@@ -17,6 +17,22 @@ module.exports = {
     filename: '[name].[contenthash:8].bundle.js',
     publicPath: '/',
   },
+  module: {
+    rules: [
+      // {
+      //   test: /\.(js|jsx)$/,
+      //   exclude: /(node_modules|bower_components)/,
+      //   loader: 'babel-loader',
+      // },
+      {
+        test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/,
+        loader: 'url-loader',
+        options: {
+          limit: 10000,
+        },
+      },
+    ],
+  },
   plugins: [
     new webpack.HashedModuleIdsPlugin(),
     new CleanWebpackPlugin(),
