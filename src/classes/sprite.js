@@ -10,12 +10,14 @@ export default function makeSprite(options) {
   that.height = options.height
   that.image = options.image
   that.loop = options.loop
+  that.x = options.x
+  that.y = options.y
 
   console.log('making sprite', that.image)
 
   that.render = () => {
     // Clear the canvas
-    that.context.clearRect(0, 0, that.width, that.height)
+    that.context.clearRect(that.x, that.y, that.width, that.height)
     // Draw the animation
     that.context.drawImage(
       that.image,
@@ -23,8 +25,8 @@ export default function makeSprite(options) {
       0,
       that.width / numberOfFrames,
       that.height,
-      0,
-      0,
+      that.x,
+      that.y,
       that.width / numberOfFrames,
       that.height,
     )
