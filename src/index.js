@@ -2,9 +2,11 @@ import boatLeftSheet from './assets/images/sprites/boat-left-sprite.png'
 import boatRightSheet from './assets/images/sprites/boat-right-sprite.png'
 import makeSprite from './classes/sprite'
 import control from './classes/control'
+import Boat from './classes/boat'
 
 let MID_X
 let MID_Y
+let SCALE_FACTOR
 
 function blockMove(event) {
   // Tell Safari not to move the window.
@@ -31,39 +33,6 @@ canvas.style.imageRendering = 'pixelated'
 boatLeftImage.src = boatLeftSheet
 boatRightImage.src = boatRightSheet
 
-const boatLeftSprite = makeSprite({
-  context: canvas.getContext('2d'),
-  width: 84,
-  height: 14,
-  image: boatLeftImage,
-  numberOfFrames: 7,
-  loop: true,
-  ticksPerFrame: 5,
-  x: 0,
-  y: 0,
-})
-
-const boatRightSprite = makeSprite({
-  context: canvas.getContext('2d'),
-  width: 84,
-  height: 14,
-  image: boatRightImage,
-  numberOfFrames: 7,
-  loop: true,
-  ticksPerFrame: 5,
-  x: 12,
-  y: 0,
-})
-
-function gameLoop() {
-  window.requestAnimationFrame(gameLoop)
-
-  boatLeftSprite.update()
-  boatLeftSprite.render()
-  boatRightSprite.update()
-  boatRightSprite.render()
-}
-
 function toggleFullscreen() {
   if (!document.fullscreenElement) {
     wrapper.requestFullscreen().catch((err) => {
@@ -83,8 +52,6 @@ window.onload = () => {
 //     toggleFullscreen()
 //   }
 // }
-
-gameLoop()
 
 setTimeout(() => {
   console.log('loaded', window.navigator.standalone)
@@ -131,8 +98,9 @@ function fit() {
   console.log('Scale factor is', scaledHeight / canvas.height)
   console.log('Canvas has been fit. The width/height are:', canvas.width, canvas.height, canvas.style.width, canvas.style.height)
 
-  MID_X = scaledWidth / 2
+  MID_X = width / 2
   MID_Y = scaledHeight / 2
+  SCALE_FACTOR = scaledHeight / canvas.height
 
   console.log('Canvas X values are min/mid/max:', 0, scaledWidth / 2, scaledWidth)
   console.log('Canvas Y values are min/mid/max:', 0, scaledHeight / 2, scaledHeight)
@@ -140,13 +108,6 @@ function fit() {
 }
 
 fit()
-
-// document.addEventListener('keydown', (event) => {
-//   if (event.ctrlKey === true && (event.which === '61' || event.which === '107' || event.which === '173' || event.which === '109' || event.which === '187' || event.which === '189')) {
-//     event.preventDefault()
-//   }
-// })
-
 
 window.addEventListener('mousewheel', (event) => {
   event.preventDefault()
@@ -163,3 +124,17 @@ window.addEventListener('load', () => {
 
   controls.init(body)
 })
+
+const boat = new Boat(canvas, boatLeftImage, boatRightImage, SCALE_FACTOR)
+
+function gameLoop() {
+  window.requestAnimationFrame(gameLoop)
+
+  // boat.update()
+  boat.setFrames(controls.boatFrame())
+  boat.render(MID_X, MID_Y / 2)
+  // console.log(controls.activeTouches())
+  // boat.render(0, 0)
+}
+
+gameLoop()

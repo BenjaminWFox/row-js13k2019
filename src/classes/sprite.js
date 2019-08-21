@@ -15,9 +15,13 @@ export default function makeSprite(options) {
 
   console.log('making sprite', that.image)
 
-  that.render = () => {
+  that.render = (x, y) => {
     // Clear the canvas
     that.context.clearRect(that.x, that.y, that.width, that.height)
+
+    that.x = x || that.x
+    that.y = y || that.y
+
     // Draw the animation
     that.context.drawImage(
       that.image,
@@ -38,7 +42,6 @@ export default function makeSprite(options) {
 
     if (tickCount > ticksPerFrame) {
       tickCount = 0
-
       // If the current frame index is in range
       if (frameIndex < numberOfFrames - 1) {
         // Go to the next frame
@@ -47,6 +50,12 @@ export default function makeSprite(options) {
       else if (that.loop) {
         frameIndex = 0
       }
+    }
+  }
+
+  that.goToFrame = (frame) => {
+    if (frame < numberOfFrames) {
+      frameIndex = frame
     }
   }
 
