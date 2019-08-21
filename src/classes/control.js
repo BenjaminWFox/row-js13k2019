@@ -35,9 +35,10 @@ export default (MID_X) => {
   }
 
   const setFrameForX = (x, side) => {
+    // The in-to-out & out-to-in will be different (pos vs neg)
+    // depending on the side
     const diff = side === 'left' ? x * -1 : x
 
-    console.log('set right X frame', diff)
     switch (boatFrame[side]) {
       case 1:
         if (Math.abs(x) !== diff) {
@@ -54,7 +55,6 @@ export default (MID_X) => {
   }
 
   const setFrameForY = (y, side) => {
-    console.log('Set right Y frame', y)
     switch (boatFrame[side]) {
       case 0:
         if (Math.abs(y) === y) {
@@ -97,8 +97,6 @@ export default (MID_X) => {
     if (y) {
       setFrameForY(y, 'right')
     }
-
-    console.log(boatFrame.right)
   }
 
   const setLeftFrame = (x, y) => {
@@ -108,8 +106,15 @@ export default (MID_X) => {
     if (y) {
       setFrameForY(y, 'left')
     }
+  }
 
-    console.log(boatFrame.right)
+  const resetAllForSide = (side) => {
+    activeTouches[side] = null
+    prevTouch[side].x = 0
+    prevTouch[side].y = 0
+    touchDiff[side].x = 0
+    touchDiff[side].y = 0
+    boatFrame[side] = 0
   }
 
   const handleNewTouch = (touchObject) => {
@@ -128,13 +133,11 @@ export default (MID_X) => {
 
   const handleRemovedTouch = (touchObject) => {
     if (activeTouches.left && activeTouches.left.identifier === touchObject.identifier) {
-      console.log('Removed LEFT touch!')
-      activeTouches.left = null
+      resetAllForSide('left')
     }
 
     if (activeTouches.right && activeTouches.right.identifier === touchObject.identifier) {
-      console.log('Removed RIGHT touch!')
-      activeTouches.right = null
+      resetAllForSide('right')
     }
   }
 
@@ -162,10 +165,11 @@ export default (MID_X) => {
       prevTouch.left.x = touchObject.pageX
 
 
-      if (touchDiff.left.x >= 20 || touchDiff.left.x <= -20) {
+      if (touchDiff.left.x >= 40 || touchDiff.left.x <= -40) {
         setLeftFrame(touchDiff.left.x, undefined)
         touchDiff.left.x = 0
       }
+
       if (touchDiff.left.y >= 20 || touchDiff.left.y <= -20) {
         setLeftFrame(undefined, touchDiff.left.y)
         touchDiff.left.y = 0
