@@ -1,140 +1,86 @@
-import boatLeftSheet from './assets/images/sprites/boat-left-sprite.png'
-import boatRightSheet from './assets/images/sprites/boat-right-sprite.png'
-import makeSprite from './classes/sprite'
 import control from './classes/control'
 import Boat from './classes/boat'
 
-let MID_X
-let MID_Y
+const CANVAS_RATIO = 16 / 9
+let CANVAS_MID_X
+// let CANVAS_MID_Y
+let SCREEN_WIDTH
+let SCREEN_HEIGHT
+let SCREEN_MID_X
+let SCREEN_MID_Y
 let SCALE_FACTOR
+let SCALED_WIDTH
+let SCALED_HEIGHT
 
-function blockMove(event) {
-  // Tell Safari not to move the window.
-  event.preventDefault()
-}
-
+// Get dom element refs
 const body = document.querySelector('body')
-
-body.addEventListener('ontouchmove', blockMove)
-body.style.overflow = 'hidden'
-body.style.backgroundColor = '#000000'
-
 const wrapper = document.getElementById('wrapper')
 const canvas = document.getElementById('canvas')
-const button = document.getElementById('button')
-const boatLeftImage = new Image()
-const boatRightImage = new Image()
 
-// canvas.width = 135
-// canvas.height = 240
-canvas.style.backgroundColor = '#0e52ce'
-canvas.style.imageRendering = 'pixelated'
+// Prevent various zoome and scroll events
+window.addEventListener('gesturestart', (e) => e.preventDefault())
+window.addEventListener('gesturechange', (e) => e.preventDefault())
+window.addEventListener('gestureend', (e) => e.preventDefault()); body.style.overflow = 'hidden'
+window.addEventListener('mousewheel', (event) => event.preventDefault(), { passive: false })
+document.addEventListener('touchmove', (ev) => ev.preventDefault(), { passive: false })
+body.addEventListener('ontouchmove', (e) => e.preventDefault())
+body.style.backgroundColor = '#000000'
 
-boatLeftImage.src = boatLeftSheet
-boatRightImage.src = boatRightSheet
+let controls
+let boat
 
-function toggleFullscreen() {
-  if (!document.fullscreenElement) {
-    wrapper.requestFullscreen().catch((err) => {
-      console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`)
-    })
-  }
-  else {
-    document.exitFullscreen()
-  }
+const setConstants = () => {
+  SCREEN_WIDTH = window.innerWidth
+  SCREEN_HEIGHT = window.innerHeight
+  SCREEN_MID_X = SCREEN_WIDTH / 2
+  SCREEN_MID_Y = SCREEN_HEIGHT / 2
+  SCALED_WIDTH = Math.round(SCREEN_HEIGHT / CANVAS_RATIO)
+  SCALED_HEIGHT = SCREEN_HEIGHT
+  CANVAS_MID_X = Math.round(SCALED_WIDTH / 2)
+  // CANVAS_MID_Y = SCALED_HEIGHT / 2
+  SCALE_FACTOR = SCALED_HEIGHT / canvas.height
 }
 
-window.onload = () => {
+const fitCanvasToScreen = () => {
+  canvas.style.width = `${SCALED_WIDTH}px`
+  body.style.height = `${SCALED_HEIGHT}px`
+  wrapper.style.height = `${SCALED_HEIGHT}px`
+  canvas.style.height = `${SCALED_HEIGHT}px`
 }
-
-// wrapper.onclick = () => {
-//   if (!document.fullscreenElement) {
-//     toggleFullscreen()
-//   }
-// }
-
-setTimeout(() => {
-  console.log('loaded', window.navigator.standalone)
-}, 250)
-
-// Avoid iOS drag events
-document.addEventListener('touchmove', (ev) => ev.preventDefault(), {
-  passive: false,
-})
-
-let width
-let height
-
-const ratios = [1.0, 1.25, 2]
-// let quality = 2
-
-// // Sorry FF, you get gimped because large canvas2D elements are slow on OSX!
-// if (/firefox/i.test(navigator.userAgent)) {
-//   quality -= 1
-// }
-
-let pixelRatio
-// // let targetPixelRatio
-
-const setPixelRatio = (target) => {
-  // targetPixelRatio = target
-  pixelRatio = Math.min(window.devicePixelRatio, target)
-}
-
-setPixelRatio(ratios[2])
-
-function fit() {
-  width = window.innerWidth
-  height = window.innerHeight
-
-  const scaledWidth = Math.round(height / (16 / 9))
-  const scaledHeight = height
-
-  canvas.style.width = `${scaledWidth}px`
-  body.style.height = `${scaledHeight}px`
-  wrapper.style.height = `${scaledHeight}px`
-  canvas.style.height = `${scaledHeight}px`
-
-  console.log('Scale factor is', scaledHeight / canvas.height)
-  console.log('Canvas has been fit. The width/height are:', canvas.width, canvas.height, canvas.style.width, canvas.style.height)
-
-  MID_X = width / 2
-  MID_Y = scaledHeight / 2
-  SCALE_FACTOR = scaledHeight / canvas.height
-
-  console.log('Canvas X values are min/mid/max:', 0, scaledWidth / 2, scaledWidth)
-  console.log('Canvas Y values are min/mid/max:', 0, scaledHeight / 2, scaledHeight)
-  // console.log('height/width:', height, '/', height * (16 / 9))
-}
-
-fit()
-
-window.addEventListener('mousewheel', (event) => {
-  event.preventDefault()
-}, { passive: false })
-
-window.addEventListener('load', () => {
-  console.log('All loaded!')
-})
-
-const controls = control(MID_X)
-
-window.addEventListener('load', () => {
-  console.log('All loaded!')
-
-  controls.init(body)
-})
-
-const boat = new Boat(canvas, boatLeftImage, boatRightImage, SCALE_FACTOR)
 
 function gameLoop() {
   window.requestAnimationFrame(gameLoop)
 
-  // boat.update()
+  // Draw a midline for reference
+  const ctx = canvas.getContext('2d')
+
+  ctx.beginPath()
+  ctx.moveTo((Math.round(135 / 2)), 0)
+  ctx.lineTo((Math.round(135 / 2)), 240)
+  ctx.stroke()
+
   boat.setFrames(controls.boatFrame())
-  boat.render(MID_X, MID_Y / 2)
-  // console.log(controls.activeTouches())
-  // boat.render(0, 0)
+  boat.render(CANVAS_MID_X, SCREEN_MID_Y / 2)
 }
 
-gameLoop()
+const initializeGame = () => {
+  setConstants()
+
+  fitCanvasToScreen()
+
+  canvas.style.backgroundColor = '#0e52ce'
+  canvas.style.imageRendering = 'pixelated'
+
+  controls = control(SCREEN_MID_X)
+  controls.init(body)
+
+  boat = new Boat(canvas, SCALE_FACTOR)
+
+  gameLoop()
+}
+
+window.addEventListener('load', () => {
+  console.log('All loaded!')
+
+  initializeGame()
+})

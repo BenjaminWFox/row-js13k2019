@@ -1,13 +1,21 @@
+import boatLeftSheet from '../assets/images/sprites/boat-left-sprite.png'
+import boatRightSheet from '../assets/images/sprites/boat-right-sprite.png'
 import makeSprite from './sprite'
 
 export default class Boat {
-  constructor(canvas, leftImage, rightImage, scaleFx) {
+  constructor(canvas, scaleFx) {
+    this.leftImage = new Image()
+    this.rightImage = new Image()
+
+    this.leftImage.src = boatLeftSheet
+    this.rightImage.src = boatRightSheet
+
     this.scaleFx = scaleFx
     this.leftSprite = makeSprite({
       context: canvas.getContext('2d'),
       width: 84,
       height: 14,
-      image: leftImage,
+      image: this.leftImage,
       numberOfFrames: 7,
       loop: true,
       ticksPerFrame: 5,
@@ -19,7 +27,7 @@ export default class Boat {
       context: canvas.getContext('2d'),
       width: 84,
       height: 14,
-      image: rightImage,
+      image: this.rightImage,
       numberOfFrames: 7,
       loop: true,
       ticksPerFrame: 5,
@@ -50,7 +58,7 @@ export default class Boat {
     let sX = x ? Math.round(x / this.scaleFx) : undefined
     let sY = y ? Math.round(y / this.scaleFx) : undefined
 
-    sX -= 24
+    sX -= 24 / 2
     sY -= 14
 
     this.leftSprite.render(sX, sY)

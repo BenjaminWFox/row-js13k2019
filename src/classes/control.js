@@ -141,29 +141,12 @@ export default (MID_X) => {
     }
   }
 
-  // We need to know:
-  // The x diff
-  // The y diff
-  // IF (frame === 2) -> if the x diff
-
-  // LEFT thumb 100 to 50 -> IN to OUT will be POSITIVE
-  // -- OUT to IN will be NEGATIVE
-
-  // RIGHT thumb 400 to 450 -> IN to OUT will be NEGATIVE
-  // -- OUT to IN will be POSITIVE
-
-  // prevTouch.right = { x: touchObject.pageX, y: touchObject.pageY }
-
   const handleMovedTouch = (touchObject) => {
     if (activeTouches.left && activeTouches.left.identifier === touchObject.identifier) {
       touchDiff.left.y += prevTouch.left.y - touchObject.pageY
-      // console.log('tdR.Y', touchDiff.right.y)
       prevTouch.left.y = touchObject.pageY
-
       touchDiff.left.x += prevTouch.left.x - touchObject.pageX
-      // console.log('tdR.X', touchDiff.right.x)
       prevTouch.left.x = touchObject.pageX
-
 
       if (touchDiff.left.x >= 40 || touchDiff.left.x <= -40) {
         setLeftFrame(touchDiff.left.x, undefined)
@@ -178,13 +161,9 @@ export default (MID_X) => {
 
     if (activeTouches.right && activeTouches.right.identifier === touchObject.identifier) {
       touchDiff.right.y += prevTouch.right.y - touchObject.pageY
-      // console.log('tdR.Y', touchDiff.right.y)
       prevTouch.right.y = touchObject.pageY
-
       touchDiff.right.x += prevTouch.right.x - touchObject.pageX
-      // console.log('tdR.X', touchDiff.right.x)
       prevTouch.right.x = touchObject.pageX
-
 
       if (touchDiff.right.x >= 20 || touchDiff.right.x <= -20) {
         setRightFrame(touchDiff.right.x, undefined)
