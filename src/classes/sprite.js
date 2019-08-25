@@ -63,3 +63,30 @@ export default function makeSprite(options) {
 
   return that
 }
+
+class Tween {
+  constructor(from, to) {
+    this.from = from
+    this.to = to
+  }
+
+  onUpdate = (fn) => {
+    fn()
+
+    return this
+  }
+
+  onComplete = (fn) => {
+    fn()
+
+    return this
+  }
+
+  duration = (timeInMs) => {
+    this.tweenDuration = timeInMs
+
+    return this
+  }
+}
+
+export { Tween }

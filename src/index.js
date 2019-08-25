@@ -2,6 +2,7 @@ import control from './classes/control'
 import Boat from './classes/boat'
 import River from './classes/river'
 import World from './classes/world'
+import Tutorial from './classes/tutorial'
 import CONSTANTS, { setConstants } from './classes/constants'
 
 // Get dom element refs
@@ -23,6 +24,7 @@ document.addEventListener('touchmove', (ev) => ev.preventDefault(), { passive: f
 body.addEventListener('ontouchmove', (e) => e.preventDefault())
 body.style.backgroundColor = '#000000'
 
+let tutorial
 let controls
 let boat
 let river
@@ -57,6 +59,8 @@ const initializeGame = (gameFn) => {
   )
   river = new River(CONSTANTS.RIVER_SPEED)
 
+  tutorial = new Tutorial(ctx, controls)
+
   gameFn()
 }
 
@@ -75,6 +79,8 @@ function gameLoop() {
 
   boat.setFrames(controls.boatFrame())
   boat.runFrameUpdate()
+
+  tutorial.renderThumb()
 }
 
 window.addEventListener('load', () => {

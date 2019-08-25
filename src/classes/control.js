@@ -2,6 +2,12 @@
 export default (MID_X) => {
   const DIVIDING_X = MID_X
 
+  const createMockTouchObject = (id, startX, startY) => ({
+    identifier: id,
+    pageX: startX,
+    pageY: startY,
+  })
+
   const activeTouches = {
     left: null,
     right: null,
@@ -118,6 +124,7 @@ export default (MID_X) => {
   }
 
   const handleNewTouch = (touchObject) => {
+    console.log('hNT', touchObject, DIVIDING_X)
     if (!activeTouches.left && touchObject.pageX < DIVIDING_X) {
       activeTouches.left = touchObject
       prevTouch.left = { x: touchObject.pageX, y: touchObject.pageY }
@@ -127,6 +134,7 @@ export default (MID_X) => {
       activeTouches.right = touchObject
       prevTouch.right = { x: touchObject.pageX, y: touchObject.pageY }
     }
+    console.log('at', activeTouches)
   }
 
   const handleRemovedTouch = (touchObject) => {
@@ -231,5 +239,9 @@ export default (MID_X) => {
     },
     activeTouches: () => activeTouches,
     boatFrame: () => boatFrame,
+    createMockTouchObject,
+    handleNewTouch,
+    handleMovedTouch,
+    handleRemovedTouch,
   }
 }
