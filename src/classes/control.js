@@ -119,13 +119,11 @@ export default (MID_X) => {
 
   const handleNewTouch = (touchObject) => {
     if (!activeTouches.left && touchObject.pageX < DIVIDING_X) {
-      console.log('New LEFT touch!')
       activeTouches.left = touchObject
       prevTouch.left = { x: touchObject.pageX, y: touchObject.pageY }
     }
 
     if (!activeTouches.right && touchObject.pageX > DIVIDING_X) {
-      console.log('New RIGHT touch!')
       activeTouches.right = touchObject
       prevTouch.right = { x: touchObject.pageX, y: touchObject.pageY }
     }
@@ -226,7 +224,6 @@ export default (MID_X) => {
 
   return {
     init: (element) => {
-      console.log('Running!')
       element.addEventListener('touchstart', handleTouchStart)
       element.addEventListener('touchmove', handleTouchMove)
       element.addEventListener('touchend', handleTouchEnd)

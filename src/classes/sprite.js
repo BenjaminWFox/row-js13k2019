@@ -12,15 +12,17 @@ export default function makeSprite(options) {
   that.loop = options.loop
   that.x = options.x
   that.y = options.y
+  that.frameIndex = 0
 
   console.log('making sprite', that.image)
 
-  that.render = (x, y) => {
-    // Clear the canvas
-    that.context.clearRect(that.x, that.y, that.width, that.height)
+  that.currentFrame = () => frameIndex
 
-    that.x = x || that.x
-    that.y = y || that.y
+  that.render = (x, y) => {
+    // // Clear the canvas
+    // that.context.clearRect(that.x, that.y, that.width, that.height)
+    that.x = x // || that.x
+    that.y = y // || that.y
 
     // Draw the animation
     that.context.drawImage(

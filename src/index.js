@@ -1,21 +1,18 @@
 import control from './classes/control'
 import Boat from './classes/boat'
-
-const CANVAS_RATIO = 16 / 9
-let CANVAS_MID_X
-// let CANVAS_MID_Y
-let SCREEN_WIDTH
-let SCREEN_HEIGHT
-let SCREEN_MID_X
-let SCREEN_MID_Y
-let SCALE_FACTOR
-let SCALED_WIDTH
-let SCALED_HEIGHT
+import River from './classes/river'
+import World from './classes/world'
+import CONSTANTS, { setConstants } from './classes/constants'
 
 // Get dom element refs
 const body = document.querySelector('body')
 const wrapper = document.getElementById('wrapper')
 const canvas = document.getElementById('canvas')
+const ctx = canvas.getContext('2d')
+
+const world = new World(ctx)
+
+ctx.font = '12px Courier'
 
 // Prevent various zoome and scroll events
 window.addEventListener('gesturestart', (e) => e.preventDefault())
@@ -28,31 +25,48 @@ body.style.backgroundColor = '#000000'
 
 let controls
 let boat
-
-const setConstants = () => {
-  SCREEN_WIDTH = window.innerWidth
-  SCREEN_HEIGHT = window.innerHeight
-  SCREEN_MID_X = SCREEN_WIDTH / 2
-  SCREEN_MID_Y = SCREEN_HEIGHT / 2
-  SCALED_WIDTH = Math.round(SCREEN_HEIGHT / CANVAS_RATIO)
-  SCALED_HEIGHT = SCREEN_HEIGHT
-  CANVAS_MID_X = Math.round(SCALED_WIDTH / 2)
-  // CANVAS_MID_Y = SCALED_HEIGHT / 2
-  SCALE_FACTOR = SCALED_HEIGHT / canvas.height
-}
+let river
 
 const fitCanvasToScreen = () => {
-  canvas.style.width = `${SCALED_WIDTH}px`
-  body.style.height = `${SCALED_HEIGHT}px`
-  wrapper.style.height = `${SCALED_HEIGHT}px`
-  canvas.style.height = `${SCALED_HEIGHT}px`
+  canvas.style.width = `${CONSTANTS.SCALED_WIDTH}px`
+  body.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
+  wrapper.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
+  canvas.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
+}
+
+const initializeGame = (gameFn) => {
+  setConstants(canvas)
+
+  console.log('CONSTANTS', CONSTANTS)
+
+  fitCanvasToScreen()
+
+  canvas.style.backgroundColor = '#0e52ce'
+  canvas.style.imageRendering = 'pixelated'
+
+  controls = control(CONSTANTS.SCREEN_MID_X)
+  controls.init(body)
+
+  boat = new Boat(
+    ctx,
+    CONSTANTS.SCALE_FACTOR,
+    CONSTANTS.STROKE_POWER,
+    CONSTANTS.MAX_HUMAN_POWER_VELOCITY,
+    CONSTANTS.WATER_FRICTION,
+    { x: CONSTANTS.CANVAS_MID_X, y: CONSTANTS.SCREEN_MID_Y / 1.25 },
+  )
+  river = new River(CONSTANTS.RIVER_SPEED)
+
+  gameFn()
 }
 
 function gameLoop() {
   window.requestAnimationFrame(gameLoop)
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-  // Draw a midline for reference
-  const ctx = canvas.getContext('2d')
+  world.drawDistanceGrid()
+
+  world.calculatePositions(river, boat)
 
   ctx.beginPath()
   ctx.moveTo((Math.round(135 / 2)), 0)
@@ -60,27 +74,11 @@ function gameLoop() {
   ctx.stroke()
 
   boat.setFrames(controls.boatFrame())
-  boat.render(CANVAS_MID_X, SCREEN_MID_Y / 2)
-}
-
-const initializeGame = () => {
-  setConstants()
-
-  fitCanvasToScreen()
-
-  canvas.style.backgroundColor = '#0e52ce'
-  canvas.style.imageRendering = 'pixelated'
-
-  controls = control(SCREEN_MID_X)
-  controls.init(body)
-
-  boat = new Boat(canvas, SCALE_FACTOR)
-
-  gameLoop()
+  boat.runFrameUpdate()
 }
 
 window.addEventListener('load', () => {
   console.log('All loaded!')
 
-  initializeGame()
+  initializeGame(gameLoop)
 })
