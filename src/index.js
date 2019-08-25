@@ -3,6 +3,7 @@ import Boat from './classes/boat'
 import River from './classes/river'
 import World from './classes/world'
 import Tutorial from './classes/tutorial'
+import infoDisplay from './classes/info-display'
 import CONSTANTS, { setConstants } from './classes/constants'
 
 // Get dom element refs
@@ -58,6 +59,8 @@ const initializeGame = (gameFn) => {
     { x: CONSTANTS.CANVAS_MID_X, y: CONSTANTS.SCREEN_MID_Y / 1.25 },
   )
   river = new River(CONSTANTS.RIVER_SPEED)
+
+  infoDisplay.init(wrapper, canvas, CONSTANTS.SCALED_WIDTH)
 
   tutorial = new Tutorial(ctx, controls)
 

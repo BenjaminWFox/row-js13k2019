@@ -1,4 +1,6 @@
 
+import CONSTANTS from './constants'
+
 export default (MID_X) => {
   const DIVIDING_X = MID_X
 
@@ -124,7 +126,13 @@ export default (MID_X) => {
   }
 
   const handleNewTouch = (touchObject) => {
-    console.log('hNT', touchObject, DIVIDING_X)
+    console.log('hNT', touchObject)
+    console.log('Touch obj adjusted', '...')
+    console.log('Canvas width:', CONSTANTS.CANVAS_WIDTH)
+    console.log('Canvas scaled width', CONSTANTS.SCALED_WIDTH)
+    console.log('Screen width', CONSTANTS.SCREEN_WIDTH)
+    console.log('Screen mid x', CONSTANTS.SCREEN_MID_X)
+
     if (!activeTouches.left && touchObject.pageX < DIVIDING_X) {
       activeTouches.left = touchObject
       prevTouch.left = { x: touchObject.pageX, y: touchObject.pageY }

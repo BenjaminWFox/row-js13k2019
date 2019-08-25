@@ -9,7 +9,7 @@ export default function makeSprite(options) {
   that.width = options.width
   that.height = options.height
   that.image = options.image
-  that.loop = options.loop
+  that.loop = options.loop || false
   that.x = options.x
   that.y = options.y
   that.frameIndex = 0
