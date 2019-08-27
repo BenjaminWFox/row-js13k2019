@@ -9,6 +9,7 @@ export default class Boat {
     this.rightImage = new Image()
     this.leftImage.src = boatLeftSheet
     this.rightImage.src = boatRightSheet
+    this.startingX = startCoords.x
     this.scaleFx = scaleFx
     this.x = startCoords.x
     this.y = startCoords.y
@@ -64,6 +65,36 @@ export default class Boat {
       this.addDrift(frameObj.right, -1)
     }
     this.rightSprite.goToFrame(frameObj.right)
+  }
+
+  justRow = () => {
+    if (this.x !== this.startingX) {
+      this.oarsOffset = true
+
+      if (this.x - this.startingX > 1) {
+        this.x -= 0.25
+        this.rightSprite.update()
+      }
+      else if (this.x - this.startingX < -1) {
+        this.x += 0.25
+        this.leftSprite.update()
+      }
+      else {
+        this.x = this.startingX
+      }
+    }
+    else {
+      if (this.oarsOffset) {
+        this.x = this.startingX
+        this.leftSprite.goToFrame(0).resetTickCount()
+        this.rightSprite.goToFrame(0).resetTickCount()
+        this.oarsOffset = false
+      }
+
+      this.rightSprite.update()
+      this.leftSprite.update()
+    }
+    this.render()
   }
 
   isOarInWater = (frame) => frame > 2 && frame < 6

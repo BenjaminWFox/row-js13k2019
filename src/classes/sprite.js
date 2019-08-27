@@ -14,9 +14,11 @@ export default function makeSprite(options) {
   that.y = options.y
   that.frameIndex = 0
 
-  console.log('making sprite', that.image)
-
   that.currentFrame = () => frameIndex
+
+  that.resetTickCount = () => {
+    tickCount = 0
+  }
 
   that.render = (x, y) => {
     // // Clear the canvas
@@ -59,6 +61,8 @@ export default function makeSprite(options) {
     if (frame < numberOfFrames) {
       frameIndex = frame
     }
+
+    return that
   }
 
   return that

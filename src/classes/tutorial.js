@@ -1,7 +1,10 @@
 import infoDisplay from './info-display'
 import thumbPath from '../assets/images/sprites/thumb.gif'
 import makeSprite from './sprite'
+import { setCookie, getCookie } from './cookie'
 import CONSTANTS from './constants'
+
+const tutorialScreenDuration = 3500
 
 export default class Tutorial {
   constructor(ctx, controls) {
@@ -11,12 +14,11 @@ export default class Tutorial {
     this.thumbImage.src = thumbPath
     this.thumbWidth = 17
     this.thumbHeight = 35
-    this.isPaused = false
+    this.running = false
     this.thumbSpeed = 2
     this.currentTutorialStep = 0
-    this.initRightThumb()
-    this.initLeftThumb()
-    this.runTutorialSteps()
+    this.cookieName = 'tutorial'
+    this.hasBeenSeen = getCookie(this.cookieName)
   }
 
   initRightThumb = () => {
@@ -86,6 +88,11 @@ export default class Tutorial {
       this.lThumbY * CONSTANTS.SCALE_FACTOR,
     )
     this.controls.handleNewTouch(this.ltMockControl)
+  }
+
+  removeThumbs = () => {
+    this.controls.handleRemovedTouch(this.rtMockControl)
+    this.controls.handleRemovedTouch(this.ltMockControl)
   }
 
   circleRightThumb = () => {
@@ -180,14 +187,20 @@ export default class Tutorial {
 
   renderThumb = () => {
     if (!this.isPaused) {
-      if (this.currentTutorialStep === 1 || this.currentTutorialStep === 3 || this.currentTutorialStep === 4) {
+      if (this.currentTutorialStep === 1
+        || this.currentTutorialStep === 3
+        || this.currentTutorialStep === 4
+      ) {
         this.circleLeftThumb()
         this.leftThumb.render(
           this.lThumbX,
           this.lThumbY,
         )
       }
-      if (this.currentTutorialStep === 1 || this.currentTutorialStep === 2 || this.currentTutorialStep === 4) {
+      if (this.currentTutorialStep === 1
+        || this.currentTutorialStep === 2
+        || this.currentTutorialStep === 4
+      ) {
         this.circleRightThumb()
         this.rightThumb.render(
           this.rThumbX,
@@ -198,6 +211,12 @@ export default class Tutorial {
   }
 
   runTutorialSteps = () => {
+    this.initRightThumb()
+    this.initLeftThumb()
+    this.hasBeenSeen = 1
+    setCookie(this.cookieName, 1)
+    this.running = true
+    infoDisplay.show()
     // first show both thumbs rowing slowly
     this.setTutorialStep(1)
     infoDisplay.setMessage('Row the boat by circling your thumbs!')
@@ -205,23 +224,26 @@ export default class Tutorial {
     setTimeout(() => {
       this.setTutorialStep(2)
       infoDisplay.setMessage('Right thumb controls right oar, and makes you go left!')
-    }, 7500)
+    }, tutorialScreenDuration * 1)
     // then show just left thumb
     setTimeout(() => {
       this.setTutorialStep(3)
       infoDisplay.setMessage('Left thumb controls left oar, and makes you go right!')
-    }, 15000)
+    }, tutorialScreenDuration * 2)
     // then show just left thumb
     setTimeout(() => {
       this.setTutorialStep(4)
       this.thumbSpeed = 6
       infoDisplay.setMessage('You\'ll have to row fast if you want to get anywhere!')
-    }, 22500)
+    }, tutorialScreenDuration * 3)
     setTimeout(() => {
       this.setTutorialStep(0)
       this.thumbSpeed = 1
       infoDisplay.setMessage('')
-    }, 30000)
+      this.removeThumbs()
+      infoDisplay.hide()
+      this.running = false
+    }, tutorialScreenDuration * 4)
   }
 
   setTutorialStep = (step) => {

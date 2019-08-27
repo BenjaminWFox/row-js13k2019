@@ -2,6 +2,7 @@ import control from './classes/control'
 import Boat from './classes/boat'
 import River from './classes/river'
 import World from './classes/world'
+import Home from './classes/home'
 import Tutorial from './classes/tutorial'
 import infoDisplay from './classes/info-display'
 import CONSTANTS, { setConstants } from './classes/constants'
@@ -11,8 +12,14 @@ const body = document.querySelector('body')
 const wrapper = document.getElementById('wrapper')
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
-
 const world = new World(ctx)
+const gameStates = {
+  initial: 'initial',
+  title: 'title',
+  tutorial: 'tutorial',
+  game: 'game',
+}
+let gameState = gameStates.initial
 
 ctx.font = '12px Courier'
 
@@ -25,10 +32,12 @@ document.addEventListener('touchmove', (ev) => ev.preventDefault(), { passive: f
 body.addEventListener('ontouchmove', (e) => e.preventDefault())
 body.style.backgroundColor = '#000000'
 
+let home
 let tutorial
 let controls
 let boat
 let river
+let paused = false
 
 const fitCanvasToScreen = () => {
   canvas.style.width = `${CONSTANTS.SCALED_WIDTH}px`
@@ -37,7 +46,7 @@ const fitCanvasToScreen = () => {
   canvas.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
 }
 
-const initializeGame = (gameFn) => {
+const initializeGame = (mainFn) => {
   setConstants(canvas)
 
   console.log('CONSTANTS', CONSTANTS)
@@ -50,6 +59,10 @@ const initializeGame = (gameFn) => {
   controls = control(CONSTANTS.SCREEN_MID_X)
   controls.init(body)
 
+  home = new Home(ctx)
+
+  tutorial = new Tutorial(ctx, controls)
+
   boat = new Boat(
     ctx,
     CONSTANTS.SCALE_FACTOR,
@@ -58,36 +71,96 @@ const initializeGame = (gameFn) => {
     CONSTANTS.WATER_FRICTION,
     { x: CONSTANTS.CANVAS_MID_X, y: CONSTANTS.SCREEN_MID_Y / 1.25 },
   )
+
   river = new River(CONSTANTS.RIVER_SPEED)
 
   infoDisplay.init(wrapper, canvas, CONSTANTS.SCALED_WIDTH)
 
-  tutorial = new Tutorial(ctx, controls)
+  mainFn()
+}
 
-  gameFn()
+function titleLoop() {
+  world.calculatePositions(river, boat)
+  boat.justRow()
+  home.renderMainScreen()
+}
+
+function tutorialLoop() {
+  world.calculatePositions(river, boat)
+  boat.setFrames(controls.boatFrame())
+  boat.runFrameUpdate()
+  tutorial.renderThumb()
 }
 
 function gameLoop() {
-  window.requestAnimationFrame(gameLoop)
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-  world.drawDistanceGrid()
+  // world.drawDistanceGrid()
 
   world.calculatePositions(river, boat)
 
-  ctx.beginPath()
-  ctx.moveTo((Math.round(135 / 2)), 0)
-  ctx.lineTo((Math.round(135 / 2)), 240)
-  ctx.stroke()
+  // ctx.beginPath()
+  // ctx.moveTo((Math.round(135 / 2)), 0)
+  // ctx.lineTo((Math.round(135 / 2)), 240)
+  // ctx.stroke()
 
   boat.setFrames(controls.boatFrame())
+
   boat.runFrameUpdate()
 
-  tutorial.renderThumb()
+  // tutorial.renderThumb()
+}
+
+function pause(duration, cb) {
+  paused = true
+  setTimeout(() => {
+    console.log('UNPAUSE')
+    paused = false
+    cb()
+  }, duration)
+}
+
+function mainLoop() {
+  if (!paused) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    switch (gameState) {
+      case gameStates.initial:
+        home.renderInitialLoad()
+        console.log('PAUSE')
+        pause(2500, () => {
+          console.log('unpause cb')
+          if (tutorial.hasBeenSeen) {
+            console.log('SET TITLE')
+            gameState = gameStates.title
+          }
+          else {
+            console.log('SET TUTORIAL')
+            tutorial.runTutorialSteps()
+            gameState = gameStates.tutorial
+          }
+        })
+
+        break
+      case gameStates.title:
+        titleLoop()
+        break
+      case gameStates.tutorial:
+        if (tutorial.running) {
+          tutorialLoop()
+        }
+        else {
+          gameState = gameStates.title
+        }
+        break
+      case gameStates.game:
+        gameLoop()
+        break
+      default:
+    }
+  }
+  window.requestAnimationFrame(mainLoop)
 }
 
 window.addEventListener('load', () => {
   console.log('All loaded!')
 
-  initializeGame(gameLoop)
+  initializeGame(mainLoop)
 })

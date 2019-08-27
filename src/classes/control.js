@@ -1,6 +1,4 @@
 
-import CONSTANTS from './constants'
-
 export default (MID_X) => {
   const DIVIDING_X = MID_X
 
@@ -126,13 +124,6 @@ export default (MID_X) => {
   }
 
   const handleNewTouch = (touchObject) => {
-    console.log('hNT', touchObject)
-    console.log('Touch obj adjusted', '...')
-    console.log('Canvas width:', CONSTANTS.CANVAS_WIDTH)
-    console.log('Canvas scaled width', CONSTANTS.SCALED_WIDTH)
-    console.log('Screen width', CONSTANTS.SCREEN_WIDTH)
-    console.log('Screen mid x', CONSTANTS.SCREEN_MID_X)
-
     if (!activeTouches.left && touchObject.pageX < DIVIDING_X) {
       activeTouches.left = touchObject
       prevTouch.left = { x: touchObject.pageX, y: touchObject.pageY }
@@ -142,7 +133,6 @@ export default (MID_X) => {
       activeTouches.right = touchObject
       prevTouch.right = { x: touchObject.pageX, y: touchObject.pageY }
     }
-    console.log('at', activeTouches)
   }
 
   const handleRemovedTouch = (touchObject) => {
@@ -191,7 +181,7 @@ export default (MID_X) => {
   }
 
   const handleTouchStart = (event) => {
-    console.log('Touch started', event)
+    // console.log('Touch started', event)
     switch (event.changedTouches.length) {
       case 1:
         handleNewTouch(event.changedTouches[0])
@@ -219,7 +209,7 @@ export default (MID_X) => {
   }
 
   const handleTouchEnd = (event) => {
-    console.log('Touch ended', event)
+    // console.log('Touch ended', event)
     switch (event.changedTouches.length) {
       case 1:
         handleRemovedTouch(event.changedTouches[0])
@@ -233,7 +223,7 @@ export default (MID_X) => {
   }
 
   const handleTouchCancel = (event) => {
-    console.log('Touch cancelled', event)
+    // console.log('Touch cancelled', event)
     activeTouches.left = null
     activeTouches.right = null
   }

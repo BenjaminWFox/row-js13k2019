@@ -12,7 +12,7 @@ class InfoDisplay {
     this.textbox.style.boxSizing = 'border-box'
     this.textbox.style.color = '#ffffff'
     this.textbox.style.backgroundColor = 'blue'
-    this.textbox.style.opacity = 0.75
+    this.hide()
   }
 
   init = (parentNode, siblingNode, width) => {
@@ -25,6 +25,16 @@ class InfoDisplay {
 
   setMessage = (message) => {
     this.textbox.innerHTML = message
+  }
+
+  show = () => {
+    this.textbox.style.opacity = 0.75
+    this.textbox.style.display = 'block'
+  }
+
+  hide = () => {
+    this.textbox.style.opacity = 0
+    this.textbox.style.display = 'none'
   }
 }
 
