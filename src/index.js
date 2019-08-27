@@ -57,9 +57,9 @@ const initializeGame = (mainFn) => {
   canvas.style.imageRendering = 'pixelated'
 
   controls = control(CONSTANTS.SCREEN_MID_X)
-  controls.init(body)
+  // controls.init(body)
 
-  home = new Home(ctx)
+  home = new Home(ctx, controls)
 
   tutorial = new Tutorial(ctx, controls)
 
@@ -118,6 +118,19 @@ function pause(duration, cb) {
   }, duration)
 }
 
+function setupTutorial() {
+  tutorial.runTutorialSteps()
+  gameState = gameStates.tutorial
+}
+
+function setupTitle() {
+  controls.registerButton(body, home.playBtn)
+  controls.registerButton(body, home.tutorialBtn, () => {
+    setupTutorial()
+  })
+  gameState = gameStates.title
+}
+
 function mainLoop() {
   if (!paused) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -125,19 +138,16 @@ function mainLoop() {
       case gameStates.initial:
         home.renderInitialLoad()
         console.log('PAUSE')
-        pause(2500, () => {
+        pause(500, () => {
           console.log('unpause cb')
           if (tutorial.hasBeenSeen) {
-            console.log('SET TITLE')
-            gameState = gameStates.title
+            setupTitle()
           }
           else {
             console.log('SET TUTORIAL')
-            tutorial.runTutorialSteps()
-            gameState = gameStates.tutorial
+            setupTutorial()
           }
         })
-
         break
       case gameStates.title:
         titleLoop()

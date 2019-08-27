@@ -8,6 +8,8 @@ export default (MID_X) => {
     pageY: startY,
   })
 
+  const buttonRegistry = {}
+
   const activeTouches = {
     left: null,
     right: null,
@@ -223,17 +225,56 @@ export default (MID_X) => {
   }
 
   const handleTouchCancel = (event) => {
-    // console.log('Touch cancelled', event)
+    console.log('Touch cancelled', event)
     activeTouches.left = null
     activeTouches.right = null
   }
 
+  const registerButton = (element, button, actionOverride = null) => {
+    buttonRegistry[button.name] = (event) => {
+      console.log('Event:', event)
+      if (event.changedTouches.length === 1) {
+        const { pageX, pageY } = event.changedTouches[0]
+
+        console.log('X:', pageX, button.xMin, button.xMax)
+        console.log('Y:', pageY, button.yMin, button.yMax)
+        if (
+          pageX > button.xMin
+          && pageX < button.xMax
+          && pageY > button.yMin
+          && pageY < button.yMax
+        ) {
+          if (actionOverride) {
+            actionOverride()
+          }
+          else {
+            button.action(event)
+          }
+        }
+      }
+    }
+
+    element.addEventListener('touchend', buttonRegistry[button.name])
+  }
+
+  const clearButton = (element, button) => {
+    element.removeEventListener('touchend', buttonRegistry[button.name])
+
+    delete buttonRegistry[button.name]
+  }
+
   return {
-    init: (element) => {
+    registerBoatControls: (element) => {
       element.addEventListener('touchstart', handleTouchStart)
       element.addEventListener('touchmove', handleTouchMove)
       element.addEventListener('touchend', handleTouchEnd)
       element.addEventListener('touchcancel', handleTouchCancel)
+    },
+    clearBoatControls: (element) => {
+      element.removeEventListener('touchstart', handleTouchStart)
+      element.removeEventListener('touchmove', handleTouchMove)
+      element.removeEventListener('touchend', handleTouchEnd)
+      element.removeEventListener('touchcancel', handleTouchCancel)
     },
     activeTouches: () => activeTouches,
     boatFrame: () => boatFrame,
@@ -241,5 +282,7 @@ export default (MID_X) => {
     handleNewTouch,
     handleMovedTouch,
     handleRemovedTouch,
+    registerButton,
+    clearButton,
   }
 }

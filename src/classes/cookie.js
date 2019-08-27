@@ -8,8 +8,9 @@ function getCookie(name) {
 
   return document.cookie.replace(regex, '$1')
 }
-function eraseCookie(name) {
-  document.cookie = `${name}=; Max-Age=-99999999;`
-}
 
-export { setCookie, getCookie, eraseCookie }
+// function eraseCookie(name) {
+//   document.cookie = `${name}=; Max-Age=-99999999;`
+// }
+
+export { setCookie, getCookie }

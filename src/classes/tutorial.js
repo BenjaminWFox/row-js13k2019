@@ -4,7 +4,7 @@ import makeSprite from './sprite'
 import { setCookie, getCookie } from './cookie'
 import CONSTANTS from './constants'
 
-const tutorialScreenDuration = 3500
+const tutorialScreenDuration = 7500
 
 export default class Tutorial {
   constructor(ctx, controls) {
