@@ -23,8 +23,10 @@ export default function makeSprite(options) {
   that.render = (x, y) => {
     // // Clear the canvas
     // that.context.clearRect(that.x, that.y, that.width, that.height)
-    that.x = x // || that.x
-    that.y = y // || that.y
+    if (x || y) {
+      that.x = x
+      that.y = y
+    }
 
     // Draw the animation
     that.context.drawImage(

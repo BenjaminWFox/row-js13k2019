@@ -43,6 +43,7 @@ let paused = false
 
 function titleLoop() {
   world.calculatePositions(river, boat)
+  river.renderBody(boat.velocity + 0.1)
   boat.justRow()
   home.renderMainScreen()
 }
@@ -61,10 +62,9 @@ function tutorialLoop() {
 function gameLoop() {
   if (!game.paused) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    world.drawDistanceGrid()
-
     world.calculatePositions(river, boat)
+    river.renderBody(boat.velocity)
+    // world.drawDistanceGrid()
 
     // ctx.beginPath()
     // ctx.moveTo((Math.round(135 / 2)), 0)
@@ -162,7 +162,7 @@ const initializeGame = (mainFn) => {
     { x: CONSTANTS.CANVAS_MID_X, y: CONSTANTS.SCREEN_MID_Y / 1.25 },
   )
 
-  river = new River(CONSTANTS.RIVER_SPEED)
+  river = new River(ctx, CONSTANTS.RIVER_SPEED)
 
   infoDisplay.init(wrapper, canvas, CONSTANTS.SCALED_WIDTH)
 
