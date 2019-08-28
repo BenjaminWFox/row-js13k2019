@@ -31,7 +31,6 @@ window.addEventListener('gestureend', (e) => e.preventDefault()); body.style.ove
 window.addEventListener('mousewheel', (event) => event.preventDefault(), { passive: false })
 document.addEventListener('touchmove', (ev) => ev.preventDefault(), { passive: false })
 body.addEventListener('ontouchmove', (e) => e.preventDefault())
-body.style.backgroundColor = '#000000'
 
 let home
 let tutorial
@@ -43,7 +42,7 @@ let paused = false
 
 function titleLoop() {
   world.calculatePositions(river, boat)
-  river.renderBody(boat.velocity + 0.1)
+  river.render(boat.velocity + 0.1)
   boat.justRow()
   home.renderMainScreen()
 }
@@ -66,7 +65,7 @@ function gameLoop() {
   if (!game.paused) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     world.calculatePositions(river, boat)
-    river.renderBody(boat.velocity)
+    river.render(boat.velocity)
     // world.drawDistanceGrid()
 
     // ctx.beginPath()

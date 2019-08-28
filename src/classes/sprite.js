@@ -1,3 +1,5 @@
+import CONSTANTS from './constants'
+
 export default function makeSprite(options) {
   const that = {}
   let frameIndex = 0
@@ -13,6 +15,7 @@ export default function makeSprite(options) {
   that.x = options.x
   that.y = options.y
   that.frameIndex = 0
+  that.rotation = options.rotation
 
   that.currentFrame = () => frameIndex
 
@@ -29,6 +32,12 @@ export default function makeSprite(options) {
     }
 
     // Draw the animation
+    if (that.rotation) {
+      that.context.save()
+      that.context.translate(0, 0)
+      that.context.rotate(that.rotation * (Math.PI / 180))
+    }
+
     that.context.drawImage(
       that.image,
       frameIndex * (that.width / numberOfFrames),
@@ -40,6 +49,10 @@ export default function makeSprite(options) {
       that.width / numberOfFrames,
       that.height,
     )
+
+    if (that.rotation) {
+      that.context.restore()
+    }
   }
 
 

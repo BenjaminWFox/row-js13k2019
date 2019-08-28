@@ -36,7 +36,7 @@ export default class Tutorial extends Screen {
       this.ctx.measureText('< Back').width,
       this.ctx.measureText('L').width,
       CONSTANTS.CANVAS_WIDTH / 2,
-      CONSTANTS.CANVAS_HEIGHT / 3.75,
+      CONSTANTS.CANVAS_HEIGHT / 5,
       () => {
         console.log('BACK BUTTON PRESSED!')
       },
