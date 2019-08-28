@@ -67,24 +67,45 @@ export default class Boat {
     this.rightSprite.goToFrame(frameObj.right)
   }
 
+  checkOarAlignment = () => {
+    console.log('Checking oar alignment...')
+    if (this.x === this.startingX) {
+      console.log('Resetting oars...')
+      this.leftSprite.goToFrame(0).resetTickCount()
+      this.rightSprite.goToFrame(0).resetTickCount()
+      this.rightSprite.update()
+      this.leftSprite.update()
+      this.oarsOffset = false
+    }
+  }
+
   justRow = () => {
     if (this.x !== this.startingX) {
+      if (this.drift !== 0) {
+        this.drift = 0
+      }
       this.oarsOffset = true
 
+      console.log('Just rowing...', this.x, this.startingX)
+
       if (this.x - this.startingX > 1) {
+        console.log('Going right')
         this.x -= 0.25
         this.rightSprite.update()
       }
       else if (this.x - this.startingX < -1) {
+        console.log('Going left')
         this.x += 0.25
         this.leftSprite.update()
       }
       else {
         this.x = this.startingX
+        console.log('Resetting X', this.x, this.startingX)
       }
     }
     else {
       if (this.oarsOffset) {
+        console.log('Fixing offset oars!')
         this.x = this.startingX
         this.leftSprite.goToFrame(0).resetTickCount()
         this.rightSprite.goToFrame(0).resetTickCount()
@@ -94,6 +115,7 @@ export default class Boat {
       this.rightSprite.update()
       this.leftSprite.update()
     }
+
     this.render()
   }
 

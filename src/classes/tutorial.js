@@ -2,12 +2,16 @@ import infoDisplay from './info-display'
 import thumbPath from '../assets/images/sprites/thumb.gif'
 import makeSprite from './sprite'
 import { setCookie, getCookie } from './cookie'
+import MenuButton from './menu-button'
+import Screen from './screen'
 import CONSTANTS from './constants'
 
 const tutorialScreenDuration = 7500
 
-export default class Tutorial {
+export default class Tutorial extends Screen {
   constructor(ctx, controls) {
+    super('Tutorial')
+
     this.ctx = ctx
     this.controls = controls
     this.thumbImage = new Image()
@@ -15,10 +19,44 @@ export default class Tutorial {
     this.thumbWidth = 17
     this.thumbHeight = 35
     this.running = false
-    this.thumbSpeed = 2
+    this.thumbSpeed = undefined
     this.currentTutorialStep = 0
     this.cookieName = 'tutorial'
     this.hasBeenSeen = getCookie(this.cookieName)
+    let step1
+    let step2
+    let step3
+    let step4
+
+    this.steps = [step1, step2, step3, step4]
+    this.setSlowThumbspeed()
+
+    this.backBtn = new MenuButton(
+      this.ctx,
+      '< Back',
+      CONSTANTS.CANVAS_WIDTH / 2,
+      CONSTANTS.CANVAS_HEIGHT / 3.75,
+      () => {
+        console.log('BACK BUTTON PRESSED!')
+      },
+    )
+  }
+
+  goTo = () => {
+
+  }
+
+  leave = () => {
+    this.stopTutorial()
+    this.controls.clearButton(this.controls.getMainTouchEl(), this.backBtn)
+  }
+
+  setSlowThumbspeed = () => {
+    this.thumbSpeed = 2
+  }
+
+  setFastThumbspeed = () => {
+    this.thumbSpeed = 6
   }
 
   initRightThumb = () => {
@@ -185,7 +223,9 @@ export default class Tutorial {
     this.controls.handleMovedTouch(this.ltMockControl)
   }
 
-  renderThumb = () => {
+  renderTutorial = () => {
+    this.backBtn.render()
+
     if (!this.isPaused) {
       if (this.currentTutorialStep === 1
         || this.currentTutorialStep === 3
@@ -221,29 +261,39 @@ export default class Tutorial {
     this.setTutorialStep(1)
     infoDisplay.setMessage('Row the boat by circling your thumbs!')
     // then show just right thumb
-    setTimeout(() => {
+    this.steps[0] = setTimeout(() => {
       this.setTutorialStep(2)
       infoDisplay.setMessage('Right thumb controls right oar, and makes you go left!')
     }, tutorialScreenDuration * 1)
     // then show just left thumb
-    setTimeout(() => {
+    this.steps[1] = setTimeout(() => {
       this.setTutorialStep(3)
       infoDisplay.setMessage('Left thumb controls left oar, and makes you go right!')
     }, tutorialScreenDuration * 2)
     // then show just left thumb
-    setTimeout(() => {
+    this.steps[2] = setTimeout(() => {
       this.setTutorialStep(4)
-      this.thumbSpeed = 6
+      this.setFastThumbspeed()
       infoDisplay.setMessage('You\'ll have to row fast if you want to get anywhere!')
     }, tutorialScreenDuration * 3)
-    setTimeout(() => {
-      this.setTutorialStep(0)
-      this.thumbSpeed = 1
-      infoDisplay.setMessage('')
-      this.removeThumbs()
-      infoDisplay.hide()
-      this.running = false
+    this.steps[3] = setTimeout(() => {
+      this.stopTutorial()
     }, tutorialScreenDuration * 4)
+  }
+
+  stopTutorial = () => {
+    this.setTutorialStep(0)
+    this.steps.forEach((step, i) => {
+      console.log('Step?', i, step)
+      if (step) {
+        clearTimeout(step)
+      }
+    })
+    this.setSlowThumbspeed()
+    infoDisplay.setMessage('')
+    this.removeThumbs()
+    infoDisplay.hide()
+    this.running = false
   }
 
   setTutorialStep = (step) => {

@@ -14,11 +14,22 @@ export default class Button {
     this.action = action
   }
 
+  setScaledMinMax = () => {
+    this.xMin = (this.oX - (this.width / 2)) * CONSTANTS.SCALE_FACTOR
+    this.yMin = (this.oY - (this.height * 1.2)) * CONSTANTS.SCALE_FACTOR
+    this.xMax = (this.oX + this.width) * CONSTANTS.SCALE_FACTOR
+    this.yMax = (this.oY + (this.height / 2)) * CONSTANTS.SCALE_FACTOR
+  }
+
   render = (ctx) => {
     ctx.fillText(
       this.name,
       this.oX,
       this.oY,
     )
+  }
+
+  restoreCtx = () => {
+    this.ctx.restore()
   }
 }

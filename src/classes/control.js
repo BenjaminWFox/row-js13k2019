@@ -1,5 +1,13 @@
 
 export default (MID_X) => {
+  let mtl
+
+  const getMainTouchEl = () => mtl
+
+  const setMainTouchEl = (el) => {
+    mtl = el
+  }
+
   const DIVIDING_X = MID_X
 
   const createMockTouchObject = (id, startX, startY) => ({
@@ -232,12 +240,9 @@ export default (MID_X) => {
 
   const registerButton = (element, button, actionOverride = null) => {
     buttonRegistry[button.name] = (event) => {
-      console.log('Event:', event)
       if (event.changedTouches.length === 1) {
         const { pageX, pageY } = event.changedTouches[0]
 
-        console.log('X:', pageX, button.xMin, button.xMax)
-        console.log('Y:', pageY, button.yMin, button.yMax)
         if (
           pageX > button.xMin
           && pageX < button.xMax
@@ -264,6 +269,8 @@ export default (MID_X) => {
   }
 
   return {
+    init: (el) => setMainTouchEl(el),
+    getMainTouchEl,
     registerBoatControls: (element) => {
       element.addEventListener('touchstart', handleTouchStart)
       element.addEventListener('touchmove', handleTouchMove)

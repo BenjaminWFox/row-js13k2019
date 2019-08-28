@@ -57,7 +57,7 @@ const initializeGame = (mainFn) => {
   canvas.style.imageRendering = 'pixelated'
 
   controls = control(CONSTANTS.SCREEN_MID_X)
-  // controls.init(body)
+  controls.init(body)
 
   home = new Home(ctx, controls)
 
@@ -85,11 +85,15 @@ function titleLoop() {
   home.renderMainScreen()
 }
 
+function goToMenu() {
+  gameState = gameStates.title
+}
+
 function tutorialLoop() {
   world.calculatePositions(river, boat)
   boat.setFrames(controls.boatFrame())
   boat.runFrameUpdate()
-  tutorial.renderThumb()
+  tutorial.renderTutorial()
 }
 
 function gameLoop() {
@@ -118,16 +122,31 @@ function pause(duration, cb) {
   }, duration)
 }
 
-function setupTutorial() {
+function goToTutorial() {
+  controls.registerButton(body, tutorial.backBtn, () => {
+    tutorial.leave()
+    goToTitle()
+  })
+
   tutorial.runTutorialSteps()
+
   gameState = gameStates.tutorial
 }
 
-function setupTitle() {
+function leaveTitle() {
+  controls.clearButton(body, home.playBtn)
+  controls.clearButton(body, home.tutorialBtn)
+}
+
+function goToTitle() {
   controls.registerButton(body, home.playBtn)
   controls.registerButton(body, home.tutorialBtn, () => {
-    setupTutorial()
+    leaveTitle()
+    goToTutorial()
   })
+
+  boat.checkOarAlignment()
+
   gameState = gameStates.title
 }
 
@@ -141,11 +160,12 @@ function mainLoop() {
         pause(500, () => {
           console.log('unpause cb')
           if (tutorial.hasBeenSeen) {
-            setupTitle()
+            goToTitle()
           }
           else {
             console.log('SET TUTORIAL')
-            setupTutorial()
+            leaveTitle()
+            goToTutorial()
           }
         })
         break
@@ -157,7 +177,7 @@ function mainLoop() {
           tutorialLoop()
         }
         else {
-          gameState = gameStates.title
+          goToTitle()
         }
         break
       case gameStates.game:
