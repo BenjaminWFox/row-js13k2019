@@ -1,5 +1,5 @@
 import infoDisplay from './info-display'
-import thumbPath from '../assets/images/sprites/thumb.gif'
+import thumbPath from '../assets/images/sprites/thumb.png'
 import makeSprite from './sprite'
 import { setCookie, getCookie } from './cookie'
 import Button from './button'
@@ -261,22 +261,22 @@ export default class Tutorial extends Screen {
     infoDisplay.show()
     // first show both thumbs rowing slowly
     this.setTutorialStep(1)
-    infoDisplay.setMessage('Row the boat by circling your thumbs!')
+    infoDisplay.setMessage('Circle thumbs to row!')
     // then show just right thumb
     this.steps[0] = setTimeout(() => {
       this.setTutorialStep(2)
-      infoDisplay.setMessage('Right thumb controls right oar, and makes you go left!')
+      infoDisplay.setMessage('R thumb - R oar!')
     }, tutorialScreenDuration * 1)
     // then show just left thumb
     this.steps[1] = setTimeout(() => {
       this.setTutorialStep(3)
-      infoDisplay.setMessage('Left thumb controls left oar, and makes you go right!')
+      infoDisplay.setMessage('L thumb - L oar!')
     }, tutorialScreenDuration * 2)
     // then show just left thumb
     this.steps[2] = setTimeout(() => {
       this.setTutorialStep(4)
       this.setFastThumbspeed()
-      infoDisplay.setMessage('You\'ll have to row fast if you want to get anywhere!')
+      infoDisplay.setMessage('Row fast to go go go!')
     }, tutorialScreenDuration * 3)
     this.steps[3] = setTimeout(() => {
       this.stopTutorial()

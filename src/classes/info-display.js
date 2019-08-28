@@ -2,7 +2,7 @@ class InfoDisplay {
   constructor() {
     this.isInit = false
     this.textbox = document.createElement('div')
-    this.textbox.style.fontSize = '22px'
+    this.textbox.style.fontSize = '20px'
     this.textbox.style.fontWeight = 'bold'
     this.textbox.style.position = 'absolute'
     this.textbox.style.top = 0

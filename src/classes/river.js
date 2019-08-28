@@ -1,4 +1,4 @@
-import borderSrc from '../assets/images/sprites/river-border.gif'
+import borderSrc from '../assets/images/sprites/river-border.png'
 import bodySrc from '../assets/images/sprites/river-body.png'
 import makeSprite from './sprite'
 import CONSTANTS from './constants'

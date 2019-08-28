@@ -54,6 +54,9 @@ function goToMenu() {
 
 function tutorialLoop() {
   world.calculatePositions(river, boat)
+  river.renderBody(boat.velocity + 0.1)
+  // I think there is lingering velocity after the tutorial ends?
+  // TODO: check on above.
   boat.setFrames(controls.boatFrame())
   boat.runFrameUpdate()
   tutorial.renderTutorial()
