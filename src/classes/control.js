@@ -272,12 +272,16 @@ export default (MID_X) => {
     init: (el) => setMainTouchEl(el),
     getMainTouchEl,
     registerBoatControls: (element) => {
-      element.addEventListener('touchstart', handleTouchStart)
-      element.addEventListener('touchmove', handleTouchMove)
-      element.addEventListener('touchend', handleTouchEnd)
-      element.addEventListener('touchcancel', handleTouchCancel)
+      const attachToEl = element || getMainTouchEl()
+
+      attachToEl.addEventListener('touchstart', handleTouchStart)
+      attachToEl.addEventListener('touchmove', handleTouchMove)
+      attachToEl.addEventListener('touchend', handleTouchEnd)
+      attachToEl.addEventListener('touchcancel', handleTouchCancel)
     },
     clearBoatControls: (element) => {
+      const attachToEl = element || getMainTouchEl()
+
       element.removeEventListener('touchstart', handleTouchStart)
       element.removeEventListener('touchmove', handleTouchMove)
       element.removeEventListener('touchend', handleTouchEnd)

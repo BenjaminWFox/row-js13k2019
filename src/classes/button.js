@@ -1,8 +1,10 @@
 import CONSTANTS from './constants'
 
 export default class Button {
-  constructor(name, width, height, x, y, action) {
+  constructor(name, width, height, x, y, action, options = {}) {
     this.name = name
+    this.fontSize = options.fontSize || 20
+    this.alignment = options.alignment || 'center'
     this.width = width
     this.height = height
     this.oX = x
@@ -22,14 +24,15 @@ export default class Button {
   }
 
   render = (ctx) => {
+    ctx.save()
+    ctx.textAlign = this.alignment
+    ctx.fillStyle = '#ffffff'
+    ctx.font = `${this.fontSize}px Courier`
     ctx.fillText(
       this.name,
       this.oX,
       this.oY,
     )
-  }
-
-  restoreCtx = () => {
-    this.ctx.restore()
+    ctx.restore()
   }
 }

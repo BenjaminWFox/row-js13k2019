@@ -3,6 +3,7 @@ import Boat from './classes/boat'
 import River from './classes/river'
 import World from './classes/world'
 import Home from './classes/home'
+import Game from './classes/game'
 import Tutorial from './classes/tutorial'
 import infoDisplay from './classes/info-display'
 import CONSTANTS, { setConstants } from './classes/constants'
@@ -34,50 +35,11 @@ body.style.backgroundColor = '#000000'
 
 let home
 let tutorial
+let game
 let controls
 let boat
 let river
 let paused = false
-
-const fitCanvasToScreen = () => {
-  canvas.style.width = `${CONSTANTS.SCALED_WIDTH}px`
-  body.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
-  wrapper.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
-  canvas.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
-}
-
-const initializeGame = (mainFn) => {
-  setConstants(canvas)
-
-  console.log('CONSTANTS', CONSTANTS)
-
-  fitCanvasToScreen()
-
-  canvas.style.backgroundColor = '#0e52ce'
-  canvas.style.imageRendering = 'pixelated'
-
-  controls = control(CONSTANTS.SCREEN_MID_X)
-  controls.init(body)
-
-  home = new Home(ctx, controls)
-
-  tutorial = new Tutorial(ctx, controls)
-
-  boat = new Boat(
-    ctx,
-    CONSTANTS.SCALE_FACTOR,
-    CONSTANTS.STROKE_POWER,
-    CONSTANTS.MAX_HUMAN_POWER_VELOCITY,
-    CONSTANTS.WATER_FRICTION,
-    { x: CONSTANTS.CANVAS_MID_X, y: CONSTANTS.SCREEN_MID_Y / 1.25 },
-  )
-
-  river = new River(CONSTANTS.RIVER_SPEED)
-
-  infoDisplay.init(wrapper, canvas, CONSTANTS.SCALED_WIDTH)
-
-  mainFn()
-}
 
 function titleLoop() {
   world.calculatePositions(river, boat)
@@ -97,19 +59,24 @@ function tutorialLoop() {
 }
 
 function gameLoop() {
-  // world.drawDistanceGrid()
+  if (!game.paused) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-  world.calculatePositions(river, boat)
+    world.drawDistanceGrid()
 
-  // ctx.beginPath()
-  // ctx.moveTo((Math.round(135 / 2)), 0)
-  // ctx.lineTo((Math.round(135 / 2)), 240)
-  // ctx.stroke()
+    world.calculatePositions(river, boat)
 
-  boat.setFrames(controls.boatFrame())
+    // ctx.beginPath()
+    // ctx.moveTo((Math.round(135 / 2)), 0)
+    // ctx.lineTo((Math.round(135 / 2)), 240)
+    // ctx.stroke()
 
-  boat.runFrameUpdate()
+    boat.setFrames(controls.boatFrame())
 
+    boat.runFrameUpdate()
+
+    game.render(world.distanceMoved)
+  }
   // tutorial.renderThumb()
 }
 
@@ -138,8 +105,17 @@ function leaveTitle() {
   controls.clearButton(body, home.tutorialBtn)
 }
 
+function goToGame() {
+  leaveTitle()
+  controls.registerBoatControls()
+  game.goTo()
+  gameState = gameStates.game
+}
+
 function goToTitle() {
-  controls.registerButton(body, home.playBtn)
+  controls.registerButton(body, home.playBtn, () => {
+    goToGame()
+  })
   controls.registerButton(body, home.tutorialBtn, () => {
     leaveTitle()
     goToTutorial()
@@ -150,11 +126,54 @@ function goToTitle() {
   gameState = gameStates.title
 }
 
+
+const fitCanvasToScreen = () => {
+  canvas.style.width = `${CONSTANTS.SCALED_WIDTH}px`
+  body.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
+  wrapper.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
+  canvas.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
+}
+
+const initializeGame = (mainFn) => {
+  setConstants(canvas)
+
+  console.log('CONSTANTS', CONSTANTS)
+
+  fitCanvasToScreen()
+
+  canvas.style.backgroundColor = '#0e52ce'
+  canvas.style.imageRendering = 'pixelated'
+
+  controls = control(CONSTANTS.SCREEN_MID_X)
+  controls.init(body)
+
+  home = new Home(ctx, controls)
+
+  game = new Game(ctx, controls, goToTitle)
+
+  tutorial = new Tutorial(ctx, controls)
+
+  boat = new Boat(
+    ctx,
+    CONSTANTS.SCALE_FACTOR,
+    CONSTANTS.STROKE_POWER,
+    CONSTANTS.MAX_HUMAN_POWER_VELOCITY,
+    CONSTANTS.WATER_FRICTION,
+    { x: CONSTANTS.CANVAS_MID_X, y: CONSTANTS.SCREEN_MID_Y / 1.25 },
+  )
+
+  river = new River(CONSTANTS.RIVER_SPEED)
+
+  infoDisplay.init(wrapper, canvas, CONSTANTS.SCALED_WIDTH)
+
+  mainFn()
+}
+
 function mainLoop() {
   if (!paused) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
     switch (gameState) {
       case gameStates.initial:
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
         home.renderInitialLoad()
         console.log('PAUSE')
         pause(500, () => {
@@ -170,9 +189,11 @@ function mainLoop() {
         })
         break
       case gameStates.title:
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
         titleLoop()
         break
       case gameStates.tutorial:
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
         if (tutorial.running) {
           tutorialLoop()
         }

@@ -1,6 +1,7 @@
 import boatLeftSheet from '../assets/images/sprites/boat-left-sprite.png'
 import boatRightSheet from '../assets/images/sprites/boat-right-sprite.png'
 import makeSprite from './sprite'
+import CONSTANTS from './constants'
 
 export default class Boat {
   constructor(ctx, scaleFx, strokePower, maxVelocity, waterFriction, startCoords) {
@@ -184,8 +185,21 @@ export default class Boat {
     this.applyWaterFriction()
   }
 
+  checkForOutOfBounds = (x) => {
+    if (x >= CONSTANTS.SCALED_WIDTH - 24) {
+      this.x = CONSTANTS.SCALED_WIDTH - 24
+      this.drift = 0
+    }
+    if (x <= 0 + 24) {
+      this.x = 24
+      this.drift = 0
+    }
+  }
+
   render = () => {
     this.x += this.drift * 4
+
+    this.checkForOutOfBounds(this.x)
 
     const scaledX = Math.round(this.x / this.scaleFx)
     const scaledY = Math.round(this.y / this.scaleFx)

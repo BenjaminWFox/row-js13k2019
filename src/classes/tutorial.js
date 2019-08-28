@@ -2,7 +2,7 @@ import infoDisplay from './info-display'
 import thumbPath from '../assets/images/sprites/thumb.gif'
 import makeSprite from './sprite'
 import { setCookie, getCookie } from './cookie'
-import MenuButton from './menu-button'
+import Button from './button'
 import Screen from './screen'
 import CONSTANTS from './constants'
 
@@ -31,14 +31,16 @@ export default class Tutorial extends Screen {
     this.steps = [step1, step2, step3, step4]
     this.setSlowThumbspeed()
 
-    this.backBtn = new MenuButton(
-      this.ctx,
+    this.backBtn = new Button(
       '< Back',
+      this.ctx.measureText('< Back').width,
+      this.ctx.measureText('L').width,
       CONSTANTS.CANVAS_WIDTH / 2,
       CONSTANTS.CANVAS_HEIGHT / 3.75,
       () => {
         console.log('BACK BUTTON PRESSED!')
       },
+      { fontSize: 20 },
     )
   }
 
@@ -224,7 +226,7 @@ export default class Tutorial extends Screen {
   }
 
   renderTutorial = () => {
-    this.backBtn.render()
+    this.backBtn.render(this.ctx)
 
     if (!this.isPaused) {
       if (this.currentTutorialStep === 1

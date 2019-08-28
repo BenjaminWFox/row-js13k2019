@@ -28,6 +28,7 @@ export default class Home {
       () => {
         console.log('PLAY BUTTON PRESSED!')
       },
+      { fontSize: 20 },
     )
     this.tutorialBtn = new Button(
       this.tutorialBtnText,
@@ -38,6 +39,7 @@ export default class Home {
       () => {
         console.log('TUTORIAL BUTTON PRESSED!')
       },
+      { fontSize: 20 },
     )
     this.ctx.restore()
   }
@@ -56,15 +58,15 @@ export default class Home {
   }
 
   renderMenu = () => {
-    this.ctx.save()
-    this.ctx.textAlign = 'center'
-    this.ctx.fillStyle = '#ffffff'
-    this.ctx.font = '20px Courier'
+    // this.ctx.save()
+    // this.ctx.textAlign = 'center'
+    // this.ctx.fillStyle = '#ffffff'
+    // this.ctx.font = '20px Courier'
 
     this.playBtn.render(this.ctx)
     this.tutorialBtn.render(this.ctx)
 
-    this.ctx.restore()
+    // this.ctx.restore()
   }
 
   renderMainScreen = () => {
