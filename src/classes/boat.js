@@ -1,7 +1,10 @@
-import boatLeftSheet from '../assets/images/sprites/boat-left-sprite.png'
-import boatRightSheet from '../assets/images/sprites/boat-right-sprite.png'
+import boatLeftSheet from '../assets/images/sprites/boat-shadow-sprite-left.png'
+import boatRightSheet from '../assets/images/sprites/boat-shadow-sprite-right.png'
 import makeSprite from './sprite'
 import CONSTANTS from './constants'
+
+const BOAT_SPRITE_WIDTH = 84
+const BOAT_SPRITE_HEIGHT = 15
 
 export default class Boat {
   constructor(ctx, scaleFx, strokePower, maxVelocity, waterFriction, startCoords) {
@@ -16,8 +19,8 @@ export default class Boat {
     this.y = startCoords.y
     this.leftSprite = makeSprite({
       context: ctx,
-      width: 84,
-      height: 14,
+      width: BOAT_SPRITE_WIDTH,
+      height: BOAT_SPRITE_HEIGHT,
       image: this.leftImage,
       numberOfFrames: 7,
       loop: true,
@@ -27,8 +30,8 @@ export default class Boat {
     })
     this.rightSprite = makeSprite({
       context: ctx,
-      width: 84,
-      height: 14,
+      width: BOAT_SPRITE_WIDTH,
+      height: BOAT_SPRITE_HEIGHT,
       image: this.rightImage,
       numberOfFrames: 7,
       loop: true,
@@ -204,7 +207,7 @@ export default class Boat {
     const scaledX = Math.round(this.x / this.scaleFx)
     const scaledY = Math.round(this.y / this.scaleFx)
     const renderX = -12
-    const renderY = -7
+    const renderY = -Math.floor(BOAT_SPRITE_HEIGHT / 2)
     const renderXOffset = 12
 
     this.context.save()

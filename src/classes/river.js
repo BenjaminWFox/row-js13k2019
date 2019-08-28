@@ -1,5 +1,5 @@
 import borderSrc from '../assets/images/sprites/river-border.gif'
-import bodySrc from '../assets/images/sprites/river-body.gif'
+import bodySrc from '../assets/images/sprites/river-body.png'
 import makeSprite from './sprite'
 import CONSTANTS from './constants'
 
