@@ -6,6 +6,7 @@ import Home from './classes/home'
 import Game from './classes/game'
 import Tutorial from './classes/tutorial'
 import infoDisplay from './classes/info-display'
+import Waterfall from './classes/waterfall'
 import CONSTANTS, { setConstants } from './classes/constants'
 
 // Get dom element refs
@@ -19,6 +20,7 @@ const gameStates = {
   title: 'title',
   tutorial: 'tutorial',
   game: 'game',
+  gameOver: 'gameOver',
 }
 let gameState = gameStates.initial
 
@@ -38,10 +40,11 @@ let game
 let controls
 let boat
 let river
+let waterfall
 let paused = false
 
 function titleLoop() {
-  world.calculatePositions(river, boat)
+  world.calculatePositions(river, waterfall, boat)
   river.render(boat.velocity + 0.1)
   boat.justRow()
   home.renderMainScreen()
@@ -52,7 +55,7 @@ function goToMenu() {
 }
 
 function tutorialLoop() {
-  world.calculatePositions(river, boat)
+  world.calculatePositions(river, waterfall, boat)
   river.renderBody(boat.velocity + 0.1)
   // I think there is lingering velocity after the tutorial ends?
   // TODO: check on above.
@@ -64,14 +67,16 @@ function tutorialLoop() {
 function gameLoop() {
   if (!game.paused) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    world.calculatePositions(river, boat)
-    river.render(boat.velocity)
-    // world.drawDistanceGrid()
+    world.calculatePositions(river, waterfall, boat)
 
-    // ctx.beginPath()
-    // ctx.moveTo((Math.round(135 / 2)), 0)
-    // ctx.lineTo((Math.round(135 / 2)), 240)
-    // ctx.stroke()
+    if (!world.running) {
+      gameState = gameStates.gameOver
+    }
+
+    waterfall.render(boat.velocity)
+    river.render(boat.velocity)
+
+    // drawDebug()
 
     boat.setFrames(controls.boatFrame())
 
@@ -80,6 +85,19 @@ function gameLoop() {
     game.render(world.distanceMoved)
   }
   // tutorial.renderThumb()
+}
+
+function gameOverLoop() {
+  if (waterfall.current !== 0 || river.current !== 0) {
+    waterfall.current = 0
+    river.current = 0
+  }
+  world.calculatePositions(river, waterfall, boat)
+  waterfall.render(0)
+  river.render(0)
+  boat.fadeOut()
+
+  game.render(world.distanceMoved)
 }
 
 function pause(duration, cb) {
@@ -166,6 +184,8 @@ const initializeGame = (mainFn) => {
 
   river = new River(ctx, CONSTANTS.RIVER_SPEED)
 
+  waterfall = new Waterfall(ctx, CONSTANTS.RIVER_SPEED)
+
   infoDisplay.init(wrapper, canvas, CONSTANTS.SCALED_WIDTH)
 
   mainFn()
@@ -206,10 +226,23 @@ function mainLoop() {
       case gameStates.game:
         gameLoop()
         break
+      case gameStates.gameOver:
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        gameOverLoop()
+        break
       default:
     }
   }
   window.requestAnimationFrame(mainLoop)
+}
+
+function drawDebug() {
+  world.drawDistanceGrid()
+
+  ctx.beginPath()
+  ctx.moveTo((Math.round(135 / 2)), 0)
+  ctx.lineTo((Math.round(135 / 2)), 240)
+  ctx.stroke()
 }
 
 window.addEventListener('load', () => {

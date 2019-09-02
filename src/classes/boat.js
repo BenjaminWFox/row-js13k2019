@@ -9,6 +9,7 @@ const BOAT_SPRITE_HEIGHT = 15
 export default class Boat {
   constructor(ctx, scaleFx, strokePower, maxVelocity, waterFriction, startCoords) {
     this.context = ctx
+    this.height = BOAT_SPRITE_HEIGHT
     this.leftImage = new Image()
     this.rightImage = new Image()
     this.leftImage.src = boatLeftSheet
@@ -17,6 +18,7 @@ export default class Boat {
     this.scaleFx = scaleFx
     this.x = startCoords.x
     this.y = startCoords.y
+    this.opacity = 1
     this.leftSprite = makeSprite({
       context: ctx,
       width: BOAT_SPRITE_WIDTH,
@@ -40,8 +42,7 @@ export default class Boat {
       y: 0,
     })
 
-    this.velocity = 0
-    // this.rotation = 0
+    this.resetVelocity()
     this.drift = 0
     this.sameSideStrokes = 0
     this.lastSameSideStroke = 0
@@ -49,6 +50,10 @@ export default class Boat {
     this.strokePower = strokePower
     this.waterFriction = waterFriction
     this.lastStrokeUpdate = undefined
+  }
+
+  resetVelocity = () => {
+    this.velocity = 0
   }
 
   setFrames = (frameObj) => {
@@ -178,7 +183,7 @@ export default class Boat {
     if (now - this.lastStrokeUpdate > 500 && this.velocity > 0) {
       this.velocity -= this.waterFriction
       if (this.velocity < 0) {
-        this.velocity = 0
+        this.resetVelocity()
       }
     }
   }
@@ -222,6 +227,23 @@ export default class Boat {
     this.leftSprite.render(renderX, renderY)
     this.rightSprite.render(renderX + renderXOffset, renderY)
 
+    console.log('GA', this.context.globalAlpha)
+
     this.context.restore()
+  }
+
+  fadeOut = () => {
+    if (this.velocity !== 0) {
+      this.resetVelocity()
+    }
+    if (this.opacity > 0) {
+      this.context.save()
+      this.opacity -= 0.05
+      this.context.globalAlpha = this.opacity
+
+      console.log('OP', this.opacity)
+      this.render()
+      this.context.restore()
+    }
   }
 }

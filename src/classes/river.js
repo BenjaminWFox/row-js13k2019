@@ -1,4 +1,4 @@
-import borderSrc from '../assets/images/sprites/river-border-horizontal.png'
+import borderSrc from '../assets/images/sprites/river-border-horizontal-mono.png'
 import bodySrc from '../assets/images/sprites/river-body.png'
 import makeSprite from './sprite'
 import CONSTANTS from './constants'
@@ -38,57 +38,115 @@ export default class River {
     this.makeBodySprites()
   }
 
-  getBodySpriteYPos = (index) => ((index * this.bodyDimention) - this.bodyDimention)
+  getRenderAdjustAmount = (velocity) => (this.current * 2) + velocity
+
+  /**
+   * BORDER methods
+   */
+  getBorderBasePositions = () => ({
+    left: {
+      x: 0,
+      y: -this.borderXDimension,
+    },
+    right: {
+      x: -this.borderYDimension,
+      y: CONSTANTS.CANVAS_WIDTH - this.borderXDimension,
+    },
+  })
 
   getLeftBorderYPos = (yPos, index) => (yPos + ((index - 1) * this.borderYDimension))
 
   getRightBorderYPos = (yPos, index) => (yPos + ((index - 1) * this.borderYDimension))
 
-  // getLeftBorderYPos = (yPos, index) => ((index * yPos) - this.borderYDimension)
-
   makeBorderLeft = () => {
-    this.makeBorderSprites(0, -this.borderXDimension, 90, this.bordersLeft)
+    const startPos = this.getBorderBasePositions()
+
+    this.makeBorderSprites(startPos.left.x, startPos.left.y, 90, this.bordersLeft)
   }
 
   makeBorderRight = () => {
-    this.makeBorderSprites(-this.borderYDimension, CONSTANTS.CANVAS_WIDTH - this.borderXDimension, -90, this.bordersRight)
+    const startPos = this.getBorderBasePositions()
+
+    this.makeBorderSprites(startPos.right.x, startPos.right.y, -90, this.bordersRight)
   }
 
   makeBorderSprites = (xPos, yPos, rotation, arr) => {
-    console.log(xPos, rotation, arr)
     for (let i = 0; i < this.bordersInColumn; i += 1) {
-      let x
-      let y
-
-      if (Math.abs(rotation) === rotation) {
-        y = yPos
-        x = this.getLeftBorderYPos(xPos, i)
-        // console.log('LEFT sprite', x, y, xPos, i)
-      }
-      else {
-        y = yPos
-        x = this.getRightBorderYPos(xPos, i)
-        // console.log('LEFT sprite', x, y, xPos, i)
-      }
-
-      const sprite = makeSprite(
-        {
-          context: this.ctx,
-          width: this.borderYDimension,
-          height: this.borderXDimension,
-          image: this.borderImage,
-          numberOfFrames: 0,
-          x, // this is actually the Y value ... rotation ...
-          y, // this is actually the X value ... rotation ...
-          rotation,
-        },
-      )
+      const sprite = this.makeBorderSprite(xPos, yPos, rotation, i)
 
       // console.log('Made sprite, sprite y', sprite.y)
       // console.log('Made sprite, sprite X', sprite.x)
       arr.push(sprite)
     }
   }
+
+  makeBorderSprite = (xPos, yPos, rotation, i) => {
+    let x
+    let y
+
+    if (Math.abs(rotation) === rotation) {
+      y = yPos
+      x = this.getLeftBorderYPos(xPos, i)
+      // console.log('LEFT sprite', x, y, xPos, i)
+    }
+    else {
+      y = yPos
+      x = this.getRightBorderYPos(xPos, i)
+      // console.log('LEFT sprite', x, y, xPos, i)
+    }
+
+    console.log('Making new border sprite', y, x)
+
+    return makeSprite(
+      {
+        context: this.ctx,
+        width: this.borderYDimension,
+        height: this.borderXDimension,
+        image: this.borderImage,
+        numberOfFrames: 0,
+        x, // this is actually the Y value ... rotation ...
+        y, // this is actually the X value ... rotation ...
+        rotation,
+      },
+    )
+  }
+
+  addBordersAbove = () => {
+    const startPos = this.getBorderBasePositions()
+
+    this.bordersLeft.unshift(this.makeBorderSprite(startPos.left.x, startPos.left.y, 90, 0))
+    this.bordersRight.push(this.makeBorderSprite(startPos.right.x, startPos.right.y, -90, 2))
+
+    if (this.bordersLeft.length > 4) {
+      this.bordersLeft.splice(this.bordersLeft.length - 1, 1)
+    }
+    if (this.bordersRight.length > 4) {
+      this.bordersRight.splice(0, 1)
+    }
+
+    console.log('Added above ... ', this.bordersLeft.length, this.bordersRight.length)
+  }
+
+  addBordersBelow = () => {
+    const startPos = this.getBorderBasePositions()
+
+    this.bordersLeft.push(this.makeBorderSprite(startPos.left.x, startPos.left.y, 90, 2))
+    this.bordersRight.unshift(this.makeBorderSprite(startPos.right.x, startPos.right.y, -90, 0))
+
+    if (this.bordersLeft.length > 4) {
+      this.bordersLeft.splice(0, 1)
+    }
+    if (this.bordersRight.length > 4) {
+      this.bordersRight.splice(this.bordersRight.length - 1, 1)
+    }
+
+    console.log('Added below ... ', this.bordersLeft.length, this.bordersRight.length)
+  }
+
+  /**
+   * BODY methods
+   */
+  getBodySpriteYPos = (index) => ((index * this.bodyDimention) - this.bodyDimention)
 
   makeBodySprites = () => {
     for (let i = 0; i < this.rowsInBodyColumn; i += 1) {
@@ -102,7 +160,7 @@ export default class River {
       this.bodyColumns.push(this.makeSpriteRow(i))
     }
 
-    console.log(this.bodyColumns)
+    console.log('BODY COLUMNS', this.bodyColumns)
   }
 
   makeSpriteRow = (index) => {
@@ -146,6 +204,14 @@ export default class River {
     }
   }
 
+  /**
+    * GENERAL methods
+    */
+  render = (velocity) => {
+    this.renderBody(velocity)
+    this.renderBorder(velocity)
+  }
+
   renderBody = (velocity) => {
     const maxY = this.bodyColumns[this.bodyColumns.length - 1][0].y
     const minY = this.bodyColumns[0][0].y
@@ -169,14 +235,14 @@ export default class River {
   }
 
   renderBorder = (velocity) => {
+    if (this.bordersLeft[0].x >= 0) {
+      this.addBordersAbove()
+    }
+    if (this.bordersLeft[this.bordersLeft.length - 1].x <= 0) {
+      this.addBordersBelow()
+    }
+
     for (let i = 0; i < this.bordersLeft.length; i += 1) {
-      // console.log('LEFT COLUMN', this.bordersLeft[0].x, this.bordersLeft[this.bordersLeft.length - 1].x)
-      if (this.bordersLeft[0].x >= 0) {
-        this.unshiftBorderToColumn(this.bordersLeft, 'left')
-      }
-      if (this.bordersLeft[this.bordersLeft.length - 1].x <= 0) {
-        this.pushBorderToColumn(this.bordersLeft, 'left')
-      }
       // Unshift LEFT at GREATER THAN 0
       // Push LEFT at LESS THAN 0
       const sprite = this.bordersLeft[i]
@@ -185,13 +251,6 @@ export default class River {
       sprite.render()
     }
     for (let i = 0; i < this.bordersRight.length; i += 1) {
-      // console.log('RIGHT COLUMN', this.bordersRight[0].x, this.bordersRight[this.bordersRight.length - 1].x)
-      if (this.bordersRight[0].x <= -720) {
-        this.unshiftBorderToColumn(this.bordersRight, 'right')
-      }
-      if (this.bordersRight[this.bordersRight.length - 1].x >= 240) {
-        this.pushBorderToColumn(this.bordersRight, 'right')
-      }
       // Unshift RIGHT at LESS THAN -720
       // Push RIGHT at GREATER THAN 240
       const sprite = this.bordersRight[i]
@@ -200,19 +259,4 @@ export default class River {
       sprite.render()
     }
   }
-
-  unshiftBorderToColumn = (array, debug) => {
-    console.log('UNSHIFT BORDER', debug)
-  }
-
-  pushBorderToColumn = (array, debug) => {
-    console.log('PUSH BORDER', debug)
-  }
-
-  render = (velocity) => {
-    this.renderBody(velocity)
-    this.renderBorder(velocity)
-  }
-
-  getRenderAdjustAmount = (velocity) => (this.current * 2) + velocity
 }

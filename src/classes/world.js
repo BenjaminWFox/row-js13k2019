@@ -4,6 +4,7 @@ export default class World {
   constructor(ctx) {
     this.distanceMoved = 0
     this.ctx = ctx
+    this.running = true
   }
 
   drawDistanceGrid = () => {
@@ -22,12 +23,23 @@ export default class World {
     }
   }
 
-  calculatePositions = (river, boat) => {
+  calculatePositions = (river, waterfall, boat) => {
     const { current } = river
-    const { velocity } = boat
+    const { velocity, scaleFx } = boat
 
     this.distanceMoved = this.distanceMoved - (current + velocity)
 
-    // console.log(this.distanceMoved)
+    if (
+      (((waterfall.sprite.y + waterfall.height) * boat.scaleFx) - ((boat.height * boat.scaleFx) / 2) + (16))
+      > boat.y + (boat.height * boat.scaleFx)
+    ) {
+      console.log('GAME OVER!')
+      this.running = false
+    }
+    else {
+      console.log('BOAT vs WATERFALL',
+        boat.y + (boat.height * boat.scaleFx),
+        ((waterfall.sprite.y + waterfall.height) * boat.scaleFx) - (boat.height * boat.scaleFx) + 16)
+    }
   }
 }
