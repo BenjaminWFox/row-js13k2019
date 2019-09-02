@@ -1,4 +1,4 @@
-import waterfallSrc from '../assets/images/sprites/waterfall-sprite.png'
+import waterfallSrc from '../assets/images/sprites/waterfall-sprite-2frame.png'
 import makeSprite from './sprite'
 
 export default class Waterfall {
@@ -17,10 +17,10 @@ export default class Waterfall {
 
     this.sprite = makeSprite({
       context: this.ctx,
-      width: 405,
+      width: 270,
       height: 166,
       image: this.image,
-      numberOfFrames: 3,
+      numberOfFrames: 2,
       ticksPerFrame: 10,
       loop: true,
       x: 0,

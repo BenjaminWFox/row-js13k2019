@@ -27,11 +27,11 @@ export default class World {
     const { current } = river
     const { velocity, scaleFx } = boat
 
-    this.distanceMoved = this.distanceMoved - (current + velocity)
+    this.distanceMoved = this.distanceMoved - ((current * 2) + velocity)
 
     if (
-      (((waterfall.sprite.y + waterfall.height) * boat.scaleFx) - ((boat.height * boat.scaleFx) / 2) + (16))
-      > boat.y + (boat.height * boat.scaleFx)
+      (((waterfall.sprite.y + waterfall.height) * scaleFx) - ((boat.height * scaleFx) / 2) + (16))
+      > boat.y + (boat.height * scaleFx)
     ) {
       console.log('GAME OVER!')
       this.running = false
@@ -39,7 +39,8 @@ export default class World {
     else {
       console.log('BOAT vs WATERFALL',
         boat.y + (boat.height * boat.scaleFx),
-        ((waterfall.sprite.y + waterfall.height) * boat.scaleFx) - (boat.height * boat.scaleFx) + 16)
+        ((waterfall.sprite.y + waterfall.height) * boat.scaleFx)
+        - (boat.height * boat.scaleFx) + 16)
     }
   }
 }

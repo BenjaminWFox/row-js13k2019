@@ -1,4 +1,4 @@
-import borderSrc from '../assets/images/sprites/river-border-horizontal-mono.png'
+import borderSrc from '../assets/images/sprites/river-border-horizontal-stone.png'
 import bodySrc from '../assets/images/sprites/river-body.png'
 import makeSprite from './sprite'
 import CONSTANTS from './constants'
@@ -227,7 +227,7 @@ export default class River {
       for (let n = 0; n < this.bodiesInRow; n += 1) {
         const sprite = this.bodyColumns[i][n]
 
-        sprite.y -= this.getRenderAdjustAmount(velocity)
+        sprite.y -= this.getRenderAdjustAmount(velocity) + 0.15
 
         this.bodyColumns[i][n].render()
       }

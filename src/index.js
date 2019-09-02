@@ -7,6 +7,9 @@ import Game from './classes/game'
 import Tutorial from './classes/tutorial'
 import infoDisplay from './classes/info-display'
 import Waterfall from './classes/waterfall'
+import Tree from './classes/tree'
+import Rock from './classes/rock'
+import drawDebug from './classes/debug'
 import CONSTANTS, { setConstants } from './classes/constants'
 
 // Get dom element refs
@@ -14,7 +17,6 @@ const body = document.querySelector('body')
 const wrapper = document.getElementById('wrapper')
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
-const world = new World(ctx)
 const gameStates = {
   initial: 'initial',
   title: 'title',
@@ -34,6 +36,7 @@ window.addEventListener('mousewheel', (event) => event.preventDefault(), { passi
 document.addEventListener('touchmove', (ev) => ev.preventDefault(), { passive: false })
 body.addEventListener('ontouchmove', (e) => e.preventDefault())
 
+let world
 let home
 let tutorial
 let game
@@ -41,18 +44,46 @@ let controls
 let boat
 let river
 let waterfall
+let tree
+let rock
 let paused = false
+
+function initGameClasses() {
+  world = new World(ctx)
+
+  home = new Home(ctx, controls)
+
+  game = new Game(ctx, controls, goToTitle)
+
+  tutorial = new Tutorial(ctx, controls)
+
+  boat = new Boat(
+    ctx,
+    CONSTANTS.SCALE_FACTOR,
+    CONSTANTS.STROKE_POWER,
+    CONSTANTS.MAX_HUMAN_POWER_VELOCITY,
+    CONSTANTS.WATER_FRICTION,
+    { x: CONSTANTS.CANVAS_MID_X, y: CONSTANTS.SCREEN_MID_Y / 1.25 },
+  )
+
+  waterfall = new Waterfall(ctx, CONSTANTS.RIVER_SPEED)
+
+  tree = new Tree(ctx)
+  rock = new Rock(ctx)
+}
 
 function titleLoop() {
   world.calculatePositions(river, waterfall, boat)
   river.render(boat.velocity + 0.1)
   boat.justRow()
+  tree.render()
+  rock.render()
   home.renderMainScreen()
 }
 
-function goToMenu() {
-  gameState = gameStates.title
-}
+// function goToMenu() {
+//   gameState = gameStates.title
+// }
 
 function tutorialLoop() {
   world.calculatePositions(river, waterfall, boat)
@@ -74,13 +105,16 @@ function gameLoop() {
     }
 
     waterfall.render(boat.velocity)
-    river.render(boat.velocity)
 
-    // drawDebug()
+    river.renderBody(boat.velocity)
+
+    // drawDebug(ctx, world)
 
     boat.setFrames(controls.boatFrame())
 
     boat.runFrameUpdate()
+
+    river.renderBorder(boat.velocity)
 
     game.render(world.distanceMoved)
   }
@@ -127,6 +161,9 @@ function leaveTitle() {
 
 function goToGame() {
   leaveTitle()
+
+  initGameClasses()
+
   controls.registerBoatControls()
   game.goTo()
   gameState = gameStates.game
@@ -165,28 +202,14 @@ const initializeGame = (mainFn) => {
   canvas.style.imageRendering = 'pixelated'
 
   controls = control(CONSTANTS.SCREEN_MID_X)
+
   controls.init(body)
 
-  home = new Home(ctx, controls)
-
-  game = new Game(ctx, controls, goToTitle)
-
-  tutorial = new Tutorial(ctx, controls)
-
-  boat = new Boat(
-    ctx,
-    CONSTANTS.SCALE_FACTOR,
-    CONSTANTS.STROKE_POWER,
-    CONSTANTS.MAX_HUMAN_POWER_VELOCITY,
-    CONSTANTS.WATER_FRICTION,
-    { x: CONSTANTS.CANVAS_MID_X, y: CONSTANTS.SCREEN_MID_Y / 1.25 },
-  )
-
-  river = new River(ctx, CONSTANTS.RIVER_SPEED)
-
-  waterfall = new Waterfall(ctx, CONSTANTS.RIVER_SPEED)
+  initGameClasses()
 
   infoDisplay.init(wrapper, canvas, CONSTANTS.SCALED_WIDTH)
+
+  river = new River(ctx, CONSTANTS.RIVER_SPEED)
 
   mainFn()
 }
@@ -234,15 +257,6 @@ function mainLoop() {
     }
   }
   window.requestAnimationFrame(mainLoop)
-}
-
-function drawDebug() {
-  world.drawDistanceGrid()
-
-  ctx.beginPath()
-  ctx.moveTo((Math.round(135 / 2)), 0)
-  ctx.lineTo((Math.round(135 / 2)), 240)
-  ctx.stroke()
 }
 
 window.addEventListener('load', () => {

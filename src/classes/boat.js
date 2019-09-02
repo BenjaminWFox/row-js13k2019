@@ -194,12 +194,12 @@ export default class Boat {
   }
 
   checkForOutOfBounds = (x) => {
-    if (x >= CONSTANTS.SCALED_WIDTH - 36) {
-      this.x = CONSTANTS.SCALED_WIDTH - 36
+    if (x >= CONSTANTS.SCALED_WIDTH - 48) {
+      this.x = CONSTANTS.SCALED_WIDTH - 48
       this.drift = 0
     }
-    if (x <= 0 + 36) {
-      this.x = 36
+    if (x <= 0 + 48) {
+      this.x = 48
       this.drift = 0
     }
   }
