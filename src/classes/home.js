@@ -70,13 +70,15 @@ export default class Home {
   }
 
   renderMainScreen = () => {
-    if (this.currentTitleY > 60) {
-      this.currentTitleY -= 1
-      this.renderTitle(this.initialTitleX, this.currentTitleY)
-    }
-    else {
-      this.renderTitle(this.initialTitleX, this.currentTitleY)
-      this.renderMenu()
-    }
+    // if (this.currentTitleY > 60) {
+    //   this.currentTitleY -= 1
+    //   this.renderTitle(this.initialTitleX, this.currentTitleY)
+    // }
+    // else {
+    //   this.renderTitle(this.initialTitleX, this.currentTitleY)
+    //   this.renderMenu()
+    // }
+    this.renderTitle(this.initialTitleX, 60)
+    this.renderMenu()
   }
 }

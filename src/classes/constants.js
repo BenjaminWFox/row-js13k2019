@@ -13,8 +13,11 @@ const constants = {
   SCALED_HEIGHT: undefined,
   MAX_HUMAN_POWER_VELOCITY: 0.75,
   WATER_FRICTION: 0.005,
-  STROKE_POWER: 0.005,
+  // STROKE_POWER: 0.005,
+  STROKE_POWER: 0.05,
   RIVER_SPEED: -0.1,
+  BOAT_WIDTH: 24,
+  BOAT_HEIGHT: 14,
 }
 
 export const setConstants = (canvas) => {

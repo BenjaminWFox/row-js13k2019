@@ -10,14 +10,21 @@ export default class Boat {
   constructor(ctx, scaleFx, strokePower, maxVelocity, waterFriction, startCoords) {
     this.context = ctx
     this.height = BOAT_SPRITE_HEIGHT
+    this.width = BOAT_SPRITE_WIDTH / 7
+
     this.leftImage = new Image()
     this.rightImage = new Image()
+
     this.leftImage.src = boatLeftSheet
     this.rightImage.src = boatRightSheet
     this.startingX = startCoords.x
     this.scaleFx = scaleFx
+
     this.x = startCoords.x
     this.y = startCoords.y
+
+    console.log('THIS X/Y', this.x, this.y)
+
     this.opacity = 1
     this.leftSprite = makeSprite({
       context: ctx,
@@ -52,6 +59,13 @@ export default class Boat {
     this.lastStrokeUpdate = undefined
   }
 
+  getBoatBodyDimensions = () => ({
+    minY: this.y,
+    maxX: this.x + 17,
+    maxY: this.y + this.height,
+    minX: this.x + 8,
+  })
+
   resetVelocity = () => {
     this.velocity = 0
   }
@@ -77,7 +91,7 @@ export default class Boat {
   }
 
   checkOarAlignment = () => {
-    console.log('Checking oar alignment...')
+    // console.log('Checking oar alignment...')
     if (this.x === this.startingX) {
       console.log('Resetting oars...')
       this.leftSprite.goToFrame(0).resetTickCount()
@@ -194,12 +208,12 @@ export default class Boat {
   }
 
   checkForOutOfBounds = (x) => {
-    if (x >= CONSTANTS.SCALED_WIDTH - 48) {
-      this.x = CONSTANTS.SCALED_WIDTH - 48
+    if (x >= CONSTANTS.CANVAS_WIDTH - this.width - 20) {
+      this.x = CONSTANTS.CANVAS_WIDTH - this.width - 20
       this.drift = 0
     }
-    if (x <= 0 + 48) {
-      this.x = 48
+    if (x <= 0 + 10) {
+      this.x = 10
       this.drift = 0
     }
   }
@@ -209,8 +223,8 @@ export default class Boat {
 
     this.checkForOutOfBounds(this.x)
 
-    const scaledX = Math.round(this.x / this.scaleFx)
-    const scaledY = Math.round(this.y / this.scaleFx)
+    const scaledX = Math.round(this.x) // Math.round(this.x / this.scaleFx)
+    const scaledY = Math.round(this.y) // Math.round(this.y / this.scaleFx)
     const renderX = -12
     const renderY = -Math.floor(BOAT_SPRITE_HEIGHT / 2)
     const renderXOffset = 12
@@ -218,16 +232,21 @@ export default class Boat {
     this.context.save()
 
     // Keeping the context
-    this.context.translate(scaledX, scaledY)
+    // this.context.translate(scaledX, scaledY)
     // this.context.rotate((((Math.round(this.rotation / 90) * 90) * Math.PI) / 180).toFixed(5))
 
     // draw the image...
     // these are rendered in relation to the translated X and Y
     // The numbers are 1/2 of the original images resepctive width & height
-    this.leftSprite.render(renderX, renderY)
-    this.rightSprite.render(renderX + renderXOffset, renderY)
+    // this.leftSprite.render(renderX, renderY)
+    // this.rightSprite.render(renderX + renderXOffset, renderY)
+    this.leftSprite.render(scaledX, scaledY)
+    this.rightSprite.render(scaledX + renderXOffset, scaledY)
 
-    console.log('GA', this.context.globalAlpha)
+    this.context.rect(renderX, renderY, 24, 14)
+    this.context.fill()
+
+    // console.log('GA', this.context.globalAlpha)
 
     this.context.restore()
   }
@@ -241,7 +260,7 @@ export default class Boat {
       this.opacity -= 0.05
       this.context.globalAlpha = this.opacity
 
-      console.log('OP', this.opacity)
+      // console.log('OP', this.opacity)
       this.render()
       this.context.restore()
     }

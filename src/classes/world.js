@@ -25,22 +25,22 @@ export default class World {
 
   calculatePositions = (river, waterfall, boat) => {
     const { current } = river
-    const { velocity, scaleFx } = boat
+    const { velocity } = boat
 
     this.distanceMoved = this.distanceMoved - ((current * 2) + velocity)
 
     if (
-      (((waterfall.sprite.y + waterfall.height) * scaleFx) - ((boat.height * scaleFx) / 2) + (16))
-      > boat.y + (boat.height * scaleFx)
+      (((waterfall.sprite.y + waterfall.height)) - ((boat.height) / 2))
+      > boat.y + (boat.height)
     ) {
-      console.log('GAME OVER!')
+      // console.log('GAME OVER!')
       this.running = false
     }
     else {
-      console.log('BOAT vs WATERFALL',
-        boat.y + (boat.height * boat.scaleFx),
-        ((waterfall.sprite.y + waterfall.height) * boat.scaleFx)
-        - (boat.height * boat.scaleFx) + 16)
+      // console.log('BOAT vs WATERFALL',
+      //   boat.y + (boat.height * boat.scaleFx),
+      //   ((waterfall.sprite.y + waterfall.height) * boat.scaleFx)
+      //   - (boat.height * boat.scaleFx) + 16)
     }
   }
 }

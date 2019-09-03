@@ -7,9 +7,11 @@ import Game from './classes/game'
 import Tutorial from './classes/tutorial'
 import infoDisplay from './classes/info-display'
 import Waterfall from './classes/waterfall'
-import Tree from './classes/tree'
-import Rock from './classes/rock'
+import CollisionManager from './classes/collision-manager'
+// import Tree from './classes/tree'
+// import Rock from './classes/rock'
 import drawDebug from './classes/debug'
+import ObstacleManager from './classes/obstacle-manager'
 import CONSTANTS, { setConstants } from './classes/constants'
 
 // Get dom element refs
@@ -44,8 +46,10 @@ let controls
 let boat
 let river
 let waterfall
-let tree
-let rock
+let obstacleManager
+let collisionManager
+// let tree
+// let rock
 let paused = false
 
 function initGameClasses() {
@@ -63,21 +67,26 @@ function initGameClasses() {
     CONSTANTS.STROKE_POWER,
     CONSTANTS.MAX_HUMAN_POWER_VELOCITY,
     CONSTANTS.WATER_FRICTION,
-    { x: CONSTANTS.CANVAS_MID_X, y: CONSTANTS.SCREEN_MID_Y / 1.25 },
+    {
+      x: (CONSTANTS.CANVAS_WIDTH / 2) - (CONSTANTS.BOAT_WIDTH / 2),
+      y: CONSTANTS.CANVAS_HEIGHT / 2 / 1.25,
+    },
   )
+
+  collisionManager.init(boat)
 
   waterfall = new Waterfall(ctx, CONSTANTS.RIVER_SPEED)
 
-  tree = new Tree(ctx)
-  rock = new Rock(ctx)
+  obstacleManager = new ObstacleManager(ctx)
 }
 
 function titleLoop() {
   world.calculatePositions(river, waterfall, boat)
-  river.render(boat.velocity + 0.1)
+  river.renderBody(boat.velocity + 0.35)
   boat.justRow()
-  tree.render()
-  rock.render()
+  // tree.render(boat.velocity + 0.35)
+  // rock.render(boat.velocity + 0.35)
+  river.renderBorder(boat.velocity + 0.35)
   home.renderMainScreen()
 }
 
@@ -98,6 +107,7 @@ function tutorialLoop() {
 function gameLoop() {
   if (!game.paused) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
+
     world.calculatePositions(river, waterfall, boat)
 
     if (!world.running) {
@@ -110,9 +120,17 @@ function gameLoop() {
 
     // drawDebug(ctx, world)
 
+    obstacleManager.renderObstacles(boat.velocity)
+
     boat.setFrames(controls.boatFrame())
 
     boat.runFrameUpdate()
+
+    // tree.render(boat.velocity)
+
+    // rock.render(boat.velocity)
+
+    collisionManager.broadPhaseCheck(boat, obstacleManager.obstacles)
 
     river.renderBorder(boat.velocity)
 
@@ -165,7 +183,11 @@ function goToGame() {
   initGameClasses()
 
   controls.registerBoatControls()
+
+  obstacleManager.spawnObstacle()
+
   game.goTo()
+
   gameState = gameStates.game
 }
 
@@ -204,6 +226,8 @@ const initializeGame = (mainFn) => {
   controls = control(CONSTANTS.SCREEN_MID_X)
 
   controls.init(body)
+
+  collisionManager = new CollisionManager(ctx)
 
   initGameClasses()
 
@@ -247,7 +271,9 @@ function mainLoop() {
         }
         break
       case gameStates.game:
-        gameLoop()
+        if (!collisionManager.hasCollision) {
+          gameLoop()
+        }
         break
       case gameStates.gameOver:
         ctx.clearRect(0, 0, canvas.width, canvas.height)

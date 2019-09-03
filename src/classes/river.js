@@ -1,11 +1,8 @@
 import borderSrc from '../assets/images/sprites/river-border-horizontal-stone.png'
 import bodySrc from '../assets/images/sprites/river-body.png'
 import makeSprite from './sprite'
+import random from './utility'
 import CONSTANTS from './constants'
-
-function randomIntFromInterval(min, max) { // min and max included
-  return Math.floor(Math.random() * (max - min + 1) + min)
-}
 
 export default class River {
   constructor(ctx, currentSpeed) {
@@ -181,7 +178,7 @@ export default class River {
         },
       )
 
-      sprite.goToFrame(randomIntFromInterval(0, 4))
+      sprite.goToFrame(random(0, 4))
       spriteRow.push(sprite)
     }
 
