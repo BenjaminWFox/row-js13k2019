@@ -3,6 +3,8 @@ import CONSTANTS from './constants'
 export default class World {
   constructor(ctx) {
     this.distanceMoved = 0
+    this.distanceFromStart = 0
+    this.totalDistanceRowed = 0
     this.ctx = ctx
     this.running = true
   }
@@ -26,8 +28,13 @@ export default class World {
   calculatePositions = (river, waterfall, boat) => {
     const { current } = river
     const { velocity } = boat
+    const distMod = ((current * 2) + velocity)
 
-    this.distanceMoved = this.distanceMoved - ((current * 2) + velocity)
+    this.distanceMoved = this.distanceMoved - distMod
+    this.distanceFromStart = this.distanceMoved
+    this.totalDistanceRowed = distMod > 0 ? this.totalDistanceRowed + distMod : this.totalDistanceRowed
+
+    console.log('Distance mod', ((current * 2) + velocity))
 
     if (
       (((waterfall.sprite.y + waterfall.height)) - ((boat.height) / 2))

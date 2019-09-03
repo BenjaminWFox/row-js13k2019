@@ -101,6 +101,7 @@ function tutorialLoop() {
   // TODO: check on above.
   boat.setFrames(controls.boatFrame())
   boat.runFrameUpdate()
+  river.renderBorder(boat.velocity)
   tutorial.renderTutorial()
 }
 
@@ -134,7 +135,7 @@ function gameLoop() {
 
     river.renderBorder(boat.velocity)
 
-    game.render(world.distanceMoved)
+    game.render(world.totalDistanceRowed)
   }
   // tutorial.renderThumb()
 }

@@ -70,7 +70,7 @@ export default class Game extends Screen {
   }
 
   updateScore = (distance) => {
-    this.distanceTraveled = Math.floor(-(distance / 3))
+    this.distanceTraveled = Math.floor((distance / 3))
     this.score.name = this.scoreText
   }
 
