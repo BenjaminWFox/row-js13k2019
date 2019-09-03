@@ -20,21 +20,43 @@ export default class CollisionManager {
       const obstacleBox = obstacle.getObstacleBodyDimensions()
 
       if (
-        (boatBox.minX > obstacleBox.minX
-        && boatBox.minY > obstacleBox.minY)
-        // || (boatBox.maxX < obstacleBox.maxX
-        // && boatBox.maxY < obstacleBox.maxY)
+        boatBox.maxX > obstacleBox.minX
+        && boatBox.minX < obstacleBox.maxX
+        && boatBox.maxY > obstacleBox.minY
+        && boatBox.minY < obstacleBox.maxY
       ) {
-        console.log('GO TO NARROW PHASE')
+        this.narrowPhaseCheck(boatBox, boat, obstacleBox, obstacle)
+      }
+      else {
+        boat.setUnstuck()
       }
     })
   }
 
-  narrowPhaseCheck = (boatBox, obstacle) => {
-    // if (boatBox.maxX > obstacle.x + obstacle.collisionOffsets.nw
-    //   && boatBox.maxY > obstacle.y + obstacle.collisionOffsets.nw) {
-    //   console.log('NW Collision...')
-    //   this.hasCollision = true
+  narrowPhaseCheck = (boatBox, boat, obstacleBox, obstacle) => {
+    // console.log('NARROW PHASE!')
+
+    if (boatBox.maxY > obstacleBox.maxY) {
+      // Boat is stuck on the obstacle! Hold it in place...
+      console.log('SET STUCK!')
+      boat.setStuck()
+    }
+    else {
+      if (boatBox.minX < obstacleBox.maxX && boatBox.maxX > obstacleBox.maxX) {
+        console.log('BOUNCE RIGHT')
+        boat.bounceRight()
+      }
+      if (boatBox.maxX > obstacleBox.minX && boatBox.minX < obstacleBox.minX) {
+        console.log('BOUNCE LEFT')
+        boat.bounceLeft()
+      }
+      if (boatBox.maxY > obstacleBox.minY) {
+        // console.log('BOUNCE OFF')
+        boat.resetVelocity()
+      }
+    }
+    // else {
+    //   boat.setUnstuck()
     // }
   }
 }

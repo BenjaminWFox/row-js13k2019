@@ -57,6 +57,18 @@ export default class Boat {
     this.strokePower = strokePower
     this.waterFriction = waterFriction
     this.lastStrokeUpdate = undefined
+
+    this.isStuck = false
+  }
+
+  setStuck = () => {
+    this.isStuck = true
+  }
+
+  setUnstuck = () => {
+    if (this.isStuck) {
+      this.isStuck = false
+    }
   }
 
   getBoatBodyDimensions = () => ({
@@ -153,10 +165,19 @@ export default class Boat {
         && this.velocity <= this.maxVelocity
         && !this.isSameSideRowing()
       ) {
+        this.setUnstuck()
         this.velocity += this.strokePower
         this.lastStrokeUpdate = Date.now()
       }
     }
+  }
+
+  bounceLeft = () => {
+    this.drift = -0.075
+  }
+
+  bounceRight = () => {
+    this.drift = 0.075
   }
 
   addDrift = (frame, direction) => {
@@ -194,7 +215,11 @@ export default class Boat {
       }
     }
 
-    if (now - this.lastStrokeUpdate > 500 && this.velocity > 0) {
+    if (this.isStuck) {
+      this.velocity = -(CONSTANTS.RIVER_SPEED * 2)
+    }
+    else if (now - this.lastStrokeUpdate > 500 && this.velocity > 0) {
+      this.setUnstuck()
       this.velocity -= this.waterFriction
       if (this.velocity < 0) {
         this.resetVelocity()
@@ -223,30 +248,13 @@ export default class Boat {
 
     this.checkForOutOfBounds(this.x)
 
-    const scaledX = Math.round(this.x) // Math.round(this.x / this.scaleFx)
-    const scaledY = Math.round(this.y) // Math.round(this.y / this.scaleFx)
-    const renderX = -12
-    const renderY = -Math.floor(BOAT_SPRITE_HEIGHT / 2)
+    const roundX = Math.round(this.x) // Math.round(this.x / this.scaleFx)
+    const roundY = Math.round(this.y) // Math.round(this.y / this.scaleFx)
     const renderXOffset = 12
 
     this.context.save()
-
-    // Keeping the context
-    // this.context.translate(scaledX, scaledY)
-    // this.context.rotate((((Math.round(this.rotation / 90) * 90) * Math.PI) / 180).toFixed(5))
-
-    // draw the image...
-    // these are rendered in relation to the translated X and Y
-    // The numbers are 1/2 of the original images resepctive width & height
-    // this.leftSprite.render(renderX, renderY)
-    // this.rightSprite.render(renderX + renderXOffset, renderY)
-    this.leftSprite.render(scaledX, scaledY)
-    this.rightSprite.render(scaledX + renderXOffset, scaledY)
-
-    this.context.rect(renderX, renderY, 24, 14)
-    this.context.fill()
-
-    // console.log('GA', this.context.globalAlpha)
+    this.leftSprite.render(roundX, roundY)
+    this.rightSprite.render(roundX + renderXOffset, roundY)
 
     this.context.restore()
   }
