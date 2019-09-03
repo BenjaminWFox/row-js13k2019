@@ -48,6 +48,9 @@ export default class Rock {
     maxX: this.x + 26,
     maxY: this.y + 27,
     minX: this.x + 7,
+    midX: this.x + 16,
+    midY: this.y + 15,
+    quadSize: 6,
   })
 
   getRenderAdjustAmount = (velocity) => (CONSTANTS.RIVER_SPEED * 2) + velocity

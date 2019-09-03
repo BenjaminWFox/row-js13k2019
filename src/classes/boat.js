@@ -173,11 +173,11 @@ export default class Boat {
   }
 
   bounceLeft = () => {
-    this.drift = -0.075
+    this.drift = -0.066
   }
 
   bounceRight = () => {
-    this.drift = 0.075
+    this.drift = 0.066
   }
 
   addDrift = (frame, direction) => {

@@ -49,6 +49,9 @@ export default class Tree {
     maxX: this.x + 22,
     maxY: this.y + 25,
     minX: this.x + 6,
+    midX: this.x + 14,
+    midY: this.y + 14,
+    quadSize: 5,
   })
 
   getRenderAdjustAmount = (velocity) => (CONSTANTS.RIVER_SPEED * 2) + velocity
