@@ -15,7 +15,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].[contenthash:8].bundle.js',
-    publicPath: '/',
+    publicPath: './',
   },
   module: {
     rules: [
@@ -28,7 +28,7 @@ module.exports = {
         test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/,
         loader: 'url-loader',
         options: {
-          limit: 10000,
+          limit: 12,
         },
       },
     ],
