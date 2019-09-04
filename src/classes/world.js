@@ -25,7 +25,7 @@ export default class World {
     }
   }
 
-  calculatePositions = (river, waterfall, boat) => {
+  calculatePositions = (river, boat) => {
     const { current } = river
     const { velocity } = boat
     const distMod = ((current * 2) + velocity)
@@ -34,12 +34,13 @@ export default class World {
     this.distanceFromStart = this.distanceMoved
     this.totalDistanceRowed = distMod > 0 ? this.totalDistanceRowed + distMod : this.totalDistanceRowed
 
-    console.log('Distance mod', ((current * 2) + velocity))
+    // console.log('Distance mod', ((current * 2) + velocity))
 
-    if (
-      (((waterfall.sprite.y + waterfall.height)) - ((boat.height) / 2))
-      > boat.y + (boat.height)
-    ) {
+    // if (
+    //   (((waterfall.sprite.y + waterfall.height)) - ((boat.height) / 2))
+    //   > boat.y + (boat.height)
+    // ) {
+    if (boat.y - this.distanceFromStart < 0) {
       // console.log('GAME OVER!')
       this.running = false
     }

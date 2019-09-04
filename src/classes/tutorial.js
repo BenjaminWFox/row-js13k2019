@@ -4,7 +4,7 @@ import makeSprite from './sprite'
 import { setCookie, getCookie } from './cookie'
 import Button from './button'
 import Screen from './screen'
-import CONSTANTS from './constants'
+import C from './constants'
 
 const tutorialScreenDuration = 7500
 
@@ -20,7 +20,7 @@ export default class Tutorial extends Screen {
     this.thumbHeight = 35
     this.running = false
     this.thumbSpeed = undefined
-    this.currentTutorialStep = 0
+    this.cTS = 0
     this.cookieName = 'tutorial'
     this.hasBeenSeen = getCookie(this.cookieName)
     let step1
@@ -35,8 +35,8 @@ export default class Tutorial extends Screen {
       '< Back',
       this.ctx.measureText('< Back').width,
       this.ctx.measureText('L').width,
-      CONSTANTS.CANVAS_WIDTH / 2,
-      CONSTANTS.CANVAS_HEIGHT / 5,
+      C.CANVAS_WIDTH / 2,
+      C.CANVAS_HEIGHT / 5,
       () => {
         console.log('BACK BUTTON PRESSED!')
       },
@@ -74,24 +74,24 @@ export default class Tutorial extends Screen {
       y: 0,
     })
 
-    this.rThumbX = CONSTANTS.CANVAS_WIDTH - this.thumbWidth - (CONSTANTS.CANVAS_WIDTH / 3)
-    this.rThumbY = CONSTANTS.CANVAS_HEIGHT - this.thumbHeight - 10
+    this.rTX = C.CANVAS_WIDTH - this.thumbWidth - (C.CANVAS_WIDTH / 3)
+    this.rTY = C.CANVAS_HEIGHT - this.thumbHeight - 10
     this.currentRightThumbStep = 0
     this.rightThumbPath = {
-      0: this.rThumbY,
-      1: this.rThumbY - 50,
-      2: this.rThumbX + 30,
-      3: this.rThumbY,
-      4: this.rThumbX,
+      0: this.rTY,
+      1: this.rTY - 50,
+      2: this.rTX + 30,
+      3: this.rTY,
+      4: this.rTX,
     }
     this.rtMockControl = this.controls.createMockTouchObject(
       'rt',
       // This math is because the `rThumbX value is relative to the original, un-scaled canvas.
       // It has to be scaled, and adjusted to be correct relative to the MID-X that the controls use
       // which is the middle of the viewport
-      (this.rThumbX * CONSTANTS.SCALE_FACTOR)
-      + ((CONSTANTS.SCREEN_WIDTH - CONSTANTS.SCALED_WIDTH) / 2),
-      this.rThumbY * CONSTANTS.SCALE_FACTOR,
+      (this.rTX * C.SCALE_FACTOR)
+      + ((C.SCREEN_WIDTH - C.SCALED_WIDTH) / 2),
+      this.rTY * C.SCALE_FACTOR,
     )
     this.controls.handleNewTouch(this.rtMockControl)
   }
@@ -109,23 +109,23 @@ export default class Tutorial extends Screen {
       y: 0,
     })
 
-    this.lThumbX = 0 + (CONSTANTS.CANVAS_WIDTH / 3)
-    this.lThumbY = CONSTANTS.CANVAS_HEIGHT - this.thumbHeight - 10
+    this.lTX = 0 + (C.CANVAS_WIDTH / 3)
+    this.lTY = C.CANVAS_HEIGHT - this.thumbHeight - 10
 
     this.currentLeftThumbStep = 0
     this.leftThumbPath = {
-      0: this.lThumbY,
-      1: this.lThumbY - 50,
-      2: this.lThumbX - 30,
-      3: this.lThumbY,
-      4: this.lThumbX,
+      0: this.lTY,
+      1: this.lTY - 50,
+      2: this.lTX - 30,
+      3: this.lTY,
+      4: this.lTX,
     }
     this.ltMockControl = this.controls.createMockTouchObject(
       'lt',
       // See note above on what this math is doing
-      (this.lThumbX * CONSTANTS.SCALE_FACTOR)
-      + ((CONSTANTS.SCREEN_WIDTH - CONSTANTS.SCALED_WIDTH) / 2),
-      this.lThumbY * CONSTANTS.SCALE_FACTOR,
+      (this.lTX * C.SCALE_FACTOR)
+      + ((C.SCREEN_WIDTH - C.SCALED_WIDTH) / 2),
+      this.lTY * C.SCALE_FACTOR,
     )
     this.controls.handleNewTouch(this.ltMockControl)
   }
@@ -138,32 +138,32 @@ export default class Tutorial extends Screen {
   circleRightThumb = () => {
     switch (this.currentRightThumbStep) {
       case 0:
-        if (this.rThumbY > this.rightThumbPath[1]) {
-          this.rThumbY -= this.thumbSpeed
+        if (this.rTY > this.rightThumbPath[1]) {
+          this.rTY -= this.thumbSpeed
         }
         else {
           this.currentRightThumbStep = 1
         }
         break
       case 1:
-        if (this.rThumbX < this.rightThumbPath[2]) {
-          this.rThumbX += this.thumbSpeed
+        if (this.rTX < this.rightThumbPath[2]) {
+          this.rTX += this.thumbSpeed
         }
         else {
           this.currentRightThumbStep = 2
         }
         break
       case 2:
-        if (this.rThumbY < this.rightThumbPath[3]) {
-          this.rThumbY += this.thumbSpeed
+        if (this.rTY < this.rightThumbPath[3]) {
+          this.rTY += this.thumbSpeed
         }
         else {
           this.currentRightThumbStep = 3
         }
         break
       case 3:
-        if (this.rThumbX > this.rightThumbPath[4]) {
-          this.rThumbX -= this.thumbSpeed
+        if (this.rTX > this.rightThumbPath[4]) {
+          this.rTX -= this.thumbSpeed
         }
         else {
           this.currentRightThumbStep = 4
@@ -175,40 +175,40 @@ export default class Tutorial extends Screen {
       default:
         break
     }
-    this.rtMockControl.pageX = this.rThumbX * CONSTANTS.CANVAS_RATIO
-    this.rtMockControl.pageY = this.rThumbY * CONSTANTS.CANVAS_RATIO
+    this.rtMockControl.pageX = this.rTX * C.CANVAS_RATIO
+    this.rtMockControl.pageY = this.rTY * C.CANVAS_RATIO
     this.controls.handleMovedTouch(this.rtMockControl)
   }
 
   circleLeftThumb = () => {
     switch (this.currentLeftThumbStep) {
       case 0:
-        if (this.lThumbY > this.leftThumbPath[1]) {
-          this.lThumbY -= this.thumbSpeed
+        if (this.lTY > this.leftThumbPath[1]) {
+          this.lTY -= this.thumbSpeed
         }
         else {
           this.currentLeftThumbStep = 1
         }
         break
       case 1:
-        if (this.lThumbX > this.leftThumbPath[2]) {
-          this.lThumbX -= this.thumbSpeed
+        if (this.lTX > this.leftThumbPath[2]) {
+          this.lTX -= this.thumbSpeed
         }
         else {
           this.currentLeftThumbStep = 2
         }
         break
       case 2:
-        if (this.lThumbY < this.leftThumbPath[3]) {
-          this.lThumbY += this.thumbSpeed
+        if (this.lTY < this.leftThumbPath[3]) {
+          this.lTY += this.thumbSpeed
         }
         else {
           this.currentLeftThumbStep = 3
         }
         break
       case 3:
-        if (this.lThumbX < this.leftThumbPath[4]) {
-          this.lThumbX += this.thumbSpeed
+        if (this.lTX < this.leftThumbPath[4]) {
+          this.lTX += this.thumbSpeed
         }
         else {
           this.currentLeftThumbStep = 4
@@ -220,8 +220,8 @@ export default class Tutorial extends Screen {
       default:
         break
     }
-    this.ltMockControl.pageX = this.lThumbX * CONSTANTS.CANVAS_RATIO
-    this.ltMockControl.pageY = this.lThumbY * CONSTANTS.CANVAS_RATIO
+    this.ltMockControl.pageX = this.lTX * C.CANVAS_RATIO
+    this.ltMockControl.pageY = this.lTY * C.CANVAS_RATIO
     this.controls.handleMovedTouch(this.ltMockControl)
   }
 
@@ -229,24 +229,24 @@ export default class Tutorial extends Screen {
     this.backBtn.render(this.ctx)
 
     if (!this.isPaused) {
-      if (this.currentTutorialStep === 1
-        || this.currentTutorialStep === 3
-        || this.currentTutorialStep === 4
+      if (this.cTS === 1
+        || this.cTS === 3
+        || this.cTS === 4
       ) {
         this.circleLeftThumb()
         this.leftThumb.render(
-          this.lThumbX,
-          this.lThumbY,
+          this.lTX,
+          this.lTY,
         )
       }
-      if (this.currentTutorialStep === 1
-        || this.currentTutorialStep === 2
-        || this.currentTutorialStep === 4
+      if (this.cTS === 1
+        || this.cTS === 2
+        || this.cTS === 4
       ) {
         this.circleRightThumb()
         this.rightThumb.render(
-          this.rThumbX,
-          this.rThumbY,
+          this.rTX,
+          this.rTY,
         )
       }
     }
@@ -299,6 +299,6 @@ export default class Tutorial extends Screen {
   }
 
   setTutorialStep = (step) => {
-    this.currentTutorialStep = step
+    this.cTS = step
   }
 }

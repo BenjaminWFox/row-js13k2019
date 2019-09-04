@@ -8,6 +8,33 @@ export default class ObstacleManager {
   constructor(ctx) {
     this.ctx = ctx
     this.obstacles = []
+    this.waterfall = []
+    this.spawnKey = 7
+    this.spawnFrequency = 150
+    this.difficultyMultiplyer = 15
+    this.maxSpawnFrequency = 40
+    this.lastSpawnAt = 0
+  }
+
+  makeWaterfall = () => {
+    let waterfallObjects = 50
+
+    while (waterfallObjects > 0) {
+      this.waterfall.push(this.spawnRock(null, random(-10, -140)))
+      this.waterfall.push(this.spawnTree(null, random(-10, -140)))
+      waterfallObjects -= 1
+    }
+  }
+
+  render = (velocity) => {
+    this.renderWaterfall(velocity)
+    this.renderObstacles(velocity)
+  }
+
+  renderWaterfall = (velocity) => {
+    this.waterfall.forEach((item) => {
+      item.render(velocity)
+    })
   }
 
   renderObstacles = (velocity) => {
@@ -16,34 +43,49 @@ export default class ObstacleManager {
     })
   }
 
+  trySpawnObstacle = (distance, difficulty) => {
+    const spawnDifficulty = this.spawnFrequency - (this.difficultyMultiplyer * difficulty)
+    const spawnCheckNum = spawnDifficulty < this.maxSpawnFrequency ? this.maxSpawnFrequency : spawnDifficulty
+    const canSpawnNum = distance - spawnCheckNum
+
+    if (canSpawnNum > this.lastSpawnAt) {
+      if (random(1, 20) === this.spawnKey) {
+        this.spawnObstacle()
+
+        this.lastSpawnAt = distance
+      }
+    }
+  }
+
   spawnObstacle = () => {
     const type = random(1, 2)
+    let obstacle
 
     if (type === 1) {
-      this.spawnRock()
+      obstacle = this.spawnRock()
     }
     else {
-      this.spawnTree()
+      obstacle = this.spawnTree()
     }
+
+    this.obstacles.push(obstacle)
   }
 
-  spawnTree = () => {
+  spawnTree = (x, y) => {
     const tree = makeObstacle(this.ctx, Tree)
 
-    // tree.x = random(tree.minX, tree.maxX)
-    tree.x = 50
-    tree.y = CONSTANTS.CANVAS_HEIGHT / 2
+    tree.x = x || random(tree.minX, tree.maxX)
+    tree.y = y || random(CONSTANTS.CANVAS_HEIGHT, CONSTANTS.CANVAS_HEIGHT + 25)
 
-    this.obstacles.push(tree)
+    return tree
   }
 
-  spawnRock = () => {
+  spawnRock = (x, y) => {
     const rock = makeObstacle(this.ctx, Rock)
 
-    // rock.x = random(rock.minX, rock.maxX)
-    rock.x = 50
-    rock.y = CONSTANTS.CANVAS_HEIGHT / 2
+    rock.x = x || random(rock.minX, rock.maxX)
+    rock.y = y || random(CONSTANTS.CANVAS_HEIGHT, CONSTANTS.CANVAS_HEIGHT + 25)
 
-    this.obstacles.push(rock)
+    return rock
   }
 }

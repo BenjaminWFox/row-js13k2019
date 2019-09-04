@@ -6,7 +6,7 @@ import Home from './classes/home'
 import Game from './classes/game'
 import Tutorial from './classes/tutorial'
 import infoDisplay from './classes/info-display'
-import Waterfall from './classes/waterfall'
+// import Waterfall from './classes/waterfall'
 import CollisionManager from './classes/collision-manager'
 // import Tree from './classes/tree'
 // import Rock from './classes/rock'
@@ -45,7 +45,7 @@ let game
 let controls
 let boat
 let river
-let waterfall
+// let waterfall
 let obstacleManager
 let collisionManager
 // let tree
@@ -75,13 +75,13 @@ function initGameClasses() {
 
   collisionManager.init(boat)
 
-  waterfall = new Waterfall(ctx, CONSTANTS.RIVER_SPEED)
+  // waterfall = new Waterfall(ctx, CONSTANTS.RIVER_SPEED)
 
   obstacleManager = new ObstacleManager(ctx)
 }
 
 function titleLoop() {
-  world.calculatePositions(river, waterfall, boat)
+  world.calculatePositions(river, boat)
   river.renderBody(boat.velocity + 0.35)
   boat.justRow()
   // tree.render(boat.velocity + 0.35)
@@ -95,7 +95,7 @@ function titleLoop() {
 // }
 
 function tutorialLoop() {
-  world.calculatePositions(river, waterfall, boat)
+  world.calculatePositions(river, boat)
   river.renderBody(boat.velocity + 0.1)
   // I think there is lingering velocity after the tutorial ends?
   // TODO: check on above.
@@ -109,24 +109,29 @@ function gameLoop() {
   if (!game.paused) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    world.calculatePositions(river, waterfall, boat)
+    world.calculatePositions(river, boat)
 
     if (!world.running) {
       gameState = gameStates.gameOver
     }
 
-    waterfall.render(boat.velocity)
+    // waterfall.render(boat.velocity)
 
     river.renderBody(boat.velocity)
 
     // drawDebug(ctx, world)
 
-    obstacleManager.renderObstacles(boat.velocity)
+    obstacleManager.trySpawnObstacle(world.totalDistanceRowed, game.difficulty)
+
+    obstacleManager.render(boat.velocity)
 
     boat.setFrames(controls.boatFrame())
 
     boat.runFrameUpdate()
 
+    boat.updateStrokePower(game.difficulty)
+
+    // obstacleManager.updateObstaclesAllowedInView(game.difficulty)
     // tree.render(boat.velocity)
 
     // rock.render(boat.velocity)
@@ -141,13 +146,12 @@ function gameLoop() {
 }
 
 function gameOverLoop() {
-  if (waterfall.current !== 0 || river.current !== 0) {
-    waterfall.current = 0
+  if (river.current !== 0) {
     river.current = 0
   }
-  world.calculatePositions(river, waterfall, boat)
-  waterfall.render(0)
+  world.calculatePositions(river, boat)
   river.render(0)
+  obstacleManager.render(-(CONSTANTS.RIVER_SPEED * 2))
   boat.fadeOut()
 
   game.render(world.distanceMoved)
@@ -185,7 +189,7 @@ function goToGame() {
 
   controls.registerBoatControls()
 
-  obstacleManager.spawnObstacle()
+  obstacleManager.makeWaterfall()
 
   game.goTo()
 
