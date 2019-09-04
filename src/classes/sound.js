@@ -106,16 +106,16 @@ export default class Sound {
     this.play(C4, this.ctx.currentTime + 5.875)
     this.play(C4, this.ctx.currentTime + 6.00)
     this.play(C4, this.ctx.currentTime + 6.125)
-    this.end(6)
+    this.end(6.00)
   }
 
-  end = (offset = 0) => {
+  end = (offset = 0.00) => {
     this.play(G4, this.ctx.currentTime + 0.25 + offset)
-    this.play(F4, this.ctx.currentTime + 0.5 + offset)
+    this.play(F4, this.ctx.currentTime + 0.50 + offset)
     this.play(F4, this.ctx.currentTime + 0.625 + offset)
     this.play(E4, this.ctx.currentTime + 0.75 + offset)
     this.play(E4, this.ctx.currentTime + 0.875 + offset)
-    this.play(D4, this.ctx.currentTime + 1 + offset)
+    this.play(D4, this.ctx.currentTime + 1.00 + offset)
     this.play(C4, this.ctx.currentTime + 1.25 + offset)
   }
 }

@@ -9,10 +9,12 @@ export default class Button {
     this.height = height
     this.oX = x
     this.oY = y
+
     this.xMin = (x - (this.width / 2)) * CONSTANTS.SCALE_FACTOR
     this.yMin = (y - (this.height * 1.2)) * CONSTANTS.SCALE_FACTOR
     this.xMax = (x + this.width) * CONSTANTS.SCALE_FACTOR
     this.yMax = (y + (this.height / 2)) * CONSTANTS.SCALE_FACTOR
+
     this.action = action
   }
 

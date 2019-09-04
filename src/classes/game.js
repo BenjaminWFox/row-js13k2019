@@ -55,17 +55,17 @@ export default class Game extends Screen {
       this.scoreText,
       this.ctx.measureText(this.scoreText).width,
       this.ctx.measureText('L').width,
-      2,
-      25,
+      CONSTANTS.CANVAS_WIDTH / 2,
+      30,
       () => {
         console.log('PAUSE BUTTON PRESSED!')
       },
-      { fontSize: 10, alignment: 'left' },
+      { fontSize: 20, alignment: 'center' },
     )
   }
 
   get scoreText() {
-    return `Traveled: ${this.distanceRowed}m`
+    return `${this.distanceRowed}m`
   }
 
   resetDifficulty = () => {
