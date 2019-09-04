@@ -5,6 +5,7 @@ import World from './classes/world'
 import Home from './classes/home'
 import Game from './classes/game'
 import Tutorial from './classes/tutorial'
+import Sound from './classes/sound'
 import infoDisplay from './classes/info-display'
 // import Waterfall from './classes/waterfall'
 import CollisionManager from './classes/collision-manager'
@@ -13,6 +14,10 @@ import CollisionManager from './classes/collision-manager'
 import drawDebug from './classes/debug'
 import ObstacleManager from './classes/obstacle-manager'
 import CONSTANTS, { setConstants } from './classes/constants'
+
+const sCtx = new (window.AudioContext || window.webkitAudioContext)()
+
+const sound = new Sound(sCtx)
 
 // Get dom element refs
 const body = document.querySelector('body')
@@ -53,11 +58,12 @@ let collisionManager
 let paused = false
 
 function initGameClasses() {
-  world = new World(ctx)
+  world = new World(ctx, sound.end.bind(sound))
 
   home = new Home(ctx, controls)
 
-  game = new Game(ctx, controls, goToTitle)
+  console.log('Set game', sound)
+  game = new Game(ctx, controls, goToTitle, sound)
 
   tutorial = new Tutorial(ctx, controls)
 
@@ -189,7 +195,11 @@ function goToGame() {
 
   controls.registerBoatControls()
 
+  world.reset()
+  river.reset()
+
   obstacleManager.makeWaterfall()
+
 
   game.goTo()
 
@@ -198,6 +208,7 @@ function goToGame() {
 
 function goToTitle() {
   controls.registerButton(body, home.playBtn, () => {
+    sound.song()
     goToGame()
   })
   controls.registerButton(body, home.tutorialBtn, () => {
@@ -230,15 +241,15 @@ const initializeGame = (mainFn) => {
 
   controls = control(CONSTANTS.SCREEN_MID_X)
 
-  controls.init(body)
+  controls.init(body, sound.oar.bind(sound))
 
-  collisionManager = new CollisionManager(ctx)
+  collisionManager = new CollisionManager(ctx, sound.bump.bind(sound))
 
   initGameClasses()
 
   infoDisplay.init(wrapper, canvas, CONSTANTS.SCALED_WIDTH)
 
-  river = new River(ctx, CONSTANTS.RIVER_SPEED)
+  river = new River(ctx)
 
   mainFn()
 }

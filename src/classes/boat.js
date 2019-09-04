@@ -75,7 +75,6 @@ export default class Boat {
 
   updateStrokePower = (difficulty) => {
     this.strokePower = CONSTANTS.STROKE_POWER + (CONSTANTS.STROKE_INCREASE * difficulty)
-    console.log('SP', this.strokePower)
   }
 
   getBoatBodyDimensions = () => ({

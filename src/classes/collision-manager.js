@@ -1,10 +1,9 @@
-import CONSTANTS from './constants'
-
 export default class CollisionManager {
-  constructor(ctx) {
+  constructor(ctx, colSound) {
     this.ctx = ctx
     this.boatY = undefined
     this.hasCollision = false
+    this.colSound = colSound
   }
 
   init = (boat) => {
@@ -30,7 +29,7 @@ export default class CollisionManager {
     })
   }
 
-  narrowPhaseCheck = (boatBox, boat, obstacleBox, obstacle) => {
+  narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
     // console.log('Y: ', boatBox.maxY, obstacleBox.midY)
     console.log('X: ', boatBox.maxX, obstacleBox.midX, obstacleBox.quadSize)
     let buffer = 0
@@ -72,10 +71,12 @@ export default class CollisionManager {
       // Boat is stuck on the obstacle! Hold it in place...
       console.log('SET STUCK!')
       boat.setStuck()
+      this.colSound()
     }
     else if (boatBox.maxY > obstacleBox.minY + buffer) {
       console.log('BOUNCE OFF')
       boat.resetVelocity()
+      this.colSound()
     }
 
     if (
@@ -84,6 +85,7 @@ export default class CollisionManager {
     ) {
       console.log('BOUNCE RIGHT')
       boat.bounceRight()
+      this.colSound()
     }
     if (
       boatBox.maxX > obstacleBox.minX + buffer
@@ -91,6 +93,7 @@ export default class CollisionManager {
     ) {
       console.log('BOUNCE LEFT')
       boat.bounceLeft()
+      this.colSound()
     }
     // else {
     //   boat.setUnstuck()

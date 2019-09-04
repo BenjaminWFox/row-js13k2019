@@ -6,16 +6,18 @@ const quitText = '< QUIT'
 const pauseText = 'PAUSE'
 
 export default class Game extends Screen {
-  constructor(ctx, controls, goToBackScreen, goToNextScreen) {
-    super('Game', goToBackScreen, goToNextScreen)
+  constructor(ctx, controls, goToBackScreen, sound) {
+    super('Game', goToBackScreen, undefined)
 
     this.ctx = ctx
     this.controls = controls
+    this.sound = sound
+    console.log('GAME', this.sound)
     this.paused = false
     this.resetDifficulty()
 
     this.goToBackScreen = goToBackScreen
-    this.goToNextScreen = goToNextScreen
+    // this.goToNextScreen = goToNextScreen
 
     this.quitBtn = new Button(
       quitText,
@@ -37,6 +39,13 @@ export default class Game extends Screen {
       10,
       () => {
         this.paused = !this.paused
+        if (this.paused) {
+          console.log('PAUSE')
+          this.sound.mute()
+        }
+        else {
+          this.sound.unmute()
+        }
       },
       { fontSize: 10, alignment: 'right' },
     )
@@ -65,7 +74,6 @@ export default class Game extends Screen {
 
   updateDifficulty = (distance) => {
     this.difficulty = Math.floor(distance / 100)
-    console.log('DIFF', this.difficulty)
   }
 
   goTo = () => {

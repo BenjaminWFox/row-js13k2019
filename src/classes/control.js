@@ -1,11 +1,16 @@
 
 export default (MID_X) => {
   let mtl
+  let oarSound
 
   const getMainTouchEl = () => mtl
 
   const setMainTouchEl = (el) => {
     mtl = el
+  }
+
+  const setOarSound = (sound) => {
+    oarSound = sound
   }
 
   const DIVIDING_X = MID_X
@@ -85,6 +90,7 @@ export default (MID_X) => {
       case 3:
         if (Math.abs(y) !== y) {
           boatFrame[side] = 4
+          oarSound()
         }
         break
       case 4:
@@ -269,7 +275,10 @@ export default (MID_X) => {
   }
 
   return {
-    init: (el) => setMainTouchEl(el),
+    init: (el, sound) => {
+      setMainTouchEl(el)
+      setOarSound(sound)
+    },
     getMainTouchEl,
     registerBoatControls: (element) => {
       const attachToEl = element || getMainTouchEl()
@@ -282,10 +291,10 @@ export default (MID_X) => {
     clearBoatControls: (element) => {
       const attachToEl = element || getMainTouchEl()
 
-      element.removeEventListener('touchstart', handleTouchStart)
-      element.removeEventListener('touchmove', handleTouchMove)
-      element.removeEventListener('touchend', handleTouchEnd)
-      element.removeEventListener('touchcancel', handleTouchCancel)
+      attachToEl.removeEventListener('touchstart', handleTouchStart)
+      attachToEl.removeEventListener('touchmove', handleTouchMove)
+      attachToEl.removeEventListener('touchend', handleTouchEnd)
+      attachToEl.removeEventListener('touchcancel', handleTouchCancel)
     },
     activeTouches: () => activeTouches,
     boatFrame: () => boatFrame,

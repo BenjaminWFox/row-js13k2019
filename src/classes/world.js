@@ -1,11 +1,19 @@
 import CONSTANTS from './constants'
 
 export default class World {
-  constructor(ctx) {
+  constructor(ctx, endSound) {
     this.distanceMoved = 0
     this.distanceFromStart = 0
     this.totalDistanceRowed = 0
     this.ctx = ctx
+    this.running = true
+    this.endSound = endSound
+  }
+
+  reset = () => {
+    this.distanceMoved = 0
+    this.distanceFromStart = 0
+    this.totalDistanceRowed = 0
     this.running = true
   }
 
@@ -41,7 +49,9 @@ export default class World {
     //   > boat.y + (boat.height)
     // ) {
     if (boat.y - this.distanceFromStart < 0) {
-      // console.log('GAME OVER!')
+      if (this.running) {
+        this.endSound()
+      }
       this.running = false
     }
     else {

@@ -5,7 +5,7 @@ import random from './utility'
 import CONSTANTS from './constants'
 
 export default class River {
-  constructor(ctx, currentSpeed) {
+  constructor(ctx) {
     this.ctx = ctx
 
     this.bodyDimention = 27
@@ -23,7 +23,7 @@ export default class River {
     this.borderImage.src = borderSrc
     this.bodyImage = new Image()
     this.bodyImage.src = bodySrc
-    this.current = currentSpeed
+    this.current = CONSTANTS.RIVER_SPEED
 
     this.bodyColumns = []
 
@@ -33,6 +33,10 @@ export default class River {
     this.makeBorderLeft()
     this.makeBorderRight()
     this.makeBodySprites()
+  }
+
+  reset = () => {
+    this.current = CONSTANTS.RIVER_SPEED
   }
 
   getRenderAdjustAmount = (velocity) => (this.current * 2) + velocity
