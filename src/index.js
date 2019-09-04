@@ -121,13 +121,18 @@ function tutorialLoop() {
   tutorial.renderTutorial()
 }
 
+function goToGameOver() {
+  sound.end()
+  setHs(world.totalDistanceRowed)
+  gameState = gameStates.gameOver
+}
+
 function gameLoop() {
   if (!game.paused) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    if (!world.running) {
-      setHs(world.totalDistanceRowed)
-      gameState = gameStates.gameOver
+    if (!world.running || collisionManager.collisions >= 8) {
+      goToGameOver()
     }
 
     world.calculatePositions(river, boat, gameState)
@@ -152,6 +157,8 @@ function gameLoop() {
 
     game.render(world.totalDistanceRowed)
 
+    boat.renderLivesLeft(collisionManager.collisions)
+
     updateHs(world.totalDistanceRowed)
   }
 }
@@ -170,6 +177,7 @@ function gameOverLoop() {
   boat.fadeOut()
 
   game.render(world.totalDistanceRowed)
+  game.renderGameOver()
 }
 
 function pause(duration, cb) {
@@ -206,6 +214,7 @@ function goToGame() {
 
   world.reset()
   river.reset()
+  collisionManager.reset()
 
   obstacleManager.makeWaterfall()
 
@@ -236,7 +245,6 @@ function goToTitle() {
 
   gameState = gameStates.title
 }
-
 
 const fitCanvasToScreen = () => {
   canvas.style.width = `${CONSTANTS.SCALED_WIDTH}px`

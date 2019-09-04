@@ -18,6 +18,7 @@ module.exports = merge(common, {
           },
           mangle: {
             toplevel: true,
+            properties: false,
           }, // Note `mangle.properties` is `false` by default.
           module: false,
           output: null,

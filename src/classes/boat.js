@@ -61,6 +61,27 @@ export default class Boat {
     this.isStuck = false
   }
 
+  renderLivesLeft = (collisions) => {
+    const atY = 32
+    const loops = 8 - collisions > 0 ? 8 - collisions : 0
+    let evens = 0
+    let odds = 0
+
+    this.context.save()
+    this.context.globalAlpha = 0.7
+    for (let i = 0; i < loops; i += 1) {
+      if (i % 2 === 0) {
+        this.context.drawImage(this.leftImage, 0, 0, 12, 14, 16 + (evens * 24) + (evens * 2), atY, 12, 14)
+        evens += 1
+      }
+      else {
+        this.context.drawImage(this.rightImage, 0, 0, 12, 14, 28 + (odds * 24) + (odds * 2), atY, 12, 14)
+        odds += 1
+      }
+    }
+    this.context.restore()
+  }
+
   setStuck = () => {
     console.log('Stuck set...')
     this.isStuck = true

@@ -4,12 +4,30 @@ export default class CollisionManager {
     this.boatY = undefined
     this.hasCollision = false
     this.colSound = colSound
+
+    this.collisions = 0
+    this.lastCollisionAt = 0
   }
 
   init = (boat) => {
     // this.boatY = boat.y / CONSTANTS.SCALE_FACTOR
     this.boatWidth = boat.width
     this.boatHeight = boat.height
+  }
+
+  reset = () => {
+    this.collisions = 0
+    this.lastCollisionAt = 0
+  }
+
+  addCollision = () => {
+    const now = Date.now()
+
+    if (now > this.lastCollisionAt + 500) {
+      this.colSound()
+      this.collisions += 1
+      this.lastCollisionAt = now
+    }
   }
 
   broadPhaseCheck = (boat, obstacles) => {
@@ -71,12 +89,12 @@ export default class CollisionManager {
       // Boat is stuck on the obstacle! Hold it in place...
       console.log('SET STUCK!')
       boat.setStuck()
-      this.colSound()
+      this.addCollision()
     }
     else if (boatBox.maxY > obstacleBox.minY + buffer) {
       console.log('BOUNCE OFF')
       boat.resetVelocity()
-      this.colSound()
+      this.addCollision()
     }
 
     if (
@@ -85,7 +103,7 @@ export default class CollisionManager {
     ) {
       console.log('BOUNCE RIGHT')
       boat.bounceRight()
-      this.colSound()
+      this.addCollision()
     }
     if (
       boatBox.maxX > obstacleBox.minX + buffer
@@ -93,7 +111,7 @@ export default class CollisionManager {
     ) {
       console.log('BOUNCE LEFT')
       boat.bounceLeft()
-      this.colSound()
+      this.addCollision()
     }
     // else {
     //   boat.setUnstuck()

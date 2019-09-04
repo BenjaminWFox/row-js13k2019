@@ -25,7 +25,7 @@ export default class Sound {
 
   unmute = () => {
     this.muted = false
-    this.vol = 0.0015
+    this.vol = 0.005
     this.gainNode.gain.setValueAtTime(this.vol, this.ctx.currentTime)
     this.ctx.resume()
   }

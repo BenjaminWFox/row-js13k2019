@@ -38,8 +38,6 @@ export default class World {
     const { velocity } = boat
     const distMod = ((current * 2) + velocity)
 
-    console.log(boat.y, this.distanceFromStart)
-
     if (this.running) {
       this.distanceMoved = this.distanceMoved - distMod
       this.distanceFromStart = this.distanceMoved
@@ -49,9 +47,6 @@ export default class World {
     }
 
     if (state === 'game' && boat.y - this.distanceFromStart < 0) {
-      if (this.running) {
-        this.endSound()
-      }
       this.running = false
     }
   }

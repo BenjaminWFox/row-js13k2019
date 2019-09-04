@@ -50,13 +50,25 @@ export default class Game extends Screen {
       { fontSize: 10, alignment: 'right' },
     )
 
+    this.gameOverBtn = new Button(
+      'GAMEOVER',
+      this.ctx.measureText('GAMEOVER').width,
+      this.ctx.measureText('L').width,
+      CONSTANTS.CANVAS_WIDTH / 2,
+      110,
+      () => {
+        this.leave()
+      },
+      { fontSize: 25, alignment: 'center' },
+    )
+
     this.distanceRowed = 0
     this.score = new Button(
       this.scoreText,
       this.ctx.measureText(this.scoreText).width,
       this.ctx.measureText('L').width,
       CONSTANTS.CANVAS_WIDTH / 2,
-      30,
+      27,
       () => {
         console.log('PAUSE BUTTON PRESSED!')
       },
@@ -100,5 +112,9 @@ export default class Game extends Screen {
     this.quitBtn.render(this.ctx)
     this.pauseBtn.render(this.ctx)
     this.score.render(this.ctx)
+  }
+
+  renderGameOver = () => {
+    this.gameOverBtn.render(this.ctx)
   }
 }
