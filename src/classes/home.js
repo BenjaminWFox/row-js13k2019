@@ -2,8 +2,9 @@ import CONSTANTS from './constants'
 import Button from './button'
 
 export default class Home {
-  constructor(ctx) {
+  constructor(ctx, hs) {
     this.ctx = ctx
+    this.hs = `Best: ${hs || 0}m`
     this.title = 'ROW'
     this.playBtnText = 'PLAY'
     this.tutorialBtnText = 'TUTORIAL'
@@ -24,7 +25,7 @@ export default class Home {
       this.ctx.measureText(this.playBtnText).width,
       approxHeight,
       CONSTANTS.CANVAS_WIDTH / 2,
-      CONSTANTS.CANVAS_HEIGHT / 1.6,
+      CONSTANTS.CANVAS_HEIGHT / 1.65,
       () => {
         console.log('PLAY BUTTON PRESSED!')
       },
@@ -35,13 +36,27 @@ export default class Home {
       this.ctx.measureText(this.tutorialBtnText).width,
       approxHeight,
       CONSTANTS.CANVAS_WIDTH / 2,
-      CONSTANTS.CANVAS_HEIGHT / 1.25,
+      CONSTANTS.CANVAS_HEIGHT / 1.35,
       () => {
         console.log('TUTORIAL BUTTON PRESSED!')
       },
       { fontSize: 20 },
     )
+    this.hsText = new Button(
+      this.hs,
+      this.ctx.measureText(this.hs).width,
+      approxHeight,
+      CONSTANTS.CANVAS_WIDTH / 2,
+      CONSTANTS.CANVAS_HEIGHT / 1.15,
+      () => {},
+      { fontSize: 10 },
+    )
     this.ctx.restore()
+  }
+
+  updateHs = (score) => {
+    this.hs = `Best: ${score || 0}m`
+    this.hsText.name = this.hs
   }
 
   renderInitialLoad = () => {
@@ -65,6 +80,7 @@ export default class Home {
 
     this.playBtn.render(this.ctx)
     this.tutorialBtn.render(this.ctx)
+    this.hsText.render(this.ctx)
 
     // this.ctx.restore()
   }

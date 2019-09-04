@@ -33,32 +33,26 @@ export default class World {
     }
   }
 
-  calculatePositions = (river, boat) => {
+  calculatePositions = (river, boat, state) => {
     const { current } = river
     const { velocity } = boat
     const distMod = ((current * 2) + velocity)
 
-    this.distanceMoved = this.distanceMoved - distMod
-    this.distanceFromStart = this.distanceMoved
-    this.totalDistanceRowed = distMod > 0 ? this.totalDistanceRowed + distMod : this.totalDistanceRowed
+    console.log(boat.y, this.distanceFromStart)
 
-    // console.log('Distance mod', ((current * 2) + velocity))
+    if (this.running) {
+      this.distanceMoved = this.distanceMoved - distMod
+      this.distanceFromStart = this.distanceMoved
+      this.totalDistanceRowed = distMod > 0
+        ? this.totalDistanceRowed + distMod
+        : this.totalDistanceRowed
+    }
 
-    // if (
-    //   (((waterfall.sprite.y + waterfall.height)) - ((boat.height) / 2))
-    //   > boat.y + (boat.height)
-    // ) {
-    if (boat.y - this.distanceFromStart < 0) {
+    if (state === 'game' && boat.y - this.distanceFromStart < 0) {
       if (this.running) {
         this.endSound()
       }
       this.running = false
-    }
-    else {
-      // console.log('BOAT vs WATERFALL',
-      //   boat.y + (boat.height * boat.scaleFx),
-      //   ((waterfall.sprite.y + waterfall.height) * boat.scaleFx)
-      //   - (boat.height * boat.scaleFx) + 16)
     }
   }
 }

@@ -7,17 +7,29 @@ import Game from './classes/game'
 import Tutorial from './classes/tutorial'
 import Sound from './classes/sound'
 import infoDisplay from './classes/info-display'
-// import Waterfall from './classes/waterfall'
 import CollisionManager from './classes/collision-manager'
-// import Tree from './classes/tree'
-// import Rock from './classes/rock'
-import drawDebug from './classes/debug'
+// import drawDebug from './classes/debug'
 import ObstacleManager from './classes/obstacle-manager'
 import CONSTANTS, { setConstants } from './classes/constants'
 
 const sCtx = new (window.AudioContext || window.webkitAudioContext)()
 
 const sound = new Sound(sCtx)
+
+let hs = localStorage.getItem('highscore')
+
+const updateHs = (score) => {
+  if (!hs || score > hs) {
+    hs = score
+  }
+}
+
+const setHs = (score) => {
+  if (!hs || score >= hs) {
+    hs = Math.floor(score / 3)
+    localStorage.setItem('highscore', hs)
+  }
+}
 
 // Get dom element refs
 const body = document.querySelector('body')
@@ -60,7 +72,7 @@ let paused = false
 function initGameClasses() {
   world = new World(ctx, sound.end.bind(sound))
 
-  home = new Home(ctx, controls)
+  home = new Home(ctx, hs)
 
   console.log('Set game', sound)
   game = new Game(ctx, controls, goToTitle, sound)
@@ -90,8 +102,6 @@ function titleLoop() {
   world.calculatePositions(river, boat)
   river.renderBody(boat.velocity + 0.35)
   boat.justRow()
-  // tree.render(boat.velocity + 0.35)
-  // rock.render(boat.velocity + 0.35)
   river.renderBorder(boat.velocity + 0.35)
   home.renderMainScreen()
 }
@@ -115,13 +125,12 @@ function gameLoop() {
   if (!game.paused) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    world.calculatePositions(river, boat)
-
     if (!world.running) {
+      setHs(world.totalDistanceRowed)
       gameState = gameStates.gameOver
     }
 
-    // waterfall.render(boat.velocity)
+    world.calculatePositions(river, boat, gameState)
 
     river.renderBody(boat.velocity)
 
@@ -137,30 +146,30 @@ function gameLoop() {
 
     boat.updateStrokePower(game.difficulty)
 
-    // obstacleManager.updateObstaclesAllowedInView(game.difficulty)
-    // tree.render(boat.velocity)
-
-    // rock.render(boat.velocity)
-
     collisionManager.broadPhaseCheck(boat, obstacleManager.obstacles)
 
     river.renderBorder(boat.velocity)
 
     game.render(world.totalDistanceRowed)
+
+    updateHs(world.totalDistanceRowed)
   }
-  // tutorial.renderThumb()
 }
 
 function gameOverLoop() {
   if (river.current !== 0) {
     river.current = 0
   }
+
   world.calculatePositions(river, boat)
+
   river.render(0)
+
   obstacleManager.render(-(CONSTANTS.RIVER_SPEED * 2))
+
   boat.fadeOut()
 
-  game.render(world.distanceMoved)
+  game.render(world.totalDistanceRowed)
 }
 
 function pause(duration, cb) {
@@ -217,6 +226,13 @@ function goToTitle() {
   })
 
   boat.checkOarAlignment()
+
+  if (gameState === gameStates.game) {
+    console.log('Set hs', world.totalDistanceRowed)
+    setHs(world.totalDistanceRowed)
+    home.updateHs(hs)
+  }
+
 
   gameState = gameStates.title
 }
