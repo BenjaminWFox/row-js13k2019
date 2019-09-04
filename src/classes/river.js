@@ -96,8 +96,6 @@ export default class River {
       // console.log('LEFT sprite', x, y, xPos, i)
     }
 
-    console.log('Making new border sprite', y, x)
-
     return makeSprite(
       {
         context: this.ctx,

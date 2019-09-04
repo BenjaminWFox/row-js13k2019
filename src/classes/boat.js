@@ -148,26 +148,26 @@ export default class Boat {
       }
       this.oarsOffset = true
 
-      console.log('Just rowing...', this.x, this.startingX)
+      // console.log('Just rowing...', this.x, this.startingX)
 
       if (this.x - this.startingX > 1) {
-        console.log('Going right')
+        // console.log('Going right')
         this.x -= 0.25
         this.rightSprite.update()
       }
       else if (this.x - this.startingX < -1) {
-        console.log('Going left')
+        // console.log('Going left')
         this.x += 0.25
         this.leftSprite.update()
       }
       else {
         this.x = this.startingX
-        console.log('Resetting X', this.x, this.startingX)
+        // console.log('Resetting X', this.x, this.startingX)
       }
     }
     else {
       if (this.oarsOffset) {
-        console.log('Fixing offset oars!')
+        // console.log('Fixing offset oars!')
         this.x = this.startingX
         this.leftSprite.goToFrame(0).resetTickCount()
         this.rightSprite.goToFrame(0).resetTickCount()
@@ -192,7 +192,6 @@ export default class Boat {
         && this.velocity <= this.maxVelocity
         && !this.isSameSideRowing()
       ) {
-        console.log('Velo unstuck...')
         this.setUnstuck()
         this.velocity += this.strokePower
         this.lastStrokeUpdate = Date.now()
@@ -215,8 +214,6 @@ export default class Boat {
     else {
       this.sameSideStrokes += direction
     }
-
-    // console.log(this.sameSideStrokes)
 
     if (frame) {
       if (this.isOarInWater(frame)) {
@@ -245,10 +242,10 @@ export default class Boat {
 
     if (this.isStuck) {
       this.velocity = -(CONSTANTS.RIVER_SPEED * 2)
-      console.log('Is stuck...', this.velocity)
+      // console.log('Is stuck...', this.velocity)
     }
     else if (now - this.lastStrokeUpdate > 500 && this.velocity > 0) {
-      console.log('Friction unstuck...')
+      // console.log('Friction unstuck...')
       this.setUnstuck()
       this.velocity -= this.waterFriction
       if (this.velocity < 0) {

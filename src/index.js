@@ -16,9 +16,14 @@ const sCtx = new (window.AudioContext || window.webkitAudioContext)()
 
 const sound = new Sound(sCtx)
 
+// localStorage.removeItem('highscore')
+
 let hs = localStorage.getItem('highscore')
 
+console.log('HIGH SCORE', hs)
+
 const updateHs = (score) => {
+  console.log('HS/Score', hs, score)
   if (!hs || score > hs) {
     hs = score
   }
@@ -26,7 +31,9 @@ const updateHs = (score) => {
 
 const setHs = (score) => {
   if (!hs || score >= hs) {
-    hs = Math.floor(score / 3)
+    console.log('DONE AM SETTING HS!', hs, score)
+    hs = score
+    console.log('Highscore AS SET', hs)
     localStorage.setItem('highscore', hs)
   }
 }

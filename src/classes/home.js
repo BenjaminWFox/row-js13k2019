@@ -4,7 +4,7 @@ import Button from './button'
 export default class Home {
   constructor(ctx, hs) {
     this.ctx = ctx
-    this.hs = `Best: ${hs || 0}m`
+    this.hs = `Best: ${Math.floor(hs / 3) || 0}m`
     this.title = 'ROW'
     this.playBtnText = 'PLAY'
     this.tutorialBtnText = 'TUTORIAL'
@@ -55,7 +55,7 @@ export default class Home {
   }
 
   updateHs = (score) => {
-    this.hs = `Best: ${score || 0}m`
+    this.hs = `Best: ${Math.floor(score / 3) || 0}m`
     this.hsText.name = this.hs
   }
 

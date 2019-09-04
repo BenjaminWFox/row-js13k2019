@@ -44,8 +44,6 @@ export default class Sound {
   play(value, time, stopTime = undefined, volume = undefined) {
     const modVol = volume ? volume * this.vol : this.vol
 
-    console.log('PLAY', time)
-
     this.init()
 
     this.osc.frequency.value = value
