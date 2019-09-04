@@ -62,13 +62,20 @@ export default class Boat {
   }
 
   setStuck = () => {
+    console.log('Stuck set...')
     this.isStuck = true
   }
 
   setUnstuck = () => {
     if (this.isStuck) {
+      console.log('UNStuck set...')
       this.isStuck = false
     }
+  }
+
+  updateStrokePower = (difficulty) => {
+    this.strokePower = CONSTANTS.STROKE_POWER + (CONSTANTS.STROKE_INCREASE * difficulty)
+    console.log('SP', this.strokePower)
   }
 
   getBoatBodyDimensions = () => ({
@@ -165,6 +172,7 @@ export default class Boat {
         && this.velocity <= this.maxVelocity
         && !this.isSameSideRowing()
       ) {
+        console.log('Velo unstuck...')
         this.setUnstuck()
         this.velocity += this.strokePower
         this.lastStrokeUpdate = Date.now()
@@ -217,8 +225,10 @@ export default class Boat {
 
     if (this.isStuck) {
       this.velocity = -(CONSTANTS.RIVER_SPEED * 2)
+      console.log('Is stuck...', this.velocity)
     }
     else if (now - this.lastStrokeUpdate > 500 && this.velocity > 0) {
+      console.log('Friction unstuck...')
       this.setUnstuck()
       this.velocity -= this.waterFriction
       if (this.velocity < 0) {

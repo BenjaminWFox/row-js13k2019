@@ -27,9 +27,6 @@ export default class CollisionManager {
       ) {
         this.narrowPhaseCheck(boatBox, boat, obstacleBox, obstacle)
       }
-      else {
-        boat.setUnstuck()
-      }
     })
   }
 

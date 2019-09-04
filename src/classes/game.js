@@ -12,6 +12,7 @@ export default class Game extends Screen {
     this.ctx = ctx
     this.controls = controls
     this.paused = false
+    this.resetDifficulty()
 
     this.goToBackScreen = goToBackScreen
     this.goToNextScreen = goToNextScreen
@@ -40,7 +41,7 @@ export default class Game extends Screen {
       { fontSize: 10, alignment: 'right' },
     )
 
-    this.distanceTraveled = 0
+    this.distanceRowed = 0
     this.score = new Button(
       this.scoreText,
       this.ctx.measureText(this.scoreText).width,
@@ -55,7 +56,16 @@ export default class Game extends Screen {
   }
 
   get scoreText() {
-    return `Traveled: ${this.distanceTraveled}m`
+    return `Traveled: ${this.distanceRowed}m`
+  }
+
+  resetDifficulty = () => {
+    this.difficulty = 0
+  }
+
+  updateDifficulty = (distance) => {
+    this.difficulty = Math.floor(distance / 100)
+    console.log('DIFF', this.difficulty)
   }
 
   goTo = () => {
@@ -70,12 +80,14 @@ export default class Game extends Screen {
   }
 
   updateScore = (distance) => {
-    this.distanceTraveled = Math.floor((distance / 3))
+    this.distanceRowed = Math.floor((distance / 3))
     this.score.name = this.scoreText
+
+    this.updateDifficulty(this.distanceRowed)
   }
 
-  render = (distanceMoved) => {
-    this.updateScore(distanceMoved)
+  render = (distanceRowed) => {
+    this.updateScore(distanceRowed)
 
     this.quitBtn.render(this.ctx)
     this.pauseBtn.render(this.ctx)
