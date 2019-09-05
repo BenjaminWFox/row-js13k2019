@@ -1,16 +1,68 @@
+/* eslint-disable */
+
+/**
+ * IMPORT STATEMENTS
+ */
 import control from './classes/control'
+
 import Boat from './classes/boat'
+
 import River from './classes/river'
-import World from './classes/world'
+// import World from './classes/world'
 import Home from './classes/home'
 import Game from './classes/game'
 import Tutorial from './classes/tutorial'
 import Sound from './classes/sound'
 import infoDisplay from './classes/info-display'
 import CollisionManager from './classes/collision-manager'
-// import drawDebug from './classes/debug'
 import ObstacleManager from './classes/obstacle-manager'
-import CONSTANTS, { setConstants } from './classes/constants'
+// import drawDebug from './classes/debug'
+import { setConstants } from './classes/constants'
+
+/**
+ * CONSTANTS
+ */
+let CANVAS_RATIO =  16 / 9
+let MAX_HUMAN_POWER_VELOCITY =  0.75
+let WATER_FRICTION =  0.005
+let STROKE_POWER =  0.0075 
+let STROKE_INCREASE =  0.001
+let RIVER_SPEED =  -0.1
+let BOAT_WIDTH =  24
+let BOAT_HEIGHT =  14
+// Set in `initializeGame()`
+let CANVAS_MID_X =  undefined
+let CANVAS_MID_Y =  undefined
+let CANVAS_WIDTH =  undefined
+let CANVAS_HEIGHT =  undefined
+let SCREEN_WIDTH =  undefined
+let SCREEN_HEIGHT =  undefined
+let SCREEN_MID_X =  undefined
+let SCREEN_MID_Y =  undefined
+let SCALE_FACTOR =  undefined
+let SCALED_WIDTH =  undefined
+let SCALED_HEIGHT =  undefined
+
+// STROKE_POWER: 0.005, // ORIGINAL...
+// STROKE_POWER: 0.01, // FOR TESTING ...
+
+/**
+ * World/distance vars
+ */
+let distanceMoved, distanceFromStart, totalDistanceRowed, isRunning
+
+/**
+ * Put all variables that need resetting per-game here
+ */
+function resetVarsForNewGame() {
+  console.log('-- resetVarsForNewGame --')
+  isRunning = true
+  distanceMoved = 0
+  distanceFromStart = 0
+  totalDistanceRowed = 0
+}
+
+resetVarsForNewGame()
 
 const sCtx = new (window.AudioContext || window.webkitAudioContext)()
 
@@ -62,22 +114,15 @@ window.addEventListener('mousewheel', (event) => event.preventDefault(), { passi
 document.addEventListener('touchmove', (ev) => ev.preventDefault(), { passive: false })
 body.addEventListener('ontouchmove', (e) => e.preventDefault())
 
-let world
-let home
-let tutorial
-let game
-let controls
-let boat
-let river
-// let waterfall
-let obstacleManager
-let collisionManager
+// let world,
+let home, tutorial, game, controls, boat, river, obstacleManager, collisionManager, paused = false
+
 // let tree
 // let rock
-let paused = false
+// let waterfall
 
 function initGameClasses() {
-  world = new World(ctx, sound.end.bind(sound))
+  // world = new World(ctx, sound.end.bind(sound))
 
   home = new Home(ctx, hs)
 
@@ -88,13 +133,13 @@ function initGameClasses() {
 
   boat = new Boat(
     ctx,
-    CONSTANTS.SCALE_FACTOR,
-    CONSTANTS.STROKE_POWER,
-    CONSTANTS.MAX_HUMAN_POWER_VELOCITY,
-    CONSTANTS.WATER_FRICTION,
+    SCALE_FACTOR,
+    STROKE_POWER,
+    MAX_HUMAN_POWER_VELOCITY,
+    WATER_FRICTION,
     {
-      x: (CONSTANTS.CANVAS_WIDTH / 2) - (CONSTANTS.BOAT_WIDTH / 2),
-      y: CONSTANTS.CANVAS_HEIGHT / 2 / 1.25,
+      x: (CANVAS_WIDTH / 2) - (BOAT_WIDTH / 2),
+      y: CANVAS_HEIGHT / 2 / 1.25,
     },
   )
 
@@ -106,7 +151,7 @@ function initGameClasses() {
 }
 
 function titleLoop() {
-  world.calculatePositions(river, boat)
+  _world_calculatePositions(river, boat)
   river.renderBody(boat.velocity + 0.35)
   boat.justRow()
   river.renderBorder(boat.velocity + 0.35)
@@ -118,7 +163,7 @@ function titleLoop() {
 // }
 
 function tutorialLoop() {
-  world.calculatePositions(river, boat)
+  _world_calculatePositions(river, boat)
   river.renderBody(boat.velocity + 0.1)
   // I think there is lingering velocity after the tutorial ends?
   // TODO: check on above.
@@ -130,7 +175,7 @@ function tutorialLoop() {
 
 function goToGameOver() {
   sound.end()
-  setHs(world.totalDistanceRowed)
+  setHs(totalDistanceRowed)
   gameState = gameStates.gameOver
 }
 
@@ -138,17 +183,17 @@ function gameLoop() {
   if (!game.paused) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    if (!world.running || collisionManager.collisions >= 8) {
+    if (!isRunning || collisionManager.collisions >= 8) {
       goToGameOver()
     }
 
-    world.calculatePositions(river, boat, gameState)
+    _world_calculatePositions(river, boat, gameState)
 
     river.renderBody(boat.velocity)
 
     // drawDebug(ctx, world)
 
-    obstacleManager.trySpawnObstacle(world.totalDistanceRowed, game.difficulty)
+    obstacleManager.trySpawnObstacle(totalDistanceRowed, game.difficulty)
 
     obstacleManager.render(boat.velocity)
 
@@ -162,11 +207,11 @@ function gameLoop() {
 
     river.renderBorder(boat.velocity)
 
-    game.render(world.totalDistanceRowed)
+    game.render(totalDistanceRowed)
 
     boat.renderLivesLeft(collisionManager.collisions)
 
-    updateHs(world.totalDistanceRowed)
+    updateHs(totalDistanceRowed)
   }
 }
 
@@ -175,15 +220,15 @@ function gameOverLoop() {
     river.current = 0
   }
 
-  world.calculatePositions(river, boat)
+  _world_calculatePositions(river, boat)
 
   river.render(0)
 
-  obstacleManager.render(-(CONSTANTS.RIVER_SPEED * 2))
+  obstacleManager.render(-(RIVER_SPEED * 2))
 
   boat.fadeOut()
 
-  game.render(world.totalDistanceRowed)
+  game.render(totalDistanceRowed)
   game.renderGameOver()
 }
 
@@ -219,7 +264,7 @@ function goToGame() {
 
   controls.registerBoatControls()
 
-  world.reset()
+  resetVarsForNewGame()
   river.reset()
   collisionManager.reset()
 
@@ -244,8 +289,8 @@ function goToTitle() {
   boat.checkOarAlignment()
 
   if (gameState === gameStates.game) {
-    console.log('Set hs', world.totalDistanceRowed)
-    setHs(world.totalDistanceRowed)
+    console.log('Set hs', totalDistanceRowed)
+    setHs(totalDistanceRowed)
     home.updateHs(hs)
   }
 
@@ -254,23 +299,38 @@ function goToTitle() {
 }
 
 const fitCanvasToScreen = () => {
-  canvas.style.width = `${CONSTANTS.SCALED_WIDTH}px`
-  body.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
-  wrapper.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
-  canvas.style.height = `${CONSTANTS.SCALED_HEIGHT}px`
+  canvas.style.width = `${SCALED_WIDTH}px`
+  body.style.height = `${SCALED_HEIGHT}px`
+  wrapper.style.height = `${SCALED_HEIGHT}px`
+  canvas.style.height = `${SCALED_HEIGHT}px`
 }
 
 const initializeGame = (mainFn) => {
+  /**
+   * SET UNSET CONSTANTS
+   */
   setConstants(canvas)
+  CANVAS_WIDTH = canvas.width
+  CANVAS_HEIGHT = canvas.height
+  SCREEN_WIDTH = window.innerWidth
+  SCREEN_HEIGHT = window.innerHeight
+  SCREEN_MID_X = SCREEN_WIDTH / 2
+  SCREEN_MID_Y = SCREEN_HEIGHT / 2
+  SCALED_WIDTH = Math.round(SCREEN_HEIGHT / CANVAS_RATIO)
+  SCALED_HEIGHT = SCREEN_HEIGHT
+  CANVAS_MID_X = Math.round(SCALED_WIDTH / 2)
+  CANVAS_MID_Y = SCALED_HEIGHT / 2
+  SCALE_FACTOR = SCALED_HEIGHT / canvas.height
 
-  console.log('CONSTANTS', CONSTANTS)
+
+  // console.log('CONSTANTS', CONSTANTS)
 
   fitCanvasToScreen()
 
   canvas.style.backgroundColor = '#0e52ce'
   canvas.style.imageRendering = 'pixelated'
 
-  controls = control(CONSTANTS.SCREEN_MID_X)
+  controls = control(SCREEN_MID_X)
 
   controls.init(body, sound.oar.bind(sound))
 
@@ -278,7 +338,7 @@ const initializeGame = (mainFn) => {
 
   initGameClasses()
 
-  infoDisplay.init(wrapper, canvas, CONSTANTS.SCALED_WIDTH)
+  infoDisplay.init(wrapper, canvas, SCALED_WIDTH)
 
   river = new River(ctx)
 
@@ -287,6 +347,7 @@ const initializeGame = (mainFn) => {
 
 function mainLoop() {
   if (!paused) {
+    console.log('MAIN LOOP - GAME STATE', gameState)
     switch (gameState) {
       case gameStates.initial:
         ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -332,8 +393,42 @@ function mainLoop() {
   window.requestAnimationFrame(mainLoop)
 }
 
+/**
+ * WORLD methods ...
+ */
+function _world_calculatePositions(river, boat, state) {
+  const { current } = river
+  const { velocity } = boat
+
+  const distMod = ((current * 2) + velocity)
+
+  if (isRunning) {
+    distanceMoved = distanceMoved - distMod
+    distanceFromStart = distanceMoved
+    totalDistanceRowed = distMod > 0
+      ? totalDistanceRowed + distMod
+      : totalDistanceRowed
+  }
+
+  if (state === 'game' && boat.y - distanceFromStart < 0) {
+    isRunning = false
+  }
+}
+
+/**
+ * CONTROL methods ...
+ */
+
+/**
+ * BOAT methods ...
+ */
+
+/**
+ * Set the event listener that will load the game
+ */
 window.addEventListener('load', () => {
-  console.log('All loaded!')
+  console.log('-- window _ load --')
 
   initializeGame(mainLoop)
 })
+/* eslint-enable */

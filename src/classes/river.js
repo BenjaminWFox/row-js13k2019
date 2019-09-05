@@ -32,6 +32,8 @@ export default class River {
 
     this.makeBorderLeft()
     this.makeBorderRight()
+
+    console.log('MAKE BODY SPRITE')
     this.makeBodySprites()
   }
 
@@ -212,6 +214,7 @@ export default class River {
   }
 
   renderBody = (velocity) => {
+    console.log('BODY COLUMNS', this.bodyColumns[this.bodyColumns.length - 1])
     const maxY = this.bodyColumns[this.bodyColumns.length - 1][0].y
     const minY = this.bodyColumns[0][0].y
 
