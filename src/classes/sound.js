@@ -14,6 +14,7 @@ export default class Sound {
     this.ctx = context
     this.muted = false
     this.queueSong = false
+    this.unmute()
   }
 
   mute = () => {
