@@ -3,12 +3,12 @@
 /**
  * IMPORT STATEMENTS
  */
-import control from './classes/control'
+// import control from './classes/control'
+// import World from './classes/world'
 
 import Boat from './classes/boat'
 
 import River from './classes/river'
-// import World from './classes/world'
 import Home from './classes/home'
 import Game from './classes/game'
 import Tutorial from './classes/tutorial'
@@ -115,7 +115,7 @@ document.addEventListener('touchmove', (ev) => ev.preventDefault(), { passive: f
 body.addEventListener('ontouchmove', (e) => e.preventDefault())
 
 // let world,
-let home, tutorial, game, controls, boat, river, obstacleManager, collisionManager, paused = false
+let home, tutorial, control, game, controls, boat, river, obstacleManager, collisionManager, paused = false
 
 // let tree
 // let rock
@@ -330,8 +330,7 @@ const initializeGame = (mainFn) => {
   canvas.style.backgroundColor = '#0e52ce'
   canvas.style.imageRendering = 'pixelated'
 
-  controls = control(SCREEN_MID_X)
-
+  controls = control()
   controls.init(body, sound.oar.bind(sound))
 
   collisionManager = new CollisionManager(ctx, sound.bump.bind(sound))
@@ -418,7 +417,311 @@ function _world_calculatePositions(river, boat, state) {
 /**
  * CONTROL methods ...
  */
+control = function() {
+  let mtl
+  let oarSound
 
+  const getMainTouchEl = () => mtl
+
+  const setMainTouchEl = (el) => {
+    mtl = el
+  } 
+
+  const setOarSound = (sound) => {
+    oarSound = sound
+  }
+
+  const createMockTouchObject = (id, startX, startY) => ({
+    identifier: id,
+    pageX: startX,
+    pageY: startY,
+  })
+
+  const buttonRegistry = {}
+
+  const activeTouches = {
+    left: null,
+    right: null,
+  }
+
+  const prevTouch = {
+    left: {
+      x: 0,
+      y: 0,
+    },
+    right: {
+      x: 0,
+      y: 0,
+    },
+  }
+
+  const touchDiff = {
+    left: {
+      x: 0,
+      y: 0,
+    },
+    right: {
+      x: 0,
+      y: 0,
+    },
+  }
+
+  const boatFrame = {
+    left: 0,
+    right: 0,
+  }
+
+  const setFrameForX = (x, side) => {
+    // The in-to-out & out-to-in will be different (pos vs neg)
+    // depending on the side
+    const diff = side === 'left' ? x * -1 : x
+
+    switch (boatFrame[side]) {
+      case 1:
+        if (Math.abs(x) !== diff) {
+          boatFrame[side] = 2
+        }
+        break
+      case 5:
+        if (Math.abs(x) === diff) {
+          boatFrame[side] = 6
+        }
+        break
+      default:
+    }
+  }
+
+  const setFrameForY = (y, side) => {
+    switch (boatFrame[side]) {
+      case 0:
+        if (Math.abs(y) === y) {
+          boatFrame[side] = 1
+        }
+        break
+      case 2:
+        if (Math.abs(y) !== y) {
+          boatFrame[side] = 3
+        }
+        break
+      case 3:
+        if (Math.abs(y) !== y) {
+          boatFrame[side] = 4
+          oarSound()
+        }
+        break
+      case 4:
+        if (Math.abs(y) !== y) {
+          boatFrame[[side]] = 5
+        }
+        break
+      case 5:
+        if (Math.abs(y) === y) {
+          boatFrame[side] = 6
+        }
+        break
+      case 6:
+        if (Math.abs(y) === y) {
+          boatFrame[side] = 0
+        }
+        break
+      default:
+    }
+  }
+
+  const setRightFrame = (x, y) => {
+    if (x) {
+      setFrameForX(x, 'right')
+    }
+    if (y) {
+      setFrameForY(y, 'right')
+    }
+  }
+
+  const setLeftFrame = (x, y) => {
+    if (x) {
+      setFrameForX(x, 'left')
+    }
+    if (y) {
+      setFrameForY(y, 'left')
+    }
+  }
+
+  const resetAllForSide = (side) => {
+    activeTouches[side] = null
+    prevTouch[side].x = 0
+    prevTouch[side].y = 0
+    touchDiff[side].x = 0
+    touchDiff[side].y = 0
+    boatFrame[side] = 0
+  }
+
+  const handleNewTouch = (touchObject) => {
+    if (!activeTouches.left && touchObject.pageX < SCREEN_MID_X) {
+      activeTouches.left = touchObject
+      prevTouch.left = { x: touchObject.pageX, y: touchObject.pageY }
+    }
+
+    if (!activeTouches.right && touchObject.pageX > SCREEN_MID_X) {
+      activeTouches.right = touchObject
+      prevTouch.right = { x: touchObject.pageX, y: touchObject.pageY }
+    }
+  }
+
+  const handleRemovedTouch = (touchObject) => {
+    if (activeTouches.left && activeTouches.left.identifier === touchObject.identifier) {
+      resetAllForSide('left')
+    }
+
+    if (activeTouches.right && activeTouches.right.identifier === touchObject.identifier) {
+      resetAllForSide('right')
+    }
+  }
+
+  const handleMovedTouch = (touchObject) => {
+    if (activeTouches.left && activeTouches.left.identifier === touchObject.identifier) {
+      touchDiff.left.y += prevTouch.left.y - touchObject.pageY
+      prevTouch.left.y = touchObject.pageY
+      touchDiff.left.x += prevTouch.left.x - touchObject.pageX
+      prevTouch.left.x = touchObject.pageX
+
+      if (touchDiff.left.x >= 40 || touchDiff.left.x <= -40) {
+        setLeftFrame(touchDiff.left.x, undefined)
+        touchDiff.left.x = 0
+      }
+
+      if (touchDiff.left.y >= 20 || touchDiff.left.y <= -20) {
+        setLeftFrame(undefined, touchDiff.left.y)
+        touchDiff.left.y = 0
+      }
+    }
+
+    if (activeTouches.right && activeTouches.right.identifier === touchObject.identifier) {
+      touchDiff.right.y += prevTouch.right.y - touchObject.pageY
+      prevTouch.right.y = touchObject.pageY
+      touchDiff.right.x += prevTouch.right.x - touchObject.pageX
+      prevTouch.right.x = touchObject.pageX
+
+      if (touchDiff.right.x >= 20 || touchDiff.right.x <= -20) {
+        setRightFrame(touchDiff.right.x, undefined)
+        touchDiff.right.x = 0
+      }
+      if (touchDiff.right.y >= 20 || touchDiff.right.y <= -20) {
+        setRightFrame(undefined, touchDiff.right.y)
+        touchDiff.right.y = 0
+      }
+    }
+  }
+
+  const handleTouchStart = (event) => {
+    // console.log('Touch started', event)
+    switch (event.changedTouches.length) {
+      case 1:
+        handleNewTouch(event.changedTouches[0])
+        break
+      case 2:
+        handleNewTouch(event.changedTouches[0])
+        handleNewTouch(event.changedTouches[1])
+        break
+      default:
+    }
+  }
+
+  const handleTouchMove = (event) => {
+    // console.log('Touch moved', event)
+    switch (event.changedTouches.length) {
+      case 1:
+        handleMovedTouch(event.changedTouches[0])
+        break
+      case 2:
+        handleMovedTouch(event.changedTouches[0])
+        handleMovedTouch(event.changedTouches[1])
+        break
+      default:
+    }
+  }
+
+  const handleTouchEnd = (event) => {
+    // console.log('Touch ended', event)
+    switch (event.changedTouches.length) {
+      case 1:
+        handleRemovedTouch(event.changedTouches[0])
+        break
+      case 2:
+        handleRemovedTouch(event.changedTouches[0])
+        handleRemovedTouch(event.changedTouches[1])
+        break
+      default:
+    }
+  }
+
+  const handleTouchCancel = (event) => {
+    console.log('Touch cancelled', event)
+    activeTouches.left = null
+    activeTouches.right = null
+  }
+
+  const registerButton = (element, button, actionOverride = null) => {
+    buttonRegistry[button.name] = (event) => {
+      if (event.changedTouches.length === 1) {
+        const { pageX, pageY } = event.changedTouches[0]
+
+        if (
+          pageX > button.xMin
+          && pageX < button.xMax
+          && pageY > button.yMin
+          && pageY < button.yMax
+        ) {
+          if (actionOverride) {
+            actionOverride()
+          }
+          else {
+            button.action(event)
+          }
+        }
+      }
+    }
+
+    element.addEventListener('touchend', buttonRegistry[button.name])
+  }
+
+  const clearButton = (element, button) => {
+    element.removeEventListener('touchend', buttonRegistry[button.name])
+
+    delete buttonRegistry[button.name]
+  }
+
+  return {
+    init: (el, sound) => {
+      setMainTouchEl(el)
+      setOarSound(sound)
+    },
+    getMainTouchEl,
+    registerBoatControls: (element) => {
+      const attachToEl = element || getMainTouchEl()
+
+      attachToEl.addEventListener('touchstart', handleTouchStart)
+      attachToEl.addEventListener('touchmove', handleTouchMove)
+      attachToEl.addEventListener('touchend', handleTouchEnd)
+      attachToEl.addEventListener('touchcancel', handleTouchCancel)
+    },
+    clearBoatControls: (element) => {
+      const attachToEl = element || getMainTouchEl()
+
+      attachToEl.removeEventListener('touchstart', handleTouchStart)
+      attachToEl.removeEventListener('touchmove', handleTouchMove)
+      attachToEl.removeEventListener('touchend', handleTouchEnd)
+      attachToEl.removeEventListener('touchcancel', handleTouchCancel)
+    },
+    activeTouches: () => activeTouches,
+    boatFrame: () => boatFrame,
+    createMockTouchObject,
+    handleNewTouch,
+    handleMovedTouch,
+    handleRemovedTouch,
+    registerButton,
+    clearButton,
+  }
+}
 /**
  * BOAT methods ...
  */
