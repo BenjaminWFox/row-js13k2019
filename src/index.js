@@ -8,6 +8,9 @@
 // import Boat from './classes/boat'
 // import River from './classes/river'
 // import Tutorial from './classes/tutorial'
+// import Game from './classes/_game'
+// import Home from './classes/_home'
+// import CollisionManager from './classes/_collision-manager'
 
 import boatLeftSheet from './assets/images/sprites/boat-shadow-sprite-left.png'
 import boatRightSheet from './assets/images/sprites/boat-shadow-sprite-right.png'
@@ -19,12 +22,13 @@ import makeSprite from './classes/sprite'
 import { setCookie, getCookie } from './classes/cookie'
 import Button from './classes/button'
 
-import Home from './classes/home'
-import Game from './classes/game'
 import Sound from './classes/sound'
 import infoDisplay from './classes/info-display'
-import CollisionManager from './classes/collision-manager'
-import ObstacleManager from './classes/obstacle-manager'
+import ObstacleManager from './classes/_obstacle-manager'
+import Tree from './tree'
+import Rock from './rock'
+
+
 // import drawDebug from './classes/debug'
 import { setConstants } from './classes/constants'
 
@@ -42,6 +46,9 @@ let BOAT_HEIGHT =  14
 let BOAT_SPRITE_WIDTH = 84
 let BOAT_SPRITE_HEIGHT = 15
 let TUTORIAL_SCREEN_DURATION = 5000
+let QUIT_TEXT = '< QUIT'
+let PAUSE_TEXT = 'PAUSE'
+
 // Set in `initializeGame()`
 let CANVAS_MID_X =  undefined
 let CANVAS_MID_Y =  undefined
@@ -130,6 +137,10 @@ body.addEventListener('ontouchmove', (e) => e.preventDefault())
 let home, tutorial, control, game, controls, boat, river, obstacleManager, collisionManager, paused = false
 
 boat = {}
+home = {}
+collisionManager = {}
+obstacleManager = {}
+
 
 // let tree
 // let rock
@@ -138,10 +149,10 @@ boat = {}
 function initGameClasses() {
   // world = new World(ctx, sound.end.bind(sound))
 
-  home = new Home(ctx, hs)
+  home.init(ctx, hs)
 
   // console.log('Set game', sound)
-  game = new Game(ctx, controls, goToTitle, sound)
+  game.init(ctx, controls, goToTitle, sound)
 
   tutorial.init(ctx, controls)
 
@@ -157,11 +168,11 @@ function initGameClasses() {
     },
   )
 
-  collisionManager.init(boat)
+  collisionManager.setup(boat)
 
   // waterfall = new Waterfall(ctx, RIVER_SPEED)
 
-  obstacleManager = new ObstacleManager(ctx)
+  obstacleManager.init(ctx)
 }
 
 function titleLoop() {
@@ -347,7 +358,7 @@ const initializeGame = (mainFn) => {
   controls = control()
   controls.init(body, sound.oar.bind(sound))
 
-  collisionManager = new CollisionManager(ctx, sound.bump.bind(sound))
+  collisionManager.init(ctx, sound.bump.bind(sound))
 
   initGameClasses()
 
@@ -1552,6 +1563,410 @@ tutorial.setTutorialStep = (step) => {
   tutorial.cTS = step
 }
 
+/* #endregion */
+
+/* #region GAME */
+game = {}
+
+game.init = (ctx, controls, goToBackScreen, sound) => {
+  game.ctx = ctx
+  game.controls = controls
+  game.sound = sound
+  game.paused = false
+  game.resetDifficulty()
+  game.goToBackScreen = goToBackScreen
+  game.quitBtn = new Button(QUIT_TEXT, game.ctx.measureText(QUIT_TEXT).width, game.ctx.measureText('L').width, 2, 10, () => {
+    game.leave()
+  }, { fontSize: 10, alignment: 'left' })
+  game.pauseBtn = new Button(
+    PAUSE_TEXT,
+    game.ctx.measureText(PAUSE_TEXT).width,
+    game.ctx.measureText('L').width,
+    CANVAS_WIDTH - 2,
+    10,
+    () => {
+      game.paused = !game.paused
+      if (game.paused) {
+        console.log('PAUSE')
+        game.sound.mute()
+      }
+      else {
+        game.sound.unmute()
+      }
+    },
+    { fontSize: 10, alignment: 'right' },
+  )
+
+  game.gameOverBtn = new Button(
+    'GAMEOVER',
+    game.ctx.measureText('GAMEOVER').width,
+    game.ctx.measureText('L').width,
+    CANVAS_WIDTH / 2,
+    110,
+    () => {
+      game.leave()
+    },
+    { fontSize: 25, alignment: 'center' },
+  )
+
+  game.distanceRowed = 0
+  game.score = new Button(
+    game.scoreText(),
+    game.ctx.measureText(game.scoreText()).width,
+    game.ctx.measureText('L').width,
+    CANVAS_WIDTH / 2,
+    27,
+    () => {
+      console.log('PAUSE BUTTON PRESSED!')
+    },
+    { fontSize: 20, alignment: 'center' },
+  )
+}
+game.scoreText = () => `${game.distanceRowed}m`
+
+game.resetDifficulty = () => {
+  game.difficulty = 0
+}
+
+game.updateDifficulty = (distance) => {
+  game.difficulty = Math.floor(distance / 100)
+}
+
+game.goTo = () => {
+  game.controls.registerButton(game.controls.getMainTouchEl(), game.quitBtn)
+  game.controls.registerButton(game.controls.getMainTouchEl(), game.pauseBtn)
+}
+
+game.leave = () => {
+  game.controls.clearButton(game.controls.getMainTouchEl(), game.quitBtn)
+  game.controls.clearButton(game.controls.getMainTouchEl(), game.pauseBtn)
+  game.goToBackScreen()
+}
+
+game.updateScore = (distance) => {
+  game.distanceRowed = Math.floor((distance / 3))
+  game.score.name = game.scoreText()
+
+  game.updateDifficulty(game.distanceRowed)
+}
+
+game.render = (distanceRowed) => {
+  game.updateScore(distanceRowed)
+
+  game.quitBtn.render(game.ctx)
+  game.pauseBtn.render(game.ctx)
+  game.score.render(game.ctx)
+}
+
+game.renderGameOver = () => {
+  game.gameOverBtn.render(game.ctx)
+}
+/* #endregion */
+
+/* #region HOME */
+home.init = (ctx, hs) => {
+  home.ctx = ctx
+  home.hs = `Best: ${Math.floor(hs / 3) || 0}m`
+  home.title = 'ROW'
+  home.playBtnText = 'PLAY'
+  home.tutorialBtnText = 'TUTORIAL'
+  home.initialTitleX = CANVAS_WIDTH / 2
+  home.initialTitleY = CANVAS_HEIGHT / 2
+  home.currentTitleY = CANVAS_HEIGHT / 2
+  home.playBtnDimentions = undefined
+  home.tutorialBtnDimensions = undefined
+
+  home.ctx.save()
+  home.ctx.textAlign = 'center'
+  home.ctx.fillStyle = '#ffffff'
+  home.ctx.font = '20px Courier'
+  const approxHeight = home.ctx.measureText('L').width
+
+  home.playBtn = new Button(
+    home.playBtnText,
+    home.ctx.measureText(home.playBtnText).width,
+    approxHeight,
+    CANVAS_WIDTH / 2,
+    CANVAS_HEIGHT / 1.65,
+    () => {
+      console.log('PLAY BUTTON PRESSED!')
+    },
+    { fontSize: 20 },
+  )
+  home.tutorialBtn = new Button(
+    home.tutorialBtnText,
+    home.ctx.measureText(home.tutorialBtnText).width,
+    approxHeight,
+    CANVAS_WIDTH / 2,
+    CANVAS_HEIGHT / 1.35,
+    () => {
+      console.log('TUTORIAL BUTTON PRESSED!')
+    },
+    { fontSize: 20 },
+  )
+  home.hsText = new Button(
+    home.hs,
+    home.ctx.measureText(home.hs).width,
+    approxHeight,
+    CANVAS_WIDTH / 2,
+    CANVAS_HEIGHT / 1.15,
+    () => {},
+    { fontSize: 10 },
+  )
+  home.ctx.restore()
+}
+
+
+home.updateHs = (score) => {
+  home.hs = `Best: ${Math.floor(score / 3) || 0}m`
+  home.hsText.name = home.hs
+}
+
+home.renderInitialLoad = () => {
+  home.renderTitle(home.initialTitleX, home.initialTitleY)
+}
+
+home.renderTitle = (x, y) => {
+  home.ctx.save()
+  home.ctx.textAlign = 'center'
+  home.ctx.fillStyle = '#ffffff'
+  home.ctx.font = '70px Courier'
+  home.ctx.fillText(home.title, x, y)
+  home.ctx.restore()
+}
+
+home.renderMenu = () => {
+  // home.ctx.save()
+  // home.ctx.textAlign = 'center'
+  // home.ctx.fillStyle = '#ffffff'
+  // home.ctx.font = '20px Courier'
+
+  home.playBtn.render(home.ctx)
+  home.tutorialBtn.render(home.ctx)
+  home.hsText.render(home.ctx)
+
+  // home.ctx.restore()
+}
+
+home.renderMainScreen = () => {
+  // if (home.currentTitleY > 60) {
+  //   home.currentTitleY -= 1
+  //   home.renderTitle(home.initialTitleX, home.currentTitleY)
+  // }
+  // else {
+  //   home.renderTitle(home.initialTitleX, home.currentTitleY)
+  //   home.renderMenu()
+  // }
+  home.renderTitle(home.initialTitleX, 60)
+  home.renderMenu()
+}
+/* #endregion */
+
+/* #region COLLISION MANAGER */
+collisionManager.init = (ctx, colSound) => {
+  collisionManager.ctx = ctx
+  collisionManager.boatY = undefined
+  collisionManager.hasCollision = false
+  collisionManager.colSound = colSound
+
+  collisionManager.collisions = 0
+  collisionManager.lastCollisionAt = 0
+}
+
+collisionManager.setup = (boat) => {
+  // collisionManager.boatY = boat.y / SCALE_FACTOR
+  collisionManager.boatWidth = boat.width
+  collisionManager.boatHeight = boat.height
+}
+
+collisionManager.reset = () => {
+  collisionManager.collisions = 0
+  collisionManager.lastCollisionAt = 0
+}
+
+collisionManager.addCollision = () => {
+  const now = Date.now()
+
+  if (now > collisionManager.lastCollisionAt + 500) {
+    collisionManager.colSound()
+    collisionManager.collisions += 1
+    collisionManager.lastCollisionAt = now
+  }
+}
+
+collisionManager.broadPhaseCheck = (boat, obstacles) => {
+  const boatBox = boat.getBoatBodyDimensions()
+
+  obstacles.forEach((obstacle) => {
+    const obstacleBox = obstacle.getObstacleBodyDimensions()
+
+    if (
+      boatBox.maxX > obstacleBox.minX
+        && boatBox.minX < obstacleBox.maxX
+        && boatBox.maxY > obstacleBox.minY
+        && boatBox.minY < obstacleBox.maxY
+    ) {
+      collisionManager.narrowPhaseCheck(boatBox, boat, obstacleBox, obstacle)
+    }
+  })
+}
+
+collisionManager.narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
+  // console.log('Y: ', boatBox.maxY, obstacleBox.midY)
+  console.log('X: ', boatBox.maxX, obstacleBox.midX, obstacleBox.quadSize)
+  let buffer = 0
+
+  if (
+    boatBox.maxX < obstacleBox.midX - obstacleBox.quadSize
+      && boatBox.maxY < obstacleBox.midY
+  ) {
+    console.log('NW Quad...')
+    buffer = obstacleBox.quadSize
+  }
+  else if (
+    boatBox.maxX > obstacleBox.midX + obstacleBox.quadSize
+      && boatBox.maxY < obstacleBox.midY
+  ) {
+    console.log('NE Quad...')
+    buffer = obstacleBox.quadSize
+  }
+  else if (
+    boatBox.minX > obstacleBox.midX + obstacleBox.quadSize
+      && boatBox.minY > obstacleBox.midY
+  ) {
+    console.log('SE Quad...')
+    buffer = obstacleBox.quadSize
+  }
+  else if (
+    boatBox.maxX < obstacleBox.midX - obstacleBox.quadSize
+      && boatBox.minY > obstacleBox.midY
+  ) {
+    console.log('SW Quad...')
+  }
+
+  if (
+    boatBox.maxY > obstacleBox.maxY
+      && boatBox.maxY - obstacleBox.maxY > boat.height / 6
+      && boatBox.minX > obstacleBox.minX
+      && boatBox.maxX < obstacleBox.maxX
+  ) {
+    // Boat is stuck on the obstacle! Hold it in place...
+    console.log('SET STUCK!')
+    boat.setStuck()
+    collisionManager.addCollision()
+  }
+  else if (boatBox.maxY > obstacleBox.minY + buffer) {
+    console.log('BOUNCE OFF')
+    boat.resetVelocity()
+    collisionManager.addCollision()
+  }
+
+  if (
+    boatBox.minX < obstacleBox.maxX - buffer
+        && boatBox.maxX > obstacleBox.maxX
+  ) {
+    console.log('BOUNCE RIGHT')
+    boat.bounceRight()
+    collisionManager.addCollision()
+  }
+  if (
+    boatBox.maxX > obstacleBox.minX + buffer
+        && boatBox.minX < obstacleBox.minX
+  ) {
+    console.log('BOUNCE LEFT')
+    boat.bounceLeft()
+    collisionManager.addCollision()
+  }
+  // else {
+  //   boat.setUnstuck()
+  // }
+}
+/* #endregion */
+
+/* #region OBSTACLE MANAGER */
+obstacleManager.init = (ctx) => {
+  obstacleManager.ctx = ctx
+  obstacleManager.obstacles = []
+  obstacleManager.waterfall = []
+  obstacleManager.spawnKey = 7
+  obstacleManager.spawnFrequency = 150
+  obstacleManager.difficultyMultiplyer = 15
+  obstacleManager.maxSpawnFrequency = 40
+  obstacleManager.lastSpawnAt = 0
+}
+
+obstacleManager.makeWaterfall = () => {
+  let waterfallObjects = 50
+
+  while (waterfallObjects > 0) {
+    obstacleManager.waterfall.push(obstacleManager.spawnRock(null, random(-10, -140)))
+    obstacleManager.waterfall.push(obstacleManager.spawnTree(null, random(-10, -140)))
+    waterfallObjects -= 1
+  }
+}
+
+obstacleManager.render = (velocity) => {
+  obstacleManager.renderWaterfall(velocity)
+  obstacleManager.renderObstacles(velocity)
+}
+
+obstacleManager.renderWaterfall = (velocity) => {
+  obstacleManager.waterfall.forEach((item) => {
+    item.render(velocity)
+  })
+}
+
+obstacleManager.renderObstacles = (velocity) => {
+  obstacleManager.obstacles.forEach((obstacle) => {
+    obstacle.render(velocity)
+  })
+}
+
+obstacleManager.trySpawnObstacle = (distance, difficulty) => {
+  const spawnDifficulty = obstacleManager.spawnFrequency - (obstacleManager.difficultyMultiplyer * difficulty)
+  const spawnCheckNum = spawnDifficulty < obstacleManager.maxSpawnFrequency ? obstacleManager.maxSpawnFrequency : spawnDifficulty
+  const canSpawnNum = distance - spawnCheckNum
+
+  if (canSpawnNum > obstacleManager.lastSpawnAt) {
+    if (random(1, 20) === obstacleManager.spawnKey) {
+      obstacleManager.spawnObstacle()
+
+      obstacleManager.lastSpawnAt = distance
+    }
+  }
+}
+
+obstacleManager.spawnObstacle = () => {
+  const type = random(1, 2)
+  let obstacle
+
+  if (type === 1) {
+    obstacle = obstacleManager.spawnRock()
+  }
+  else {
+    obstacle = obstacleManager.spawnTree()
+  }
+
+  obstacleManager.obstacles.push(obstacle)
+}
+
+obstacleManager.spawnTree = (x, y) => {
+  const tree = makeObstacle(obstacleManager.ctx, Tree)
+
+  tree.x = x || random(tree.minX, tree.maxX)
+  tree.y = y || random(CANVAS_HEIGHT, CANVAS_HEIGHT + 25)
+
+  return tree
+}
+
+obstacleManager.spawnRock = (x, y) => {
+  const rock = makeObstacle(obstacleManager.ctx, Rock)
+
+  rock.x = x || random(rock.minX, rock.maxX)
+  rock.y = y || random(CANVAS_HEIGHT, CANVAS_HEIGHT + 25)
+
+  return rock
+}
 /* #endregion */
 
 /**

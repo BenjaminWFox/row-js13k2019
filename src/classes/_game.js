@@ -1,14 +1,18 @@
+import Screen from './screen'
 import Button from './button'
 import CONSTANTS from './constants'
 
 const quitText = '< QUIT'
 const pauseText = 'PAUSE'
 
-export default class Game {
+export default class Game extends Screen {
   constructor(ctx, controls, goToBackScreen, sound) {
+    super('Game', goToBackScreen, undefined)
+
     this.ctx = ctx
     this.controls = controls
     this.sound = sound
+    console.log('GAME', this.sound)
     this.paused = false
     this.resetDifficulty()
 
