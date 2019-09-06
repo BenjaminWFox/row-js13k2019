@@ -11,26 +11,38 @@
 // import Game from './classes/_game'
 // import Home from './classes/_home'
 // import CollisionManager from './classes/_collision-manager'
+// import makeObstacle from './classes/obstacle'
+// import ObstacleManager from './classes/_obstacle-manager'
+// import Tree from './tree'
+// import Rock from './classes/rock'
+// import Button from './classes/button'
+// import { setConstants } from './classes/constants'
 
 import boatLeftSheet from './assets/images/sprites/boat-shadow-sprite-left.png'
 import boatRightSheet from './assets/images/sprites/boat-shadow-sprite-right.png'
 import borderSrc from './assets/images/sprites/river-border-horizontal-stone.png'
+import treeSrc from './assets/images/sprites/tree-sprite.png'
+import rockSrc from './assets/images/sprites/rock-sprite.png'
 import bodySrc from './assets/images/sprites/river-body.png'
 import thumbPath from './assets/images/sprites/thumb.png'
-import random from './classes/utility'
 import makeSprite from './classes/sprite'
-import { setCookie, getCookie } from './classes/cookie'
-import Button from './classes/button'
 
 import Sound from './classes/sound'
 import infoDisplay from './classes/info-display'
-import ObstacleManager from './classes/_obstacle-manager'
-import Tree from './tree'
-import Rock from './rock'
-
 
 // import drawDebug from './classes/debug'
-import { setConstants } from './classes/constants'
+
+const random = (min, max) => Math.floor(Math.random() * (max - min + 1) + min)
+
+function setCookie(name, value) {
+  document.cookie = `${name}=${value}`
+}
+
+function getCookie(name) {
+  const regex = new RegExp(`(?:(?:^|.*;\\s*)${name}\\s*\\=\\s*([^;]*).*$)|^.*$`)
+
+  return document.cookie.replace(regex, '$1')
+}
 
 /**
  * CONSTANTS
@@ -134,7 +146,7 @@ document.addEventListener('touchmove', (ev) => ev.preventDefault(), { passive: f
 body.addEventListener('ontouchmove', (e) => e.preventDefault())
 
 // let world,
-let home, tutorial, control, game, controls, boat, river, obstacleManager, collisionManager, paused = false
+let home, tutorial, control, game, controls, boat, river, obstacleManager, collisionManager, paused = false, makeTree, makeRock, makeButton
 
 boat = {}
 home = {}
@@ -334,7 +346,6 @@ const initializeGame = (mainFn) => {
   /**
    * SET UNSET CONSTANTS
    */
-  setConstants(canvas)
   CANVAS_WIDTH = canvas.width
   CANVAS_HEIGHT = canvas.height
   SCREEN_WIDTH = window.innerWidth
@@ -371,7 +382,6 @@ const initializeGame = (mainFn) => {
 
 function mainLoop() {
   if (!paused) {
-    console.log('MAIN LOOP - GAME STATE', gameState)
     switch (gameState) {
       case gameStates.initial:
         ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -1224,7 +1234,6 @@ river.render = (velocity) => {
 }
 
 river.renderBody = (velocity) => {
-  console.log('BODY COLUMNS', river.bodyColumns[river.bodyColumns.length - 1])
   const maxY = river.bodyColumns[river.bodyColumns.length - 1][0].y
   const minY = river.bodyColumns[0][0].y
 
@@ -1296,7 +1305,7 @@ tutorial.init = (ctx, controls) => {
   tutorial.steps = [step1, step2, step3, step4]
   tutorial.setSlowThumbspeed()
 
-  tutorial.backBtn = new Button(
+  tutorial.backBtn = makeButton(
     '< Back',
     tutorial.ctx.measureText('< Back').width,
     tutorial.ctx.measureText('L').width,
@@ -1575,10 +1584,10 @@ game.init = (ctx, controls, goToBackScreen, sound) => {
   game.paused = false
   game.resetDifficulty()
   game.goToBackScreen = goToBackScreen
-  game.quitBtn = new Button(QUIT_TEXT, game.ctx.measureText(QUIT_TEXT).width, game.ctx.measureText('L').width, 2, 10, () => {
+  game.quitBtn = makeButton(QUIT_TEXT, game.ctx.measureText(QUIT_TEXT).width, game.ctx.measureText('L').width, 2, 10, () => {
     game.leave()
   }, { fontSize: 10, alignment: 'left' })
-  game.pauseBtn = new Button(
+  game.pauseBtn = makeButton(
     PAUSE_TEXT,
     game.ctx.measureText(PAUSE_TEXT).width,
     game.ctx.measureText('L').width,
@@ -1597,7 +1606,7 @@ game.init = (ctx, controls, goToBackScreen, sound) => {
     { fontSize: 10, alignment: 'right' },
   )
 
-  game.gameOverBtn = new Button(
+  game.gameOverBtn = makeButton(
     'GAMEOVER',
     game.ctx.measureText('GAMEOVER').width,
     game.ctx.measureText('L').width,
@@ -1610,7 +1619,7 @@ game.init = (ctx, controls, goToBackScreen, sound) => {
   )
 
   game.distanceRowed = 0
-  game.score = new Button(
+  game.score = makeButton(
     game.scoreText(),
     game.ctx.measureText(game.scoreText()).width,
     game.ctx.measureText('L').width,
@@ -1682,7 +1691,7 @@ home.init = (ctx, hs) => {
   home.ctx.font = '20px Courier'
   const approxHeight = home.ctx.measureText('L').width
 
-  home.playBtn = new Button(
+  home.playBtn = makeButton(
     home.playBtnText,
     home.ctx.measureText(home.playBtnText).width,
     approxHeight,
@@ -1693,7 +1702,7 @@ home.init = (ctx, hs) => {
     },
     { fontSize: 20 },
   )
-  home.tutorialBtn = new Button(
+  home.tutorialBtn = makeButton(
     home.tutorialBtnText,
     home.ctx.measureText(home.tutorialBtnText).width,
     approxHeight,
@@ -1704,7 +1713,7 @@ home.init = (ctx, hs) => {
     },
     { fontSize: 20 },
   )
-  home.hsText = new Button(
+  home.hsText = makeButton(
     home.hs,
     home.ctx.measureText(home.hs).width,
     approxHeight,
@@ -1951,7 +1960,7 @@ obstacleManager.spawnObstacle = () => {
 }
 
 obstacleManager.spawnTree = (x, y) => {
-  const tree = makeObstacle(obstacleManager.ctx, Tree)
+  const tree = makeTree(ctx)
 
   tree.x = x || random(tree.minX, tree.maxX)
   tree.y = y || random(CANVAS_HEIGHT, CANVAS_HEIGHT + 25)
@@ -1960,12 +1969,189 @@ obstacleManager.spawnTree = (x, y) => {
 }
 
 obstacleManager.spawnRock = (x, y) => {
-  const rock = makeObstacle(obstacleManager.ctx, Rock)
+  const rock = makeRock(ctx)
 
   rock.x = x || random(rock.minX, rock.maxX)
   rock.y = y || random(CANVAS_HEIGHT, CANVAS_HEIGHT + 25)
 
   return rock
+}
+/* #endregion */
+
+/* #region TREE */
+makeTree = (ctx) => {
+  const tree = {}
+
+  tree.getObstacleBodyDimensions = () => ({
+    minY: tree.y + 10,
+    maxX: tree.x + 22,
+    maxY: tree.y + 25,
+    minX: tree.x + 6,
+    midX: tree.x + 14,
+    midY: tree.y + 14,
+    quadSize: 5,
+  })
+
+  tree.getRenderAdjustAmount = (velocity) => (RIVER_SPEED * 2) + velocity
+
+  tree.render = (velocity) => {
+    tree.y -= tree.getRenderAdjustAmount(velocity)
+
+    tree.sprite.update()
+    tree.sprite.render(tree.x, tree.y)
+  }
+
+  tree.init = (ctx) => {
+    tree.ctx = ctx
+
+    tree.image = new Image()
+    tree.image.src = treeSrc
+
+    tree.height = 28
+    tree.width = 84
+    tree.frames = 3
+    tree.frameWidth = tree.width / tree.frames
+    tree.minX = 6
+    tree.maxX = 102
+    tree.collisionOffsets = {
+      n: 0,
+      ne: 9,
+      e: 6,
+      se: 9,
+      s: 3,
+      sw: 6,
+      w: 5,
+      nw: 20,
+    }
+    tree.x = tree.maxX - 10
+    tree.y = 100
+    tree.sprite = makeSprite({
+      context: tree.ctx,
+      width: tree.width,
+      height: tree.height,
+      image: tree.image,
+      numberOfFrames: tree.frames,
+      ticksPerFrame: 10,
+      loop: true,
+      x: tree.x,
+      y: tree.y,
+    })
+
+    return tree
+  }
+
+  return tree.init(ctx)
+}
+/* #endregion */
+
+/* #region ROCK */
+makeRock = (ctx) => {
+  const rock = {}
+
+  rock.getObstacleBodyDimensions = () => ({
+    minY: rock.y + 5,
+    maxX: rock.x + 26,
+    maxY: rock.y + 27,
+    minX: rock.x + 7,
+    midX: rock.x + 16,
+    midY: rock.y + 15,
+    quadSize: 6,
+  })
+  
+  rock.getRenderAdjustAmount = (velocity) => (RIVER_SPEED * 2) + velocity
+  
+  rock.render = (velocity) => {
+    rock.y -= rock.getRenderAdjustAmount(velocity)
+  
+    rock.sprite.update()
+    rock.sprite.render(rock.x, rock.y)
+  }
+
+  rock.init = (ctx) => {
+    rock.ctx = ctx
+    rock.image = new Image()
+    rock.image.src = rockSrc
+    rock.height = 29
+    rock.width = 96
+    rock.frames = 3
+    rock.frameWidth = rock.width / rock.frames
+    rock.minX = 6
+    rock.maxX = 98
+    rock.collisionOffsets = {
+      n: 4,
+      ne: 10,
+      e: 6,
+      se: 10,
+      s: 2,
+      sw: 8,
+      w: 6,
+      nw: 11,
+    }
+    rock.x = rock.minX + 10
+    rock.y = 200
+    rock.sprite = makeSprite({
+      context: rock.ctx,
+      width: rock.width,
+      height: rock.height,
+      image: rock.image,
+      numberOfFrames: rock.frames,
+      ticksPerFrame: 10,
+      loop: true,
+      x: rock.x,
+      y: rock.y,
+    })
+
+    return rock
+  }
+
+  return rock.init(ctx)
+}
+/* #endregion */
+
+/* #region BUTTON */
+makeButton = (name, width, height, x, y, action, options = {}) => {
+  const button = {}
+
+  button.setScaledMinMax = () => {
+    button.xMin = (button.oX - (button.width / 2)) * SCALE_FACTOR
+    button.yMin = (button.oY - (button.height * 1.2)) * SCALE_FACTOR
+    button.xMax = (button.oX + button.width) * SCALE_FACTOR
+    button.yMax = (button.oY + (button.height / 2)) * SCALE_FACTOR
+  }
+
+  button.render = (ctx) => {
+    ctx.save()
+    ctx.textAlign = button.alignment
+    ctx.fillStyle = '#ffffff'
+    ctx.font = `${button.fontSize}px Courier`
+    ctx.fillText(
+      button.name,
+      button.oX,
+      button.oY,
+    )
+    ctx.restore()
+  }
+
+  button.init = () => {
+    button.name = name
+    button.fontSize = options.fontSize || 20
+    button.alignment = options.alignment || 'center'
+    button.width = width
+    button.height = height
+    button.oX = x
+    button.oY = y
+
+    button.xMin = (x - (button.width / 2)) * SCALE_FACTOR
+    button.yMin = (y - (button.height * 1.2)) * SCALE_FACTOR
+    button.xMax = (x + button.width) * SCALE_FACTOR
+    button.yMax = (y + (button.height / 2)) * SCALE_FACTOR
+
+    button.action = action
+
+    return button
+  }
+
+  return button.init()
 }
 /* #endregion */
 

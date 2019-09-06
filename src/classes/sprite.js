@@ -1,5 +1,3 @@
-import CONSTANTS from './constants'
-
 export default function makeSprite(options) {
   const that = {}
   let frameIndex = 0
