@@ -1,9 +1,7 @@
 /* eslint-disable */
-
 /**
  * IMPORT STATEMENTS
  */
-
 import boatLeftSheet from './assets/images/sprites/boat-shadow-sprite-left.png'
 import boatRightSheet from './assets/images/sprites/boat-shadow-sprite-right.png'
 import borderSrc from './assets/images/sprites/river-border-horizontal-stone.png'
@@ -12,6 +10,7 @@ import rockSrc from './assets/images/sprites/rock-sprite.png'
 import bodySrc from './assets/images/sprites/river-body.png'
 import thumbPath from './assets/images/sprites/thumb.png'
 
+/* #region UTILITY */
 const random = (min, max) => Math.floor(Math.random() * (max - min + 1) + min)
 
 function setCookie(name, value) {
@@ -23,10 +22,9 @@ function getCookie(name) {
 
   return document.cookie.replace(regex, '$1')
 }
+/* #endregion */
 
-/**
- * CONSTANTS
- */
+/* #region CONSTANTS */
 let CANVAS_RATIO =  16 / 9
 let MAX_HUMAN_POWER_VELOCITY =  0.75
 let WATER_FRICTION =  0.005
@@ -37,11 +35,10 @@ let BOAT_WIDTH =  24
 let BOAT_HEIGHT =  14
 let BOAT_SPRITE_WIDTH = 84
 let BOAT_SPRITE_HEIGHT = 15
-let TUTORIAL_SCREEN_DURATION = 5000
+let TUTORIAL_SCREEN_DURATION = 4000
 let QUIT_TEXT = '< QUIT'
 let PAUSE_TEXT = 'PAUSE'
 
-// Set in `initializeGame()`
 let CANVAS_MID_X =  undefined
 let CANVAS_MID_Y =  undefined
 let CANVAS_WIDTH =  undefined
@@ -54,9 +51,6 @@ let SCALE_FACTOR =  undefined
 let SCALED_WIDTH =  undefined
 let SCALED_HEIGHT =  undefined
 
-// STROKE_POWER: 0.005, // ORIGINAL...
-// STROKE_POWER: 0.01, // FOR TESTING ...
-
 let DEEP = 440 / 6
 let OAR = 440 * 3
 let OAR2 = 440 * 4
@@ -67,6 +61,7 @@ let E4 = A4 * (2 ** (6 / 12))
 let F4 = A4 * (2 ** (7 / 12))
 let G4 = A4 * (2 ** (9 / 12))
 let C5 = A4 * (2 ** (14 / 12))
+/* #endregion */
 
 /**
  * World/distance vars
@@ -106,7 +101,6 @@ let hs = localStorage.getItem('highscore')
 console.log('HIGH SCORE', hs)
 
 const updateHs = (score) => {
-  console.log('HS/Score', hs, score)
   if (!hs || score > hs) {
     hs = score
   }
@@ -322,7 +316,6 @@ function goToTitle() {
     home.updateHs(hs)
   }
 
-
   gameState = gameStates.title
 }
 
@@ -529,7 +522,9 @@ control = function() {
       case 3:
         if (Math.abs(y) !== y) {
           boatFrame[side] = 4
-          oarSound()
+          if (gameState === gameStates.game) {
+            oarSound()
+          }
         }
         break
       case 4:
@@ -579,6 +574,7 @@ control = function() {
   }
 
   const handleNewTouch = (touchObject) => {
+    // console.log('NEW TOUCH!')
     if (!activeTouches.left && touchObject.pageX < SCREEN_MID_X) {
       activeTouches.left = touchObject
       prevTouch.left = { x: touchObject.pageX, y: touchObject.pageY }
@@ -591,6 +587,7 @@ control = function() {
   }
 
   const handleRemovedTouch = (touchObject) => {
+    // console.log('REMOVED TOUCH!')
     if (activeTouches.left && activeTouches.left.identifier === touchObject.identifier) {
       resetAllForSide('left')
     }
@@ -601,6 +598,7 @@ control = function() {
   }
 
   const handleMovedTouch = (touchObject) => {
+    // console.log('MOVED TOUCH!')
     if (activeTouches.left && activeTouches.left.identifier === touchObject.identifier) {
       touchDiff.left.y += prevTouch.left.y - touchObject.pageY
       prevTouch.left.y = touchObject.pageY
@@ -678,7 +676,7 @@ control = function() {
   }
 
   const handleTouchCancel = (event) => {
-    console.log('Touch cancelled', event)
+    // console.log('Touch cancelled', event)
     activeTouches.left = null
     activeTouches.right = null
   }
@@ -729,6 +727,9 @@ control = function() {
     },
     clearBoatControls: (element) => {
       const attachToEl = element || getMainTouchEl()
+
+      resetAllForSide('left')
+      resetAllForSide('right')
 
       attachToEl.removeEventListener('touchstart', handleTouchStart)
       attachToEl.removeEventListener('touchmove', handleTouchMove)
@@ -1311,6 +1312,7 @@ tutorial.init = (ctx, controls) => {
 tutorial.leave = () => {
   tutorial.stopTutorial()
   tutorial.controls.clearButton(tutorial.controls.getMainTouchEl(), tutorial.backBtn)
+  tutorial.controls.clearBoatControls()
 }
 
 tutorial.setSlowThumbspeed = () => {
@@ -1509,6 +1511,9 @@ tutorial.renderTutorial = () => {
         tutorial.rTY,
       )
     }
+    if (tutorial.cTS === 5) {
+      // ...
+    }
   }
 }
 
@@ -1539,7 +1544,10 @@ tutorial.runTutorialSteps = () => {
     infoDisplay.setMessage('Row fast to go go go!')
   }, TUTORIAL_SCREEN_DURATION * 3)
   tutorial.steps[3] = setTimeout(() => {
-    tutorial.stopTutorial()
+    tutorial.setTutorialStep(5)
+    tutorial.removeThumbs()
+    tutorial.controls.registerBoatControls()
+    infoDisplay.setMessage('Ok, you try!')
   }, TUTORIAL_SCREEN_DURATION * 4)
 }
 
@@ -1576,6 +1584,7 @@ game.init = (ctx, controls, goToBackScreen, sound) => {
   game.goToBackScreen = goToBackScreen
   game.quitBtn = makeButton(QUIT_TEXT, game.ctx.measureText(QUIT_TEXT).width, game.ctx.measureText('L').width, 2, 10, () => {
     game.leave()
+    game.controls.clearBoatControls()
   }, { fontSize: 10, alignment: 'left' })
   game.pauseBtn = makeButton(
     PAUSE_TEXT,
