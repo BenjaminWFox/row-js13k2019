@@ -36,8 +36,13 @@ let BOAT_HEIGHT =  14
 let BOAT_SPRITE_WIDTH = 84
 let BOAT_SPRITE_HEIGHT = 15
 let TUTORIAL_SCREEN_DURATION = 4000
-let QUIT_TEXT = '< QUIT (q)'
-let PAUSE_TEXT = 'PAUSE (p)'
+let QUIT_TEXT = '<QUIT(Q)'
+let PAUSE_TEXT = 'PAUSE(P)'
+let BACK_TEXT = '<BACK(B)'
+let TUT_TEXT = 'TUTORIAL(T)'
+let PLAY_TEXT = 'PLAY(P)'
+let LKB_TEXT = '(A S D F)'
+let RKB_TEXT = '(; L K J)'
 let USING_KEYBOARD = false
 
 let CANVAS_MID_X =  undefined
@@ -97,6 +102,8 @@ function resetVarsForNewGame() {
 }
 
 resetVarsForNewGame()
+
+// localStorage.removeItem('highscore')
 
 let hs = localStorage.getItem('highscore')
 
@@ -311,9 +318,11 @@ function goToTitle() {
 
   __boat.checkOarAlignment()
 
-  if (gameState === gameStates.game) {
+  if (gameState === gameStates.game || gameState === gameStates.gameOver) {
     console.log('Set hs', totalDistanceRowed)
+
     setHs(totalDistanceRowed)
+
     home.updateHs(hs)
   }
 
@@ -1385,8 +1394,8 @@ tutorial.init = (ctx, controls) => {
   tutorial.setSlowThumbspeed()
 
   tutorial.backBtn = makeButton(
-    '< Back (b)',
-    tutorial.ctx.measureText('<Back(b)').width,
+    BACK_TEXT,
+    tutorial.ctx.measureText(BACK_TEXT).width,
     tutorial.ctx.measureText('L').width,
     CANVAS_WIDTH / 2,
     CANVAS_HEIGHT / 5,
@@ -1396,8 +1405,8 @@ tutorial.init = (ctx, controls) => {
     { fontSize: 16 },
   )
   tutorial.kblBtn = makeButton(
-    '(A S D F)',
-    tutorial.ctx.measureText('(A S D F)').width,
+    LKB_TEXT,
+    tutorial.ctx.measureText(LKB_TEXT).width,
     tutorial.ctx.measureText('L').width,
     10,
     CANVAS_HEIGHT - 3,
@@ -1405,8 +1414,8 @@ tutorial.init = (ctx, controls) => {
     { fontSize: 10, alignment: 'left' },
   )
   tutorial.kbrBtn = makeButton(
-    '(; L K J)',
-    tutorial.ctx.measureText('(; L K J)').width,
+    RKB_TEXT,
+    tutorial.ctx.measureText(RKB_TEXT).width,
     tutorial.ctx.measureText('L').width,
     CANVAS_WIDTH - 10,
     CANVAS_HEIGHT - 3,
@@ -1783,8 +1792,6 @@ game.renderGameOver = () => {
 home.init = (hs) => {
   home.hs = `Best: ${Math.floor(hs / 3) || 0}m`
   home.title = 'ROW'
-  home.playBtnText = 'PLAY (p)'
-  home.tutorialBtnText = 'TUTORIAL (t)'
   home.initialTitleX = CANVAS_WIDTH / 2
   home.initialTitleY = CANVAS_HEIGHT / 2
   home.currentTitleY = CANVAS_HEIGHT / 2
@@ -1798,8 +1805,8 @@ home.init = (hs) => {
   const approxHeight = ctx.measureText('L').width
 
   home.playBtn = makeButton(
-    home.playBtnText,
-    ctx.measureText(home.playBtnText).width,
+    PLAY_TEXT,
+    ctx.measureText(PLAY_TEXT).width,
     approxHeight,
     CANVAS_WIDTH / 2,
     CANVAS_HEIGHT / 1.65,
@@ -1809,8 +1816,8 @@ home.init = (hs) => {
     { fontSize: 16 },
   )
   home.tutorialBtn = makeButton(
-    home.tutorialBtnText,
-    ctx.measureText(home.tutorialBtnText).width,
+    TUT_TEXT,
+    ctx.measureText(TUT_TEXT).width,
     approxHeight,
     CANVAS_WIDTH / 2,
     CANVAS_HEIGHT / 1.35,
