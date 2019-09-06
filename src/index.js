@@ -3,25 +3,6 @@
 /**
  * IMPORT STATEMENTS
  */
-// import control from './classes/control'
-// import World from './classes/world'
-// import Boat from './classes/boat'
-// import River from './classes/river'
-// import Tutorial from './classes/tutorial'
-// import Game from './classes/game'
-// import Home from './classes/home'
-// import CollisionManager from './classes/collision-manager'
-// import makeObstacle from './classes/obstacle'
-// import ObstacleManager from './classes/obstacle-manager'
-// import Tree from './tree'
-// import Rock from './classes/rock'
-// import Button from './classes/button'
-// import { setConstants } from './classes/constants'
-// import makeSprite from './classes/sprite'
-// import Sound from './classes/sound'
-// import infoDisplay from './classes/info-display'
-// import drawDebug from './classes/debug'
-
 
 import boatLeftSheet from './assets/images/sprites/boat-shadow-sprite-left.png'
 import boatRightSheet from './assets/images/sprites/boat-shadow-sprite-right.png'
@@ -96,11 +77,11 @@ let distanceMoved, distanceFromStart, totalDistanceRowed, isRunning
  * Other var setup ...
  */
 // let world,
-let home, tutorial, control, game, controls, boat, river,
+let home, tutorial, control, game, controls, __boat, river,
     obstacleManager, collisionManager, paused = false,
     makeTree, makeRock, makeButton, makeSprite, sound, infoDisplay
 
-boat = {}
+__boat = {}
 home = {}
 collisionManager = {}
 obstacleManager = {}
@@ -178,7 +159,7 @@ function initGameClasses() {
 
   tutorial.init(ctx, controls)
 
-  boat.init(
+  __boat.init(
     ctx,
     SCALE_FACTOR,
     STROKE_POWER,
@@ -190,7 +171,7 @@ function initGameClasses() {
     },
   )
 
-  collisionManager.setup(boat)
+  collisionManager.setup(__boat)
 
   // waterfall = new Waterfall(ctx, RIVER_SPEED)
 
@@ -198,10 +179,10 @@ function initGameClasses() {
 }
 
 function titleLoop() {
-  _world_calculatePositions(river, boat)
-  river.renderBody(boat.velocity + 0.35)
-  boat.justRow()
-  river.renderBorder(boat.velocity + 0.35)
+  _world_calculatePositions(river, __boat)
+  river.renderBody(__boat.velocity + 0.35)
+  __boat.justRow()
+  river.renderBorder(__boat.velocity + 0.35)
   home.renderMainScreen()
 }
 
@@ -210,13 +191,13 @@ function titleLoop() {
 // }
 
 function tutorialLoop() {
-  _world_calculatePositions(river, boat)
-  river.renderBody(boat.velocity + 0.1)
+  _world_calculatePositions(river, __boat)
+  river.renderBody(__boat.velocity + 0.1)
   // I think there is lingering velocity after the tutorial ends?
   // TODO: check on above.
-  boat.setFrames(controls.boatFrame())
-  boat.runFrameUpdate()
-  river.renderBorder(boat.velocity)
+  __boat.setFrames(controls.boatFrame())
+  __boat.runFrameUpdate()
+  river.renderBorder(__boat.velocity)
   tutorial.renderTutorial()
 }
 
@@ -234,29 +215,29 @@ function gameLoop() {
       goToGameOver()
     }
 
-    _world_calculatePositions(river, boat, gameState)
+    _world_calculatePositions(river, __boat, gameState)
 
-    river.renderBody(boat.velocity)
+    river.renderBody(__boat.velocity)
 
     // drawDebug(ctx, world)
 
     obstacleManager.trySpawnObstacle(totalDistanceRowed, game.difficulty)
 
-    obstacleManager.render(boat.velocity)
+    obstacleManager.render(__boat.velocity)
 
-    boat.setFrames(controls.boatFrame())
+    __boat.setFrames(controls.boatFrame())
 
-    boat.runFrameUpdate()
+    __boat.runFrameUpdate()
 
-    boat.updateStrokePower(game.difficulty)
+    __boat.updateStrokePower(game.difficulty)
 
-    collisionManager.broadPhaseCheck(boat, obstacleManager.obstacles)
+    collisionManager.broadPhaseCheck(__boat, obstacleManager.obstacles)
 
-    river.renderBorder(boat.velocity)
+    river.renderBorder(__boat.velocity)
 
     game.render(totalDistanceRowed)
 
-    boat.renderLivesLeft(collisionManager.collisions)
+    __boat.renderLivesLeft(collisionManager.collisions)
 
     updateHs(totalDistanceRowed)
   }
@@ -267,13 +248,13 @@ function gameOverLoop() {
     river.current = 0
   }
 
-  _world_calculatePositions(river, boat)
+  _world_calculatePositions(river, __boat)
 
   river.render(0)
 
   obstacleManager.render(-(RIVER_SPEED * 2))
 
-  boat.fadeOut()
+  __boat.fadeOut()
 
   game.render(totalDistanceRowed)
   game.renderGameOver()
@@ -333,7 +314,7 @@ function goToTitle() {
     goToTutorial()
   })
 
-  boat.checkOarAlignment()
+  __boat.checkOarAlignment()
 
   if (gameState === gameStates.game) {
     console.log('Set hs', totalDistanceRowed)
@@ -437,12 +418,10 @@ function mainLoop() {
   window.requestAnimationFrame(mainLoop)
 }
 
-/**
- * WORLD methods ...
- */
-function _world_calculatePositions(river, boat, state) {
+/* #region WORLD */
+function _world_calculatePositions(river, __boat, state) {
   const { current } = river
-  const { velocity } = boat
+  const { velocity } = __boat
 
   const distMod = ((current * 2) + velocity)
 
@@ -454,10 +433,11 @@ function _world_calculatePositions(river, boat, state) {
       : totalDistanceRowed
   }
 
-  if (state === 'game' && boat.y - distanceFromStart < 0) {
+  if (state === 'game' && __boat.y - distanceFromStart < 0) {
     isRunning = false
   }
 }
+/* #endregion */
 
 /* #region CONTROL */
 control = function() {
@@ -768,277 +748,277 @@ control = function() {
 /* #endregion */
 
 /* #region BOAT */
-boat.init = (ctx, scaleFx, strokePower, maxVelocity, waterFriction, startCoords) => {
-  boat.context = ctx
-  boat.height = BOAT_SPRITE_HEIGHT
-  boat.width = BOAT_SPRITE_WIDTH / 7
-  boat.leftImage = new Image()
-  boat.rightImage = new Image()
-  boat.leftImage.src = boatLeftSheet
-  boat.rightImage.src = boatRightSheet
-  boat.startingX = startCoords.x
-  boat.scaleFx = scaleFx
-  boat.x = startCoords.x
-  boat.y = startCoords.y
-  boat.opacity = 1
-  boat.leftSprite = makeSprite({
-    context: ctx, width: BOAT_SPRITE_WIDTH, height: BOAT_SPRITE_HEIGHT, image: boat.leftImage, numberOfFrames: 7, loop: true, ticksPerFrame: 5, x: 0, y: 0,
+__boat.init = (ctx, scaleFx, strokePower, maxVelocity, waterFriction, startCoords) => {
+  __boat.context = ctx
+  __boat.height = BOAT_SPRITE_HEIGHT
+  __boat.width = BOAT_SPRITE_WIDTH / 7
+  __boat.leftImage = new Image()
+  __boat.rightImage = new Image()
+  __boat.leftImage.src = boatLeftSheet
+  __boat.rightImage.src = boatRightSheet
+  __boat.startingX = startCoords.x
+  __boat.scaleFx = scaleFx
+  __boat.x = startCoords.x
+  __boat.y = startCoords.y
+  __boat.opacity = 1
+  __boat.leftSprite = makeSprite({
+    context: ctx, width: BOAT_SPRITE_WIDTH, height: BOAT_SPRITE_HEIGHT, image: __boat.leftImage, numberOfFrames: 7, loop: true, ticksPerFrame: 5, x: 0, y: 0,
   })
-  boat.rightSprite = makeSprite({
-    context: ctx, width: BOAT_SPRITE_WIDTH, height: BOAT_SPRITE_HEIGHT, image: boat.rightImage, numberOfFrames: 7, loop: true, ticksPerFrame: 5, x: 12, y: 0,
+  __boat.rightSprite = makeSprite({
+    context: ctx, width: BOAT_SPRITE_WIDTH, height: BOAT_SPRITE_HEIGHT, image: __boat.rightImage, numberOfFrames: 7, loop: true, ticksPerFrame: 5, x: 12, y: 0,
   })
-  boat.resetVelocity()
-  boat.drift = 0
-  boat.sameSideStrokes = 0
-  boat.lastSameSideStroke = 0
-  boat.maxVelocity = maxVelocity
-  boat.strokePower = strokePower
-  boat.waterFriction = waterFriction
-  boat.lastStrokeUpdate = undefined
-  boat.isStuck = false
+  __boat.resetVelocity()
+  __boat.drift = 0
+  __boat.sameSideStrokes = 0
+  __boat.lastSameSideStroke = 0
+  __boat.maxVelocity = maxVelocity
+  __boat.strokePower = strokePower
+  __boat.waterFriction = waterFriction
+  __boat.lastStrokeUpdate = undefined
+  __boat.isStuck = false
 }
 
-boat.renderLivesLeft = (collisions) => {
+__boat.renderLivesLeft = (collisions) => {
   const atY = 32
   const loops = 8 - collisions > 0 ? 8 - collisions : 0
   let evens = 0
   let odds = 0
 
-  boat.context.save()
-  boat.context.globalAlpha = 0.7
+  __boat.context.save()
+  __boat.context.globalAlpha = 0.7
   for (let i = 0; i < loops; i += 1) {
     if (i % 2 === 0) {
-      boat.context.drawImage(
-        boat.leftImage, 0, 0, 12, 14, 16 + (evens * 24) + (evens * 2), atY, 12, 14,
+      __boat.context.drawImage(
+        __boat.leftImage, 0, 0, 12, 14, 16 + (evens * 24) + (evens * 2), atY, 12, 14,
       )
       evens += 1
     }
     else {
-      boat.context.drawImage(
-        boat.rightImage, 0, 0, 12, 14, 28 + (odds * 24) + (odds * 2), atY, 12, 14,
+      __boat.context.drawImage(
+        __boat.rightImage, 0, 0, 12, 14, 28 + (odds * 24) + (odds * 2), atY, 12, 14,
       )
       odds += 1
     }
   }
-  boat.context.restore()
+  __boat.context.restore()
 }
 
-boat.setStuck = () => {
+__boat.setStuck = () => {
   console.log('Stuck set...')
-  boat.isStuck = true
+  __boat.isStuck = true
 }
 
-boat.setUnstuck = () => {
-  if (boat.isStuck) {
+__boat.setUnstuck = () => {
+  if (__boat.isStuck) {
     console.log('UNStuck set...')
-    boat.isStuck = false
+    __boat.isStuck = false
   }
 }
 
-boat.updateStrokePower = (difficulty) => {
-  boat.strokePower = STROKE_POWER + (STROKE_INCREASE * difficulty)
+__boat.updateStrokePower = (difficulty) => {
+  __boat.strokePower = STROKE_POWER + (STROKE_INCREASE * difficulty)
 }
 
-boat.getBoatBodyDimensions = () => ({
-  minY: boat.y,
-  maxX: boat.x + 17,
-  maxY: boat.y + boat.height,
-  minX: boat.x + 8,
+__boat.getBoatBodyDimensions = () => ({
+  minY: __boat.y,
+  maxX: __boat.x + 17,
+  maxY: __boat.y + __boat.height,
+  minX: __boat.x + 8,
 })
 
-boat.resetVelocity = () => {
-  boat.velocity = 0
+__boat.resetVelocity = () => {
+  __boat.velocity = 0
 }
 
-boat.setFrames = (frameObj) => {
+__boat.setFrames = (frameObj) => {
   if (
-    boat.leftSprite.currentFrame() !== frameObj.left
-      && boat.rightSprite.currentFrame() !== frameObj.right
+    __boat.leftSprite.currentFrame() !== frameObj.left
+      && __boat.rightSprite.currentFrame() !== frameObj.right
   ) {
-    boat.sameSideStrokes = 0
+    __boat.sameSideStrokes = 0
   }
-  if (boat.leftSprite.currentFrame() !== frameObj.left) {
-    boat.addVelocity(frameObj.left)
-    boat.addDrift(frameObj.left, 1)
+  if (__boat.leftSprite.currentFrame() !== frameObj.left) {
+    __boat.addVelocity(frameObj.left)
+    __boat.addDrift(frameObj.left, 1)
   }
-  boat.leftSprite.goToFrame(frameObj.left)
+  __boat.leftSprite.goToFrame(frameObj.left)
 
-  if (boat.rightSprite.currentFrame() !== frameObj.right) {
-    boat.addVelocity(frameObj.right)
-    boat.addDrift(frameObj.right, -1)
+  if (__boat.rightSprite.currentFrame() !== frameObj.right) {
+    __boat.addVelocity(frameObj.right)
+    __boat.addDrift(frameObj.right, -1)
   }
-  boat.rightSprite.goToFrame(frameObj.right)
+  __boat.rightSprite.goToFrame(frameObj.right)
 }
 
-boat.checkOarAlignment = () => {
+__boat.checkOarAlignment = () => {
   // console.log('Checking oar alignment...')
-  if (boat.x === boat.startingX) {
+  if (__boat.x === __boat.startingX) {
     console.log('Resetting oars...')
-    boat.leftSprite.goToFrame(0).resetTickCount()
-    boat.rightSprite.goToFrame(0).resetTickCount()
-    boat.rightSprite.update()
-    boat.leftSprite.update()
-    boat.oarsOffset = false
+    __boat.leftSprite.goToFrame(0).resetTickCount()
+    __boat.rightSprite.goToFrame(0).resetTickCount()
+    __boat.rightSprite.update()
+    __boat.leftSprite.update()
+    __boat.oarsOffset = false
   }
 }
 
-boat.justRow = () => {
-  if (boat.x !== boat.startingX) {
-    if (boat.drift !== 0) {
-      boat.drift = 0
+__boat.justRow = () => {
+  if (__boat.x !== __boat.startingX) {
+    if (__boat.drift !== 0) {
+      __boat.drift = 0
     }
-    boat.oarsOffset = true
+    __boat.oarsOffset = true
 
-    // console.log('Just rowing...', boat.x, boat.startingX)
+    // console.log('Just rowing...', __boat.x, __boat.startingX)
 
-    if (boat.x - boat.startingX > 1) {
+    if (__boat.x - __boat.startingX > 1) {
       // console.log('Going right')
-      boat.x -= 0.25
-      boat.rightSprite.update()
+      __boat.x -= 0.25
+      __boat.rightSprite.update()
     }
-    else if (boat.x - boat.startingX < -1) {
+    else if (__boat.x - __boat.startingX < -1) {
       // console.log('Going left')
-      boat.x += 0.25
-      boat.leftSprite.update()
+      __boat.x += 0.25
+      __boat.leftSprite.update()
     }
     else {
-      boat.x = boat.startingX
-      // console.log('Resetting X', boat.x, boat.startingX)
+      __boat.x = __boat.startingX
+      // console.log('Resetting X', __boat.x, __boat.startingX)
     }
   }
   else {
-    if (boat.oarsOffset) {
+    if (__boat.oarsOffset) {
       // console.log('Fixing offset oars!')
-      boat.x = boat.startingX
-      boat.leftSprite.goToFrame(0).resetTickCount()
-      boat.rightSprite.goToFrame(0).resetTickCount()
-      boat.oarsOffset = false
+      __boat.x = __boat.startingX
+      __boat.leftSprite.goToFrame(0).resetTickCount()
+      __boat.rightSprite.goToFrame(0).resetTickCount()
+      __boat.oarsOffset = false
     }
 
-    boat.rightSprite.update()
-    boat.leftSprite.update()
+    __boat.rightSprite.update()
+    __boat.leftSprite.update()
   }
 
-  boat.render()
+  __boat.render()
 }
 
-boat.isOarInWater = (frame) => frame > 2 && frame < 6
+__boat.isOarInWater = (frame) => frame > 2 && frame < 6
 
-boat.isSameSideRowing = () => Math.abs(boat.sameSideStrokes) > 3
+__boat.isSameSideRowing = () => Math.abs(__boat.sameSideStrokes) > 3
 
-boat.addVelocity = (frame) => {
+__boat.addVelocity = (frame) => {
   if (frame) {
     if (
-      boat.isOarInWater(frame)
-        && boat.velocity <= boat.maxVelocity
-        && !boat.isSameSideRowing()
+      __boat.isOarInWater(frame)
+        && __boat.velocity <= __boat.maxVelocity
+        && !__boat.isSameSideRowing()
     ) {
-      boat.setUnstuck()
-      boat.velocity += boat.strokePower
-      boat.lastStrokeUpdate = Date.now()
+      __boat.setUnstuck()
+      __boat.velocity += __boat.strokePower
+      __boat.lastStrokeUpdate = Date.now()
     }
   }
 }
 
-boat.bounceLeft = () => {
-  boat.drift = -0.066
+__boat.bounceLeft = () => {
+  __boat.drift = -0.066
 }
 
-boat.bounceRight = () => {
-  boat.drift = 0.066
+__boat.bounceRight = () => {
+  __boat.drift = 0.066
 }
 
-boat.addDrift = (frame, direction) => {
-  if (boat.isSameSideRowing()) {
-    boat.lastSameSideStroke = Date.now()
+__boat.addDrift = (frame, direction) => {
+  if (__boat.isSameSideRowing()) {
+    __boat.lastSameSideStroke = Date.now()
   }
   else {
-    boat.sameSideStrokes += direction
+    __boat.sameSideStrokes += direction
   }
 
   if (frame) {
-    if (boat.isOarInWater(frame)) {
-      boat.drift += boat.strokePower * direction
+    if (__boat.isOarInWater(frame)) {
+      __boat.drift += __boat.strokePower * direction
     }
   }
 }
 
-boat.applyWaterFriction = () => {
+__boat.applyWaterFriction = () => {
   const now = Date.now()
 
-  if (now - boat.lastSameSideStroke > 500 && boat.drift !== 0) {
-    if (boat.drift > 0) {
-      boat.drift -= boat.waterFriction
-      if (boat.drift < 0) {
-        boat.drift = 0
+  if (now - __boat.lastSameSideStroke > 500 && __boat.drift !== 0) {
+    if (__boat.drift > 0) {
+      __boat.drift -= __boat.waterFriction
+      if (__boat.drift < 0) {
+        __boat.drift = 0
       }
     }
-    if (boat.drift < 0) {
-      boat.drift += boat.waterFriction
-      if (boat.drift > 0) {
-        boat.drift = 0
+    if (__boat.drift < 0) {
+      __boat.drift += __boat.waterFriction
+      if (__boat.drift > 0) {
+        __boat.drift = 0
       }
     }
   }
 
-  if (boat.isStuck) {
-    boat.velocity = -(RIVER_SPEED * 2)
-    // console.log('Is stuck...', boat.velocity)
+  if (__boat.isStuck) {
+    __boat.velocity = -(RIVER_SPEED * 2)
+    // console.log('Is stuck...', __boat.velocity)
   }
-  else if (now - boat.lastStrokeUpdate > 500 && boat.velocity > 0) {
+  else if (now - __boat.lastStrokeUpdate > 500 && __boat.velocity > 0) {
     // console.log('Friction unstuck...')
-    boat.setUnstuck()
-    boat.velocity -= boat.waterFriction
-    if (boat.velocity < 0) {
-      boat.resetVelocity()
+    __boat.setUnstuck()
+    __boat.velocity -= __boat.waterFriction
+    if (__boat.velocity < 0) {
+      __boat.resetVelocity()
     }
   }
 }
 
-boat.runFrameUpdate = () => {
-  boat.render()
-  boat.applyWaterFriction()
+__boat.runFrameUpdate = () => {
+  __boat.render()
+  __boat.applyWaterFriction()
 }
 
-boat.checkForOutOfBounds = (x) => {
-  if (x >= CANVAS_WIDTH - boat.width - 20) {
-    boat.x = CANVAS_WIDTH - boat.width - 20
-    boat.drift = 0
+__boat.checkForOutOfBounds = (x) => {
+  if (x >= CANVAS_WIDTH - __boat.width - 20) {
+    __boat.x = CANVAS_WIDTH - __boat.width - 20
+    __boat.drift = 0
   }
   if (x <= 0 + 10) {
-    boat.x = 10
-    boat.drift = 0
+    __boat.x = 10
+    __boat.drift = 0
   }
 }
 
-boat.render = () => {
-  boat.x += boat.drift * 4
+__boat.render = () => {
+  __boat.x += __boat.drift * 4
 
-  boat.checkForOutOfBounds(boat.x)
+  __boat.checkForOutOfBounds(__boat.x)
 
-  const roundX = Math.round(boat.x) // Math.round(boat.x / boat.scaleFx)
-  const roundY = Math.round(boat.y) // Math.round(boat.y / boat.scaleFx)
+  const roundX = Math.round(__boat.x) // Math.round(__boat.x / __boat.scaleFx)
+  const roundY = Math.round(__boat.y) // Math.round(__boat.y / __boat.scaleFx)
   const renderXOffset = 12
 
-  boat.context.save()
-  boat.leftSprite.render(roundX, roundY)
-  boat.rightSprite.render(roundX + renderXOffset, roundY)
+  __boat.context.save()
+  __boat.leftSprite.render(roundX, roundY)
+  __boat.rightSprite.render(roundX + renderXOffset, roundY)
 
-  boat.context.restore()
+  __boat.context.restore()
 }
 
-boat.fadeOut = () => {
-  if (boat.velocity !== 0) {
-    boat.resetVelocity()
+__boat.fadeOut = () => {
+  if (__boat.velocity !== 0) {
+    __boat.resetVelocity()
   }
-  if (boat.opacity > 0) {
-    boat.context.save()
-    boat.opacity -= 0.05
-    boat.context.globalAlpha = boat.opacity
+  if (__boat.opacity > 0) {
+    __boat.context.save()
+    __boat.opacity -= 0.05
+    __boat.context.globalAlpha = __boat.opacity
 
-    // console.log('OP', boat.opacity)
-    boat.render()
-    boat.context.restore()
+    // console.log('OP', __boat.opacity)
+    __boat.render()
+    __boat.context.restore()
   }
 }
 /* #endregion */
@@ -1791,10 +1771,10 @@ collisionManager.init = (ctx, colSound) => {
   collisionManager.lastCollisionAt = 0
 }
 
-collisionManager.setup = (boat) => {
-  // collisionManager.boatY = boat.y / SCALE_FACTOR
-  collisionManager.boatWidth = boat.width
-  collisionManager.boatHeight = boat.height
+collisionManager.setup = (__boat) => {
+  // collisionManager.boatY = __boat.y / SCALE_FACTOR
+  collisionManager.boatWidth = __boat.width
+  collisionManager.boatHeight = __boat.height
 }
 
 collisionManager.reset = () => {
@@ -1812,8 +1792,8 @@ collisionManager.addCollision = () => {
   }
 }
 
-collisionManager.broadPhaseCheck = (boat, obstacles) => {
-  const boatBox = boat.getBoatBodyDimensions()
+collisionManager.broadPhaseCheck = (__boat, obstacles) => {
+  const boatBox = __boat.getBoatBodyDimensions()
 
   obstacles.forEach((obstacle) => {
     const obstacleBox = obstacle.getObstacleBodyDimensions()
@@ -1824,12 +1804,12 @@ collisionManager.broadPhaseCheck = (boat, obstacles) => {
         && boatBox.maxY > obstacleBox.minY
         && boatBox.minY < obstacleBox.maxY
     ) {
-      collisionManager.narrowPhaseCheck(boatBox, boat, obstacleBox, obstacle)
+      collisionManager.narrowPhaseCheck(boatBox, __boat, obstacleBox, obstacle)
     }
   })
 }
 
-collisionManager.narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
+collisionManager.narrowPhaseCheck = (boatBox, __boat, obstacleBox) => {
   // console.log('Y: ', boatBox.maxY, obstacleBox.midY)
   console.log('X: ', boatBox.maxX, obstacleBox.midX, obstacleBox.quadSize)
   let buffer = 0
@@ -1864,18 +1844,18 @@ collisionManager.narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
 
   if (
     boatBox.maxY > obstacleBox.maxY
-      && boatBox.maxY - obstacleBox.maxY > boat.height / 6
+      && boatBox.maxY - obstacleBox.maxY > __boat.height / 6
       && boatBox.minX > obstacleBox.minX
       && boatBox.maxX < obstacleBox.maxX
   ) {
     // Boat is stuck on the obstacle! Hold it in place...
     console.log('SET STUCK!')
-    boat.setStuck()
+    __boat.setStuck()
     collisionManager.addCollision()
   }
   else if (boatBox.maxY > obstacleBox.minY + buffer) {
     console.log('BOUNCE OFF')
-    boat.resetVelocity()
+    __boat.resetVelocity()
     collisionManager.addCollision()
   }
 
@@ -1884,7 +1864,7 @@ collisionManager.narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
         && boatBox.maxX > obstacleBox.maxX
   ) {
     console.log('BOUNCE RIGHT')
-    boat.bounceRight()
+    __boat.bounceRight()
     collisionManager.addCollision()
   }
   if (
@@ -1892,11 +1872,11 @@ collisionManager.narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
         && boatBox.minX < obstacleBox.minX
   ) {
     console.log('BOUNCE LEFT')
-    boat.bounceLeft()
+    __boat.bounceLeft()
     collisionManager.addCollision()
   }
   // else {
-  //   boat.setUnstuck()
+  //   __boat.setUnstuck()
   // }
 }
 /* #endregion */
