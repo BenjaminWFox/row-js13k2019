@@ -45,14 +45,14 @@ let LKB_TEXT = '(A S D F)'
 let RKB_TEXT = '(; L K J)'
 let USING_KEYBOARD = false
 
-let CANVAS_MID_X =  undefined
-let CANVAS_MID_Y =  undefined
+// let CANVAS_MID_X =  undefined
+// let CANVAS_MID_Y =  undefined
+// let SCREEN_MID_Y =  undefined
 let CANVAS_WIDTH =  undefined
 let CANVAS_HEIGHT =  undefined
 let SCREEN_WIDTH =  undefined
 let SCREEN_HEIGHT =  undefined
 let SCREEN_MID_X =  undefined
-let SCREEN_MID_Y =  undefined
 let SCALE_FACTOR =  undefined
 let SCALED_WIDTH =  undefined
 let SCALED_HEIGHT =  undefined
@@ -340,16 +340,16 @@ const initializeGame = (mainFn) => {
   /**
    * SET UNSET CONSTANTS
    */
+  // SCREEN_MID_Y = SCREEN_HEIGHT / 2
+  // CANVAS_MID_X = Math.round(SCALED_WIDTH / 2)
+  // CANVAS_MID_Y = SCALED_HEIGHT / 2
   CANVAS_WIDTH = canvas.width
   CANVAS_HEIGHT = canvas.height
   SCREEN_WIDTH = window.innerWidth
   SCREEN_HEIGHT = window.innerHeight
   SCREEN_MID_X = SCREEN_WIDTH / 2
-  SCREEN_MID_Y = SCREEN_HEIGHT / 2
   SCALED_WIDTH = Math.round(SCREEN_HEIGHT / CANVAS_RATIO)
   SCALED_HEIGHT = SCREEN_HEIGHT
-  CANVAS_MID_X = Math.round(SCALED_WIDTH / 2)
-  CANVAS_MID_Y = SCALED_HEIGHT / 2
   SCALE_FACTOR = SCALED_HEIGHT / canvas.height
 
 
@@ -820,6 +820,7 @@ handleKeyboardControl = (event) => {
     console.log('In title', code)
     switch(code) {
       case 'KeyP':
+        sound.song()
         goToGame()
         break
       case 'KeyT':
