@@ -8,15 +8,20 @@
 // import Boat from './classes/boat'
 // import River from './classes/river'
 // import Tutorial from './classes/tutorial'
-// import Game from './classes/_game'
-// import Home from './classes/_home'
-// import CollisionManager from './classes/_collision-manager'
+// import Game from './classes/game'
+// import Home from './classes/home'
+// import CollisionManager from './classes/collision-manager'
 // import makeObstacle from './classes/obstacle'
-// import ObstacleManager from './classes/_obstacle-manager'
+// import ObstacleManager from './classes/obstacle-manager'
 // import Tree from './tree'
 // import Rock from './classes/rock'
 // import Button from './classes/button'
 // import { setConstants } from './classes/constants'
+// import makeSprite from './classes/sprite'
+// import Sound from './classes/sound'
+// import infoDisplay from './classes/info-display'
+// import drawDebug from './classes/debug'
+
 
 import boatLeftSheet from './assets/images/sprites/boat-shadow-sprite-left.png'
 import boatRightSheet from './assets/images/sprites/boat-shadow-sprite-right.png'
@@ -25,12 +30,6 @@ import treeSrc from './assets/images/sprites/tree-sprite.png'
 import rockSrc from './assets/images/sprites/rock-sprite.png'
 import bodySrc from './assets/images/sprites/river-body.png'
 import thumbPath from './assets/images/sprites/thumb.png'
-import makeSprite from './classes/sprite'
-
-import Sound from './classes/sound'
-import infoDisplay from './classes/info-display'
-
-// import drawDebug from './classes/debug'
 
 const random = (min, max) => Math.floor(Math.random() * (max - min + 1) + min)
 
@@ -77,10 +76,36 @@ let SCALED_HEIGHT =  undefined
 // STROKE_POWER: 0.005, // ORIGINAL...
 // STROKE_POWER: 0.01, // FOR TESTING ...
 
+let DEEP = 440 / 6
+let OAR = 440 * 3
+let OAR2 = 440 * 4
+let A4 = 440
+let C4 = A4 * (2 ** (2 / 12))
+let D4 = A4 * (2 ** (4 / 12))
+let E4 = A4 * (2 ** (6 / 12))
+let F4 = A4 * (2 ** (7 / 12))
+let G4 = A4 * (2 ** (9 / 12))
+let C5 = A4 * (2 ** (14 / 12))
+
 /**
  * World/distance vars
  */
 let distanceMoved, distanceFromStart, totalDistanceRowed, isRunning
+
+/**
+ * Other var setup ...
+ */
+// let world,
+let home, tutorial, control, game, controls, boat, river,
+    obstacleManager, collisionManager, paused = false,
+    makeTree, makeRock, makeButton, makeSprite, sound, infoDisplay
+
+boat = {}
+home = {}
+collisionManager = {}
+obstacleManager = {}
+sound = {}
+infoDisplay = {}
 
 /**
  * Put all variables that need resetting per-game here
@@ -94,12 +119,6 @@ function resetVarsForNewGame() {
 }
 
 resetVarsForNewGame()
-
-const sCtx = new (window.AudioContext || window.webkitAudioContext)()
-
-const sound = new Sound(sCtx)
-
-// localStorage.removeItem('highscore')
 
 let hs = localStorage.getItem('highscore')
 
@@ -145,15 +164,6 @@ window.addEventListener('mousewheel', (event) => event.preventDefault(), { passi
 document.addEventListener('touchmove', (ev) => ev.preventDefault(), { passive: false })
 body.addEventListener('ontouchmove', (e) => e.preventDefault())
 
-// let world,
-let home, tutorial, control, game, controls, boat, river, obstacleManager, collisionManager, paused = false, makeTree, makeRock, makeButton
-
-boat = {}
-home = {}
-collisionManager = {}
-obstacleManager = {}
-
-
 // let tree
 // let rock
 // let waterfall
@@ -161,7 +171,7 @@ obstacleManager = {}
 function initGameClasses() {
   // world = new World(ctx, sound.end.bind(sound))
 
-  home.init(ctx, hs)
+  home.init(hs)
 
   // console.log('Set game', sound)
   game.init(ctx, controls, goToTitle, sound)
@@ -373,7 +383,7 @@ const initializeGame = (mainFn) => {
 
   initGameClasses()
 
-  infoDisplay.init(wrapper, canvas, SCALED_WIDTH)
+  infoDisplay.setup(wrapper, canvas, SCALED_WIDTH)
 
   river.init()
 
@@ -1673,8 +1683,7 @@ game.renderGameOver = () => {
 /* #endregion */
 
 /* #region HOME */
-home.init = (ctx, hs) => {
-  home.ctx = ctx
+home.init = (hs) => {
   home.hs = `Best: ${Math.floor(hs / 3) || 0}m`
   home.title = 'ROW'
   home.playBtnText = 'PLAY'
@@ -1685,15 +1694,15 @@ home.init = (ctx, hs) => {
   home.playBtnDimentions = undefined
   home.tutorialBtnDimensions = undefined
 
-  home.ctx.save()
-  home.ctx.textAlign = 'center'
-  home.ctx.fillStyle = '#ffffff'
-  home.ctx.font = '20px Courier'
-  const approxHeight = home.ctx.measureText('L').width
+  ctx.save()
+  ctx.textAlign = 'center'
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '20px Courier'
+  const approxHeight = ctx.measureText('L').width
 
   home.playBtn = makeButton(
     home.playBtnText,
-    home.ctx.measureText(home.playBtnText).width,
+    ctx.measureText(home.playBtnText).width,
     approxHeight,
     CANVAS_WIDTH / 2,
     CANVAS_HEIGHT / 1.65,
@@ -1704,7 +1713,7 @@ home.init = (ctx, hs) => {
   )
   home.tutorialBtn = makeButton(
     home.tutorialBtnText,
-    home.ctx.measureText(home.tutorialBtnText).width,
+    ctx.measureText(home.tutorialBtnText).width,
     approxHeight,
     CANVAS_WIDTH / 2,
     CANVAS_HEIGHT / 1.35,
@@ -1715,14 +1724,14 @@ home.init = (ctx, hs) => {
   )
   home.hsText = makeButton(
     home.hs,
-    home.ctx.measureText(home.hs).width,
+    ctx.measureText(home.hs).width,
     approxHeight,
     CANVAS_WIDTH / 2,
     CANVAS_HEIGHT / 1.15,
     () => {},
     { fontSize: 10 },
   )
-  home.ctx.restore()
+  ctx.restore()
 }
 
 
@@ -1736,25 +1745,25 @@ home.renderInitialLoad = () => {
 }
 
 home.renderTitle = (x, y) => {
-  home.ctx.save()
-  home.ctx.textAlign = 'center'
-  home.ctx.fillStyle = '#ffffff'
-  home.ctx.font = '70px Courier'
-  home.ctx.fillText(home.title, x, y)
-  home.ctx.restore()
+  ctx.save()
+  ctx.textAlign = 'center'
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '70px Courier'
+  ctx.fillText(home.title, x, y)
+  ctx.restore()
 }
 
 home.renderMenu = () => {
-  // home.ctx.save()
-  // home.ctx.textAlign = 'center'
-  // home.ctx.fillStyle = '#ffffff'
-  // home.ctx.font = '20px Courier'
+  // ctx.save()
+  // ctx.textAlign = 'center'
+  // ctx.fillStyle = '#ffffff'
+  // ctx.font = '20px Courier'
 
-  home.playBtn.render(home.ctx)
-  home.tutorialBtn.render(home.ctx)
-  home.hsText.render(home.ctx)
+  home.playBtn.render(ctx)
+  home.tutorialBtn.render(ctx)
+  home.hsText.render(ctx)
 
-  // home.ctx.restore()
+  // ctx.restore()
 }
 
 home.renderMainScreen = () => {
@@ -2153,6 +2162,247 @@ makeButton = (name, width, height, x, y, action, options = {}) => {
 
   return button.init()
 }
+/* #endregion */
+
+/* #region MAKE SPRITE */
+makeSprite = (options) => {
+  const that = {}
+  let frameIndex = 0
+  let tickCount = 0
+  const ticksPerFrame = options.ticksPerFrame || 0
+  const numberOfFrames = options.numberOfFrames || 1
+
+  that.context = options.context
+  that.width = options.width
+  that.height = options.height
+  that.image = options.image
+  that.loop = options.loop || false
+  that.x = options.x
+  that.y = options.y
+  that.frameIndex = 0
+  that.rotation = options.rotation
+
+  that.currentFrame = () => frameIndex
+
+  that.resetTickCount = () => {
+    tickCount = 0
+  }
+
+  that.render = (x, y) => {
+    // // Clear the canvas
+    // that.context.clearRect(that.x, that.y, that.width, that.height)
+    if (x || y) {
+      that.x = x
+      that.y = y
+    }
+
+    // Draw the animation
+    if (that.rotation) {
+      that.context.save()
+      that.context.translate(0, 0)
+      that.context.rotate(that.rotation * (Math.PI / 180))
+    }
+
+    that.context.drawImage(
+      that.image,
+      frameIndex * (that.width / numberOfFrames),
+      0,
+      that.width / numberOfFrames,
+      that.height,
+      that.x,
+      that.y,
+      that.width / numberOfFrames,
+      that.height,
+    )
+
+    if (that.rotation) {
+      that.context.restore()
+    }
+  }
+
+
+  that.update = () => {
+    tickCount += 1
+
+    if (tickCount > ticksPerFrame) {
+      tickCount = 0
+      // If the current frame index is in range
+      if (frameIndex < numberOfFrames - 1) {
+        // Go to the next frame
+        frameIndex += 1
+      }
+      else if (that.loop) {
+        frameIndex = 0
+      }
+    }
+  }
+
+  that.goToFrame = (frame) => {
+    if (frame < numberOfFrames) {
+      frameIndex = frame
+    }
+
+    return that
+  }
+
+  return that
+}
+/* #endregion */
+
+/* #region SOUND */
+sound.init = (context) => {
+  sound.ctx = context
+  sound.muted = false
+  sound.queueSong = false
+  sound.vol = 0.005
+}
+
+sound.mute = () => {
+  sound.muted = true
+  sound.vol = 0
+  sound.gainNode.gain.setValueAtTime(sound.vol, sound.ctx.currentTime)
+  sound.ctx.suspend()
+}
+
+sound.unmute = () => {
+  sound.muted = false
+  sound.vol = 0.005
+  sound.gainNode.gain.setValueAtTime(sound.vol, sound.ctx.currentTime)
+  sound.ctx.resume()
+}
+
+sound.setup = () => {
+  sound.osc = sound.ctx.createOscillator()
+  sound.gainNode = sound.ctx.createGain()
+
+  sound.osc.connect(sound.gainNode)
+  sound.gainNode.connect(sound.ctx.destination)
+  sound.osc.type = 'square'
+
+  sound.unmute()
+}
+
+sound.play = (value, time, stopTime = undefined, volume = undefined) => {
+  const modVol = volume ? volume * sound.vol : sound.vol
+
+  sound.setup()
+
+  sound.osc.frequency.value = value
+  sound.gainNode.gain.setValueAtTime(modVol, sound.ctx.currentTime)
+
+  sound.osc.start(time)
+
+  sound.stop(time, stopTime)
+}
+
+sound.stop = (time, stopTime) => {
+  // sound.gainNode.gain.exponentialRampToValueAtTime(0.005, time + 0.1)
+  sound.osc.stop(time + (stopTime || 0.25))
+}
+
+sound.oar = () => {
+  sound.play(OAR, sound.ctx.currentTime + 0.05, 0.01, 0.5)
+  sound.play(OAR2, sound.ctx.currentTime + 0.075, 0.01, 0.5)
+  sound.play(OAR, sound.ctx.currentTime + 0.1, 0.01, 0.5)
+}
+
+sound.bump = () => {
+  sound.play(DEEP, sound.ctx.currentTime + 0.05, 0.05, 2)
+  sound.play(DEEP, sound.ctx.currentTime + 0.1, 0.05, 2)
+}
+
+sound.song = () => {
+  sound.play(C4, sound.ctx.currentTime + 0.75)
+  sound.play(C4, sound.ctx.currentTime + 0.875)
+  sound.play(C4, sound.ctx.currentTime + 1.25)
+  sound.play(C4, sound.ctx.currentTime + 1.375)
+  sound.play(C4, sound.ctx.currentTime + 1.75)
+  sound.play(C4, sound.ctx.currentTime + 1.875)
+  sound.play(D4, sound.ctx.currentTime + 2.00)
+  sound.play(D4, sound.ctx.currentTime + 2.125)
+  sound.play(E4, sound.ctx.currentTime + 2.25)
+  sound.play(E4, sound.ctx.currentTime + 2.375)
+  sound.play(E4, sound.ctx.currentTime + 2.75)
+  sound.play(E4, sound.ctx.currentTime + 2.875)
+  sound.play(D4, sound.ctx.currentTime + 3.00)
+  sound.play(D4, sound.ctx.currentTime + 3.125)
+  sound.play(E4, sound.ctx.currentTime + 3.25)
+  sound.play(F4, sound.ctx.currentTime + 3.50)
+  sound.play(G4, sound.ctx.currentTime + 3.75, 0.1)
+  sound.play(G4, sound.ctx.currentTime + 3.875, 0.1)
+  sound.play(G4, sound.ctx.currentTime + 4.00, 0.1)
+  sound.play(G4, sound.ctx.currentTime + 4.125, 0.1)
+  sound.play(G4, sound.ctx.currentTime + 4.25, 0.1)
+  sound.play(C5, sound.ctx.currentTime + 4.75)
+  sound.play(C5, sound.ctx.currentTime + 4.875)
+  sound.play(C5, sound.ctx.currentTime + 5.00)
+  sound.play(G4, sound.ctx.currentTime + 5.125)
+  sound.play(G4, sound.ctx.currentTime + 5.25)
+  sound.play(G4, sound.ctx.currentTime + 5.375)
+  sound.play(E4, sound.ctx.currentTime + 5.50)
+  sound.play(E4, sound.ctx.currentTime + 5.625)
+  sound.play(E4, sound.ctx.currentTime + 5.75)
+  sound.play(C4, sound.ctx.currentTime + 5.875)
+  sound.play(C4, sound.ctx.currentTime + 6.00)
+  sound.play(C4, sound.ctx.currentTime + 6.125)
+  sound.end(6.00)
+}
+
+sound.end = (offset = 0.00) => {
+  sound.play(G4, sound.ctx.currentTime + 0.25 + offset)
+  sound.play(F4, sound.ctx.currentTime + 0.50 + offset)
+  sound.play(F4, sound.ctx.currentTime + 0.625 + offset)
+  sound.play(E4, sound.ctx.currentTime + 0.75 + offset)
+  sound.play(E4, sound.ctx.currentTime + 0.875 + offset)
+  sound.play(D4, sound.ctx.currentTime + 1.00 + offset)
+  sound.play(C4, sound.ctx.currentTime + 1.25 + offset)
+}
+
+const sCtx = new (window.AudioContext || window.webkitAudioContext)()
+
+sound.init(sCtx)
+
+/* #endregion */
+
+/* #region INFO DISPLAY */
+infoDisplay.init = () => {
+  infoDisplay.isInit = false
+  infoDisplay.textbox = document.createElement('div')
+  infoDisplay.textbox.style.fontSize = '20px'
+  infoDisplay.textbox.style.fontWeight = 'bold'
+  infoDisplay.textbox.style.position = 'absolute'
+  infoDisplay.textbox.style.top = 0
+  infoDisplay.textbox.style.left = '50%'
+  infoDisplay.textbox.style.transform = 'translateX(-50%)'
+  infoDisplay.textbox.style.padding = '16px 20px'
+  infoDisplay.textbox.style.boxSizing = 'border-box'
+  infoDisplay.textbox.style.color = '#ffffff'
+  infoDisplay.textbox.style.backgroundColor = 'blue'
+  infoDisplay.hide()
+}
+infoDisplay.setup = (parentNode, siblingNode, width) => {
+  if (!infoDisplay.isInit) {
+    infoDisplay.textbox.style.width = `${width}px`
+    parentNode.insertBefore(infoDisplay.textbox, siblingNode)
+    infoDisplay.isInit = true
+  }
+}
+
+infoDisplay.setMessage = (message) => {
+  infoDisplay.textbox.innerHTML = message
+}
+
+infoDisplay.show = () => {
+  infoDisplay.textbox.style.opacity = 0.75
+  infoDisplay.textbox.style.display = 'block'
+}
+
+infoDisplay.hide = () => {
+  infoDisplay.textbox.style.opacity = 0
+  infoDisplay.textbox.style.display = 'none'
+}
+
+infoDisplay.init()
 /* #endregion */
 
 /**
