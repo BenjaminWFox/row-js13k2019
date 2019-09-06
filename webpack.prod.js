@@ -18,9 +18,10 @@ module.exports = merge(common, {
           },
           mangle: {
             toplevel: true,
-            properties: {
-              regex: /__/g,
-            },
+            properties: false,
+            // properties: {
+            //   regex: /__/g,
+            // },
           }, // Note `mangle.properties` is `false` by default.
           module: false,
           output: null,
