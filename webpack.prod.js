@@ -19,7 +19,7 @@ module.exports = merge(common, {
           mangle: {
             toplevel: true,
             properties: {
-              regex: /__[a-z]+.[a-zA-Z]+/g,
+              regex: /__/g,
             },
           }, // Note `mangle.properties` is `false` by default.
           module: false,
