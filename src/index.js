@@ -5,13 +5,22 @@
  */
 // import control from './classes/control'
 // import World from './classes/world'
+// import Boat from './classes/boat'
+// import River from './classes/river'
+// import Tutorial from './classes/tutorial'
 
-import Boat from './classes/boat'
+import boatLeftSheet from './assets/images/sprites/boat-shadow-sprite-left.png'
+import boatRightSheet from './assets/images/sprites/boat-shadow-sprite-right.png'
+import borderSrc from './assets/images/sprites/river-border-horizontal-stone.png'
+import bodySrc from './assets/images/sprites/river-body.png'
+import thumbPath from './assets/images/sprites/thumb.png'
+import random from './classes/utility'
+import makeSprite from './classes/sprite'
+import { setCookie, getCookie } from './classes/cookie'
+import Button from './classes/button'
 
-import River from './classes/river'
 import Home from './classes/home'
 import Game from './classes/game'
-import Tutorial from './classes/tutorial'
 import Sound from './classes/sound'
 import infoDisplay from './classes/info-display'
 import CollisionManager from './classes/collision-manager'
@@ -30,6 +39,9 @@ let STROKE_INCREASE =  0.001
 let RIVER_SPEED =  -0.1
 let BOAT_WIDTH =  24
 let BOAT_HEIGHT =  14
+let BOAT_SPRITE_WIDTH = 84
+let BOAT_SPRITE_HEIGHT = 15
+let TUTORIAL_SCREEN_DURATION = 5000
 // Set in `initializeGame()`
 let CANVAS_MID_X =  undefined
 let CANVAS_MID_Y =  undefined
@@ -117,6 +129,8 @@ body.addEventListener('ontouchmove', (e) => e.preventDefault())
 // let world,
 let home, tutorial, control, game, controls, boat, river, obstacleManager, collisionManager, paused = false
 
+boat = {}
+
 // let tree
 // let rock
 // let waterfall
@@ -126,12 +140,12 @@ function initGameClasses() {
 
   home = new Home(ctx, hs)
 
-  console.log('Set game', sound)
+  // console.log('Set game', sound)
   game = new Game(ctx, controls, goToTitle, sound)
 
-  tutorial = new Tutorial(ctx, controls)
+  tutorial.init(ctx, controls)
 
-  boat = new Boat(
+  boat.init(
     ctx,
     SCALE_FACTOR,
     STROKE_POWER,
@@ -145,7 +159,7 @@ function initGameClasses() {
 
   collisionManager.init(boat)
 
-  // waterfall = new Waterfall(ctx, CONSTANTS.RIVER_SPEED)
+  // waterfall = new Waterfall(ctx, RIVER_SPEED)
 
   obstacleManager = new ObstacleManager(ctx)
 }
@@ -339,7 +353,7 @@ const initializeGame = (mainFn) => {
 
   infoDisplay.init(wrapper, canvas, SCALED_WIDTH)
 
-  river = new River(ctx)
+  river.init()
 
   mainFn()
 }
@@ -414,9 +428,7 @@ function _world_calculatePositions(river, boat, state) {
   }
 }
 
-/**
- * CONTROL methods ...
- */
+/* #region CONTROL */
 control = function() {
   let mtl
   let oarSound
@@ -722,9 +734,825 @@ control = function() {
     clearButton,
   }
 }
+/* #endregion */
+
+/* #region BOAT */
+boat.init = (ctx, scaleFx, strokePower, maxVelocity, waterFriction, startCoords) => {
+  boat.context = ctx
+  boat.height = BOAT_SPRITE_HEIGHT
+  boat.width = BOAT_SPRITE_WIDTH / 7
+  boat.leftImage = new Image()
+  boat.rightImage = new Image()
+  boat.leftImage.src = boatLeftSheet
+  boat.rightImage.src = boatRightSheet
+  boat.startingX = startCoords.x
+  boat.scaleFx = scaleFx
+  boat.x = startCoords.x
+  boat.y = startCoords.y
+  boat.opacity = 1
+  boat.leftSprite = makeSprite({
+    context: ctx, width: BOAT_SPRITE_WIDTH, height: BOAT_SPRITE_HEIGHT, image: boat.leftImage, numberOfFrames: 7, loop: true, ticksPerFrame: 5, x: 0, y: 0,
+  })
+  boat.rightSprite = makeSprite({
+    context: ctx, width: BOAT_SPRITE_WIDTH, height: BOAT_SPRITE_HEIGHT, image: boat.rightImage, numberOfFrames: 7, loop: true, ticksPerFrame: 5, x: 12, y: 0,
+  })
+  boat.resetVelocity()
+  boat.drift = 0
+  boat.sameSideStrokes = 0
+  boat.lastSameSideStroke = 0
+  boat.maxVelocity = maxVelocity
+  boat.strokePower = strokePower
+  boat.waterFriction = waterFriction
+  boat.lastStrokeUpdate = undefined
+  boat.isStuck = false
+}
+
+boat.renderLivesLeft = (collisions) => {
+  const atY = 32
+  const loops = 8 - collisions > 0 ? 8 - collisions : 0
+  let evens = 0
+  let odds = 0
+
+  boat.context.save()
+  boat.context.globalAlpha = 0.7
+  for (let i = 0; i < loops; i += 1) {
+    if (i % 2 === 0) {
+      boat.context.drawImage(
+        boat.leftImage, 0, 0, 12, 14, 16 + (evens * 24) + (evens * 2), atY, 12, 14,
+      )
+      evens += 1
+    }
+    else {
+      boat.context.drawImage(
+        boat.rightImage, 0, 0, 12, 14, 28 + (odds * 24) + (odds * 2), atY, 12, 14,
+      )
+      odds += 1
+    }
+  }
+  boat.context.restore()
+}
+
+boat.setStuck = () => {
+  console.log('Stuck set...')
+  boat.isStuck = true
+}
+
+boat.setUnstuck = () => {
+  if (boat.isStuck) {
+    console.log('UNStuck set...')
+    boat.isStuck = false
+  }
+}
+
+boat.updateStrokePower = (difficulty) => {
+  boat.strokePower = STROKE_POWER + (STROKE_INCREASE * difficulty)
+}
+
+boat.getBoatBodyDimensions = () => ({
+  minY: boat.y,
+  maxX: boat.x + 17,
+  maxY: boat.y + boat.height,
+  minX: boat.x + 8,
+})
+
+boat.resetVelocity = () => {
+  boat.velocity = 0
+}
+
+boat.setFrames = (frameObj) => {
+  if (
+    boat.leftSprite.currentFrame() !== frameObj.left
+      && boat.rightSprite.currentFrame() !== frameObj.right
+  ) {
+    boat.sameSideStrokes = 0
+  }
+  if (boat.leftSprite.currentFrame() !== frameObj.left) {
+    boat.addVelocity(frameObj.left)
+    boat.addDrift(frameObj.left, 1)
+  }
+  boat.leftSprite.goToFrame(frameObj.left)
+
+  if (boat.rightSprite.currentFrame() !== frameObj.right) {
+    boat.addVelocity(frameObj.right)
+    boat.addDrift(frameObj.right, -1)
+  }
+  boat.rightSprite.goToFrame(frameObj.right)
+}
+
+boat.checkOarAlignment = () => {
+  // console.log('Checking oar alignment...')
+  if (boat.x === boat.startingX) {
+    console.log('Resetting oars...')
+    boat.leftSprite.goToFrame(0).resetTickCount()
+    boat.rightSprite.goToFrame(0).resetTickCount()
+    boat.rightSprite.update()
+    boat.leftSprite.update()
+    boat.oarsOffset = false
+  }
+}
+
+boat.justRow = () => {
+  if (boat.x !== boat.startingX) {
+    if (boat.drift !== 0) {
+      boat.drift = 0
+    }
+    boat.oarsOffset = true
+
+    // console.log('Just rowing...', boat.x, boat.startingX)
+
+    if (boat.x - boat.startingX > 1) {
+      // console.log('Going right')
+      boat.x -= 0.25
+      boat.rightSprite.update()
+    }
+    else if (boat.x - boat.startingX < -1) {
+      // console.log('Going left')
+      boat.x += 0.25
+      boat.leftSprite.update()
+    }
+    else {
+      boat.x = boat.startingX
+      // console.log('Resetting X', boat.x, boat.startingX)
+    }
+  }
+  else {
+    if (boat.oarsOffset) {
+      // console.log('Fixing offset oars!')
+      boat.x = boat.startingX
+      boat.leftSprite.goToFrame(0).resetTickCount()
+      boat.rightSprite.goToFrame(0).resetTickCount()
+      boat.oarsOffset = false
+    }
+
+    boat.rightSprite.update()
+    boat.leftSprite.update()
+  }
+
+  boat.render()
+}
+
+boat.isOarInWater = (frame) => frame > 2 && frame < 6
+
+boat.isSameSideRowing = () => Math.abs(boat.sameSideStrokes) > 3
+
+boat.addVelocity = (frame) => {
+  if (frame) {
+    if (
+      boat.isOarInWater(frame)
+        && boat.velocity <= boat.maxVelocity
+        && !boat.isSameSideRowing()
+    ) {
+      boat.setUnstuck()
+      boat.velocity += boat.strokePower
+      boat.lastStrokeUpdate = Date.now()
+    }
+  }
+}
+
+boat.bounceLeft = () => {
+  boat.drift = -0.066
+}
+
+boat.bounceRight = () => {
+  boat.drift = 0.066
+}
+
+boat.addDrift = (frame, direction) => {
+  if (boat.isSameSideRowing()) {
+    boat.lastSameSideStroke = Date.now()
+  }
+  else {
+    boat.sameSideStrokes += direction
+  }
+
+  if (frame) {
+    if (boat.isOarInWater(frame)) {
+      boat.drift += boat.strokePower * direction
+    }
+  }
+}
+
+boat.applyWaterFriction = () => {
+  const now = Date.now()
+
+  if (now - boat.lastSameSideStroke > 500 && boat.drift !== 0) {
+    if (boat.drift > 0) {
+      boat.drift -= boat.waterFriction
+      if (boat.drift < 0) {
+        boat.drift = 0
+      }
+    }
+    if (boat.drift < 0) {
+      boat.drift += boat.waterFriction
+      if (boat.drift > 0) {
+        boat.drift = 0
+      }
+    }
+  }
+
+  if (boat.isStuck) {
+    boat.velocity = -(RIVER_SPEED * 2)
+    // console.log('Is stuck...', boat.velocity)
+  }
+  else if (now - boat.lastStrokeUpdate > 500 && boat.velocity > 0) {
+    // console.log('Friction unstuck...')
+    boat.setUnstuck()
+    boat.velocity -= boat.waterFriction
+    if (boat.velocity < 0) {
+      boat.resetVelocity()
+    }
+  }
+}
+
+boat.runFrameUpdate = () => {
+  boat.render()
+  boat.applyWaterFriction()
+}
+
+boat.checkForOutOfBounds = (x) => {
+  if (x >= CANVAS_WIDTH - boat.width - 20) {
+    boat.x = CANVAS_WIDTH - boat.width - 20
+    boat.drift = 0
+  }
+  if (x <= 0 + 10) {
+    boat.x = 10
+    boat.drift = 0
+  }
+}
+
+boat.render = () => {
+  boat.x += boat.drift * 4
+
+  boat.checkForOutOfBounds(boat.x)
+
+  const roundX = Math.round(boat.x) // Math.round(boat.x / boat.scaleFx)
+  const roundY = Math.round(boat.y) // Math.round(boat.y / boat.scaleFx)
+  const renderXOffset = 12
+
+  boat.context.save()
+  boat.leftSprite.render(roundX, roundY)
+  boat.rightSprite.render(roundX + renderXOffset, roundY)
+
+  boat.context.restore()
+}
+
+boat.fadeOut = () => {
+  if (boat.velocity !== 0) {
+    boat.resetVelocity()
+  }
+  if (boat.opacity > 0) {
+    boat.context.save()
+    boat.opacity -= 0.05
+    boat.context.globalAlpha = boat.opacity
+
+    // console.log('OP', boat.opacity)
+    boat.render()
+    boat.context.restore()
+  }
+}
+/* #endregion */
+
+/* #region RIVER */
+river = {}
+river.init = () => {
+  river.bodyDimention = 27
+  river.bodiesInRow = Math.ceil(CANVAS_WIDTH / river.bodyDimention)
+  river.rowsInBodyColumn = Math.ceil(CANVAS_HEIGHT / river.bodyDimention) + 2
+  river.borderXDimension = 25
+  river.borderYDimension = 240
+  river.bordersInColumn = 3
+  river.bordersLeft = []
+  river.bordersRight = []
+  river.borderImage = new Image()
+  river.borderImage.src = borderSrc
+  river.bodyImage = new Image()
+  river.bodyImage.src = bodySrc
+  river.current = RIVER_SPEED
+  river.bodyColumns = []
+  river.maxBodyTileY = 0
+  river.minBodyTileY = 0
+  river.makeBorderLeft()
+  river.makeBorderRight()
+  river.makeBodySprites()
+}
+
+river.reset = () => {
+  river.current = RIVER_SPEED
+}
+
+river.getRenderAdjustAmount = (velocity) => (river.current * 2) + velocity
+
 /**
- * BOAT methods ...
- */
+   * BORDER methods
+   */
+river.getBorderBasePositions = () => ({
+  left: {
+    x: 0,
+    y: -river.borderXDimension,
+  },
+  right: {
+    x: -river.borderYDimension,
+    y: CANVAS_WIDTH - river.borderXDimension,
+  },
+})
+
+river.getLeftBorderYPos = (yPos, index) => (yPos + ((index - 1) * river.borderYDimension))
+
+river.getRightBorderYPos = (yPos, index) => (yPos + ((index - 1) * river.borderYDimension))
+
+river.makeBorderLeft = () => {
+  const startPos = river.getBorderBasePositions()
+
+  river.makeBorderSprites(startPos.left.x, startPos.left.y, 90, river.bordersLeft)
+}
+
+river.makeBorderRight = () => {
+  const startPos = river.getBorderBasePositions()
+
+  river.makeBorderSprites(startPos.right.x, startPos.right.y, -90, river.bordersRight)
+}
+
+river.makeBorderSprites = (xPos, yPos, rotation, arr) => {
+  for (let i = 0; i < river.bordersInColumn; i += 1) {
+    const sprite = river.makeBorderSprite(xPos, yPos, rotation, i)
+
+    // console.log('Made sprite, sprite y', sprite.y)
+    // console.log('Made sprite, sprite X', sprite.x)
+    arr.push(sprite)
+  }
+}
+
+river.makeBorderSprite = (xPos, yPos, rotation, i) => {
+  let x
+  let y
+
+  if (Math.abs(rotation) === rotation) {
+    y = yPos
+    x = river.getLeftBorderYPos(xPos, i)
+    // console.log('LEFT sprite', x, y, xPos, i)
+  }
+  else {
+    y = yPos
+    x = river.getRightBorderYPos(xPos, i)
+    // console.log('LEFT sprite', x, y, xPos, i)
+  }
+
+  return makeSprite(
+    {
+      context: ctx,
+      width: river.borderYDimension,
+      height: river.borderXDimension,
+      image: river.borderImage,
+      numberOfFrames: 0,
+      x, // this is actually the Y value ... rotation ...
+      y, // this is actually the X value ... rotation ...
+      rotation,
+    },
+  )
+}
+
+river.addBordersAbove = () => {
+  const startPos = river.getBorderBasePositions()
+
+  river.bordersLeft.unshift(river.makeBorderSprite(startPos.left.x, startPos.left.y, 90, 0))
+  river.bordersRight.push(river.makeBorderSprite(startPos.right.x, startPos.right.y, -90, 2))
+
+  if (river.bordersLeft.length > 4) {
+    river.bordersLeft.splice(river.bordersLeft.length - 1, 1)
+  }
+  if (river.bordersRight.length > 4) {
+    river.bordersRight.splice(0, 1)
+  }
+
+  console.log('Added above ... ', river.bordersLeft.length, river.bordersRight.length)
+}
+
+river.addBordersBelow = () => {
+  const startPos = river.getBorderBasePositions()
+
+  river.bordersLeft.push(river.makeBorderSprite(startPos.left.x, startPos.left.y, 90, 2))
+  river.bordersRight.unshift(river.makeBorderSprite(startPos.right.x, startPos.right.y, -90, 0))
+
+  if (river.bordersLeft.length > 4) {
+    river.bordersLeft.splice(0, 1)
+  }
+  if (river.bordersRight.length > 4) {
+    river.bordersRight.splice(river.bordersRight.length - 1, 1)
+  }
+
+  console.log('Added below ... ', river.bordersLeft.length, river.bordersRight.length)
+}
+
+/**
+   * BODY methods
+   */
+river.getBodySpriteYPos = (index) => ((index * river.bodyDimention) - river.bodyDimention)
+
+river.makeBodySprites = () => {
+  for (let i = 0; i < river.rowsInBodyColumn; i += 1) {
+    if (i === 0) {
+      river.minBodyTileY = river.getBodySpriteYPos(i)
+    }
+    if (i === river.rowsInBodyColumn - 1) {
+      river.maxBodyTileY = river.getBodySpriteYPos(i)
+    }
+
+    river.bodyColumns.push(river.makeSpriteRow(i))
+  }
+
+  console.log('BODY COLUMNS', river.bodyColumns)
+}
+
+river.makeSpriteRow = (index) => {
+  const spriteRow = []
+
+  for (let n = 0; n < river.bodiesInRow; n += 1) {
+    const x = n * river.bodyDimention
+    const y = river.getBodySpriteYPos(index)
+    const sprite = makeSprite(
+      {
+        context: ctx,
+        width: 135,
+        height: river.bodyDimention,
+        image: river.bodyImage,
+        numberOfFrames: 5,
+        x,
+        y,
+      },
+    )
+
+    sprite.goToFrame(random(0, 4))
+    spriteRow.push(sprite)
+  }
+
+  return spriteRow
+}
+
+river.unshiftRowToColumns = () => {
+  // Add new row at start. Remove row at end.
+  river.bodyColumns.unshift(river.makeSpriteRow(0))
+  if (river.bodyColumns.length > river.rowsInBodyColumn + 2) {
+    river.bodyColumns.splice(river.bodyColumns.length - 1, 1)
+  }
+}
+
+river.pushRowToColumns = () => {
+  // Add new row at end, remove row at start.
+  river.bodyColumns.push(river.makeSpriteRow(river.rowsInBodyColumn - 1))
+  if (river.bodyColumns.length > river.rowsInBodyColumn + 2) {
+    river.bodyColumns.shift()
+  }
+}
+
+/**
+    * GENERAL methods
+    */
+river.render = (velocity) => {
+  river.renderBody(velocity)
+  river.renderBorder(velocity)
+}
+
+river.renderBody = (velocity) => {
+  console.log('BODY COLUMNS', river.bodyColumns[river.bodyColumns.length - 1])
+  const maxY = river.bodyColumns[river.bodyColumns.length - 1][0].y
+  const minY = river.bodyColumns[0][0].y
+
+  if (maxY < river.maxBodyTileY - river.bodyDimention) {
+    river.pushRowToColumns(maxY, river.minBodyTileY + river.bodyDimention)
+  }
+  else if (minY > river.minBodyTileY + river.bodyDimention) {
+    river.unshiftRowToColumns(river.maxBodyTileY - river.bodyDimention)
+  }
+
+  for (let i = 0; i < river.bodyColumns.length; i += 1) {
+    for (let n = 0; n < river.bodiesInRow; n += 1) {
+      const sprite = river.bodyColumns[i][n]
+
+      sprite.y -= river.getRenderAdjustAmount(velocity) + 0.15
+
+      river.bodyColumns[i][n].render()
+    }
+  }
+}
+
+river.renderBorder = (velocity) => {
+  if (river.bordersLeft[0].x >= 0) {
+    river.addBordersAbove()
+  }
+  if (river.bordersLeft[river.bordersLeft.length - 1].x <= 0) {
+    river.addBordersBelow()
+  }
+
+  for (let i = 0; i < river.bordersLeft.length; i += 1) {
+    // Unshift LEFT at GREATER THAN 0
+    // Push LEFT at LESS THAN 0
+    const sprite = river.bordersLeft[i]
+
+    sprite.x -= river.getRenderAdjustAmount(velocity)
+    sprite.render()
+  }
+  for (let i = 0; i < river.bordersRight.length; i += 1) {
+    // Unshift RIGHT at LESS THAN -720
+    // Push RIGHT at GREATER THAN 240
+    const sprite = river.bordersRight[i]
+
+    sprite.x += river.getRenderAdjustAmount(velocity)
+    sprite.render()
+  }
+}
+/* #endregion */
+
+/* #region TUTORIAL */
+tutorial = {}
+
+tutorial.init = (ctx, controls) => {
+  tutorial.ctx = ctx
+  tutorial.controls = controls
+  tutorial.thumbImage = new Image()
+  tutorial.thumbImage.src = thumbPath
+  tutorial.thumbWidth = 17
+  tutorial.thumbHeight = 35
+  tutorial.running = false
+  tutorial.thumbSpeed = undefined
+  tutorial.cTS = 0
+  tutorial.cookieName = 'tutorial'
+  tutorial.hasBeenSeen = getCookie(tutorial.cookieName)
+  let step1
+  let step2
+  let step3
+  let step4
+
+  tutorial.steps = [step1, step2, step3, step4]
+  tutorial.setSlowThumbspeed()
+
+  tutorial.backBtn = new Button(
+    '< Back',
+    tutorial.ctx.measureText('< Back').width,
+    tutorial.ctx.measureText('L').width,
+    CANVAS_WIDTH / 2,
+    CANVAS_HEIGHT / 5,
+    () => {
+      console.log('BACK BUTTON PRESSED!')
+    },
+    { fontSize: 20 },
+  )
+}
+
+tutorial.leave = () => {
+  tutorial.stopTutorial()
+  tutorial.controls.clearButton(tutorial.controls.getMainTouchEl(), tutorial.backBtn)
+}
+
+tutorial.setSlowThumbspeed = () => {
+  tutorial.thumbSpeed = 2
+}
+
+tutorial.setFastThumbspeed = () => {
+  tutorial.thumbSpeed = 6
+}
+
+tutorial.initRightThumb = () => {
+  tutorial.rightThumb = makeSprite({
+    context: tutorial.ctx,
+    width: tutorial.thumbWidth,
+    height: tutorial.thumbHeight,
+    image: tutorial.thumbImage,
+    numberOfFrames: 1,
+    loop: false,
+    ticksPerFrame: 0,
+    x: 0,
+    y: 0,
+  })
+
+  tutorial.rTX = CANVAS_WIDTH - tutorial.thumbWidth - (CANVAS_WIDTH / 3)
+  tutorial.rTY = CANVAS_HEIGHT - tutorial.thumbHeight - 10
+  tutorial.currentRightThumbStep = 0
+  tutorial.rightThumbPath = {
+    0: tutorial.rTY,
+    1: tutorial.rTY - 50,
+    2: tutorial.rTX + 30,
+    3: tutorial.rTY,
+    4: tutorial.rTX,
+  }
+  tutorial.rtMockControl = tutorial.controls.createMockTouchObject(
+    'rt',
+    // This math is because the `rThumbX value is relative to the original, un-scaled canvas.
+    // It has to be scaled, and adjusted to be correct relative to the MID-X that the controls use
+    // which is the middle of the viewport
+    (tutorial.rTX * SCALE_FACTOR)
+      + ((SCREEN_WIDTH - SCALED_WIDTH) / 2),
+    tutorial.rTY * SCALE_FACTOR,
+  )
+  tutorial.controls.handleNewTouch(tutorial.rtMockControl)
+}
+
+tutorial.initLeftThumb = () => {
+  tutorial.leftThumb = makeSprite({
+    context: tutorial.ctx,
+    width: tutorial.thumbWidth,
+    height: tutorial.thumbHeight,
+    image: tutorial.thumbImage,
+    numberOfFrames: 1,
+    loop: false,
+    ticksPerFrame: 0,
+    x: 0,
+    y: 0,
+  })
+
+  tutorial.lTX = 0 + (CANVAS_WIDTH / 3)
+  tutorial.lTY = CANVAS_HEIGHT - tutorial.thumbHeight - 10
+
+  tutorial.currentLeftThumbStep = 0
+  tutorial.leftThumbPath = {
+    0: tutorial.lTY,
+    1: tutorial.lTY - 50,
+    2: tutorial.lTX - 30,
+    3: tutorial.lTY,
+    4: tutorial.lTX,
+  }
+  tutorial.ltMockControl = tutorial.controls.createMockTouchObject(
+    'lt',
+    // See note above on what this math is doing
+    (tutorial.lTX * SCALE_FACTOR)
+      + ((SCREEN_WIDTH - SCALED_WIDTH) / 2),
+    tutorial.lTY * SCALE_FACTOR,
+  )
+  tutorial.controls.handleNewTouch(tutorial.ltMockControl)
+}
+
+tutorial.removeThumbs = () => {
+  tutorial.controls.handleRemovedTouch(tutorial.rtMockControl)
+  tutorial.controls.handleRemovedTouch(tutorial.ltMockControl)
+}
+
+tutorial.circleRightThumb = () => {
+  switch (tutorial.currentRightThumbStep) {
+    case 0:
+      if (tutorial.rTY > tutorial.rightThumbPath[1]) {
+        tutorial.rTY -= tutorial.thumbSpeed
+      }
+      else {
+        tutorial.currentRightThumbStep = 1
+      }
+      break
+    case 1:
+      if (tutorial.rTX < tutorial.rightThumbPath[2]) {
+        tutorial.rTX += tutorial.thumbSpeed
+      }
+      else {
+        tutorial.currentRightThumbStep = 2
+      }
+      break
+    case 2:
+      if (tutorial.rTY < tutorial.rightThumbPath[3]) {
+        tutorial.rTY += tutorial.thumbSpeed
+      }
+      else {
+        tutorial.currentRightThumbStep = 3
+      }
+      break
+    case 3:
+      if (tutorial.rTX > tutorial.rightThumbPath[4]) {
+        tutorial.rTX -= tutorial.thumbSpeed
+      }
+      else {
+        tutorial.currentRightThumbStep = 4
+      }
+      break
+    case 4:
+      tutorial.currentRightThumbStep = 0
+      break
+    default:
+      break
+  }
+  tutorial.rtMockControl.pageX = tutorial.rTX * CANVAS_RATIO
+  tutorial.rtMockControl.pageY = tutorial.rTY * CANVAS_RATIO
+  tutorial.controls.handleMovedTouch(tutorial.rtMockControl)
+}
+
+tutorial.circleLeftThumb = () => {
+  switch (tutorial.currentLeftThumbStep) {
+    case 0:
+      if (tutorial.lTY > tutorial.leftThumbPath[1]) {
+        tutorial.lTY -= tutorial.thumbSpeed
+      }
+      else {
+        tutorial.currentLeftThumbStep = 1
+      }
+      break
+    case 1:
+      if (tutorial.lTX > tutorial.leftThumbPath[2]) {
+        tutorial.lTX -= tutorial.thumbSpeed
+      }
+      else {
+        tutorial.currentLeftThumbStep = 2
+      }
+      break
+    case 2:
+      if (tutorial.lTY < tutorial.leftThumbPath[3]) {
+        tutorial.lTY += tutorial.thumbSpeed
+      }
+      else {
+        tutorial.currentLeftThumbStep = 3
+      }
+      break
+    case 3:
+      if (tutorial.lTX < tutorial.leftThumbPath[4]) {
+        tutorial.lTX += tutorial.thumbSpeed
+      }
+      else {
+        tutorial.currentLeftThumbStep = 4
+      }
+      break
+    case 4:
+      tutorial.currentLeftThumbStep = 0
+      break
+    default:
+      break
+  }
+  tutorial.ltMockControl.pageX = tutorial.lTX * CANVAS_RATIO
+  tutorial.ltMockControl.pageY = tutorial.lTY * CANVAS_RATIO
+  tutorial.controls.handleMovedTouch(tutorial.ltMockControl)
+}
+
+tutorial.renderTutorial = () => {
+  tutorial.backBtn.render(tutorial.ctx)
+
+  if (!tutorial.isPaused) {
+    if (tutorial.cTS === 1
+        || tutorial.cTS === 3
+        || tutorial.cTS === 4
+    ) {
+      tutorial.circleLeftThumb()
+      tutorial.leftThumb.render(
+        tutorial.lTX,
+        tutorial.lTY,
+      )
+    }
+    if (tutorial.cTS === 1
+        || tutorial.cTS === 2
+        || tutorial.cTS === 4
+    ) {
+      tutorial.circleRightThumb()
+      tutorial.rightThumb.render(
+        tutorial.rTX,
+        tutorial.rTY,
+      )
+    }
+  }
+}
+
+tutorial.runTutorialSteps = () => {
+  tutorial.initRightThumb()
+  tutorial.initLeftThumb()
+  tutorial.hasBeenSeen = 1
+  setCookie(tutorial.cookieName, 1)
+  tutorial.running = true
+  infoDisplay.show()
+  // first show both thumbs rowing slowly
+  tutorial.setTutorialStep(1)
+  infoDisplay.setMessage('Circle thumbs to row!')
+  // then show just right thumb
+  tutorial.steps[0] = setTimeout(() => {
+    tutorial.setTutorialStep(2)
+    infoDisplay.setMessage('R thumb - R oar!')
+  }, TUTORIAL_SCREEN_DURATION * 1)
+  // then show just left thumb
+  tutorial.steps[1] = setTimeout(() => {
+    tutorial.setTutorialStep(3)
+    infoDisplay.setMessage('L thumb - L oar!')
+  }, TUTORIAL_SCREEN_DURATION * 2)
+  // then show just left thumb
+  tutorial.steps[2] = setTimeout(() => {
+    tutorial.setTutorialStep(4)
+    tutorial.setFastThumbspeed()
+    infoDisplay.setMessage('Row fast to go go go!')
+  }, TUTORIAL_SCREEN_DURATION * 3)
+  tutorial.steps[3] = setTimeout(() => {
+    tutorial.stopTutorial()
+  }, TUTORIAL_SCREEN_DURATION * 4)
+}
+
+tutorial.stopTutorial = () => {
+  tutorial.setTutorialStep(0)
+  tutorial.steps.forEach((step, i) => {
+    console.log('Step?', i, step)
+    if (step) {
+      clearTimeout(step)
+    }
+  })
+  tutorial.setSlowThumbspeed()
+  infoDisplay.setMessage('')
+  tutorial.removeThumbs()
+  infoDisplay.hide()
+  tutorial.running = false
+}
+
+tutorial.setTutorialStep = (step) => {
+  tutorial.cTS = step
+}
+
+/* #endregion */
 
 /**
  * Set the event listener that will load the game
