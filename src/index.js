@@ -36,8 +36,9 @@ let BOAT_HEIGHT =  14
 let BOAT_SPRITE_WIDTH = 84
 let BOAT_SPRITE_HEIGHT = 15
 let TUTORIAL_SCREEN_DURATION = 4000
-let QUIT_TEXT = '< QUIT'
-let PAUSE_TEXT = 'PAUSE'
+let QUIT_TEXT = '< QUIT (q)'
+let PAUSE_TEXT = 'PAUSE (p)'
+let USING_KEYBOARD = false
 
 let CANVAS_MID_X =  undefined
 let CANVAS_MID_Y =  undefined
@@ -74,7 +75,8 @@ let distanceMoved, distanceFromStart, totalDistanceRowed, isRunning
 // let world,
 let home, tutorial, control, game, controls, __boat, river,
     obstacleManager, collisionManager, paused = false,
-    makeTree, makeRock, makeButton, makeSprite, sound, infoDisplay
+    makeTree, makeRock, makeButton, makeSprite, sound, infoDisplay,
+    handleKeyboardControl
 
 __boat = {}
 home = {}
@@ -115,7 +117,7 @@ const setHs = (score) => {
   }
 }
 
-// Get dom element refs
+/* #region DOM / EVENT */
 const body = document.querySelector('body')
 const wrapper = document.getElementById('wrapper')
 const canvas = document.getElementById('canvas')
@@ -139,9 +141,8 @@ window.addEventListener('mousewheel', (event) => event.preventDefault(), { passi
 document.addEventListener('touchmove', (ev) => ev.preventDefault(), { passive: false })
 body.addEventListener('ontouchmove', (e) => e.preventDefault())
 
-// let tree
-// let rock
-// let waterfall
+/* #endregion */
+
 
 function initGameClasses() {
   // world = new World(ctx, sound.end.bind(sound))
@@ -744,6 +745,93 @@ control = function() {
     handleRemovedTouch,
     registerButton,
     clearButton,
+    setFrameForX,
+    setFrameForY,
+  }
+}
+
+handleKeyboardControl = (event) => {
+  const {code} = event
+
+  if (!USING_KEYBOARD) {
+    USING_KEYBOARD = true
+    STROKE_POWER *= 4
+  }
+
+  console.log('keydown', code)
+
+  if (gameState === gameStates.game || gameState === gameStates.tutorial) {
+    console.log('In game', code)
+    switch(code) {
+      case 'Semicolon':
+          controls.setFrameForY(10, 'right')
+          controls.setFrameForY(10, 'right')
+          controls.setFrameForY(10, 'right')
+          break
+      case 'KeyL':
+          controls.setFrameForX(-10, 'right')
+          break
+      case 'KeyK':
+          controls.setFrameForY(-10, 'right')
+          controls.setFrameForY(-10, 'right')
+          controls.setFrameForY(-10, 'right')
+          break
+          case 'KeyJ':
+            controls.setFrameForX(10, 'right')
+          break
+      case 'KeyA':
+          controls.setFrameForY(10, 'left')
+          controls.setFrameForY(10, 'left')
+          controls.setFrameForY(10, 'left')
+      break
+      case 'KeyS':
+          controls.setFrameForX(10, 'left')
+      break
+      case 'KeyD':
+          controls.setFrameForY(-10, 'left')
+          controls.setFrameForY(-10, 'left')
+          controls.setFrameForY(-10, 'left')
+      break
+      case 'KeyF':
+          controls.setFrameForX(-10, 'left')
+      break
+    }
+  }
+  if (gameState === gameStates.game) {
+    switch(code) {
+      case 'KeyQ':
+        goToTitle()
+        break  
+      case 'KeyP':
+        game.paused = !game.paused
+        break  
+      }
+  }
+  if (gameState === gameStates.title) {
+    console.log('In title', code)
+    switch(code) {
+      case 'KeyP':
+        goToGame()
+        break
+      case 'KeyT':
+        goToTutorial()
+        break
+    }
+  }
+  if (gameState === gameStates.tutorial) {
+    switch(code) {
+      case 'KeyB':
+        tutorial.leave()
+
+      break
+    }
+  }
+  if (gameState === gameStates.gameOver) {
+    switch(code) {
+      case 'KeyQ':
+        goToTitle()
+      break
+    }
   }
 }
 /* #endregion */
@@ -1297,15 +1385,33 @@ tutorial.init = (ctx, controls) => {
   tutorial.setSlowThumbspeed()
 
   tutorial.backBtn = makeButton(
-    '< Back',
-    tutorial.ctx.measureText('< Back').width,
+    '< Back (b)',
+    tutorial.ctx.measureText('<Back(b)').width,
     tutorial.ctx.measureText('L').width,
     CANVAS_WIDTH / 2,
     CANVAS_HEIGHT / 5,
     () => {
       console.log('BACK BUTTON PRESSED!')
     },
-    { fontSize: 20 },
+    { fontSize: 16 },
+  )
+  tutorial.kblBtn = makeButton(
+    '(A S D F)',
+    tutorial.ctx.measureText('(A S D F)').width,
+    tutorial.ctx.measureText('L').width,
+    10,
+    CANVAS_HEIGHT - 3,
+    () => {},
+    { fontSize: 10, alignment: 'left' },
+  )
+  tutorial.kbrBtn = makeButton(
+    '(; L K J)',
+    tutorial.ctx.measureText('(; L K J)').width,
+    tutorial.ctx.measureText('L').width,
+    CANVAS_WIDTH - 10,
+    CANVAS_HEIGHT - 3,
+    () => {},
+    { fontSize: 10, alignment: 'right' },
   )
 }
 
@@ -1489,6 +1595,8 @@ tutorial.circleLeftThumb = () => {
 
 tutorial.renderTutorial = () => {
   tutorial.backBtn.render(tutorial.ctx)
+  tutorial.kblBtn.render(tutorial.ctx)
+  tutorial.kbrBtn.render(tutorial.ctx)
 
   if (!tutorial.isPaused) {
     if (tutorial.cTS === 1
@@ -1675,8 +1783,8 @@ game.renderGameOver = () => {
 home.init = (hs) => {
   home.hs = `Best: ${Math.floor(hs / 3) || 0}m`
   home.title = 'ROW'
-  home.playBtnText = 'PLAY'
-  home.tutorialBtnText = 'TUTORIAL'
+  home.playBtnText = 'PLAY (p)'
+  home.tutorialBtnText = 'TUTORIAL (t)'
   home.initialTitleX = CANVAS_WIDTH / 2
   home.initialTitleY = CANVAS_HEIGHT / 2
   home.currentTitleY = CANVAS_HEIGHT / 2
@@ -1698,7 +1806,7 @@ home.init = (hs) => {
     () => {
       console.log('PLAY BUTTON PRESSED!')
     },
-    { fontSize: 20 },
+    { fontSize: 16 },
   )
   home.tutorialBtn = makeButton(
     home.tutorialBtnText,
@@ -1709,7 +1817,7 @@ home.init = (hs) => {
     () => {
       console.log('TUTORIAL BUTTON PRESSED!')
     },
-    { fontSize: 20 },
+    { fontSize: 16 },
   )
   home.hsText = makeButton(
     home.hs,
@@ -2400,6 +2508,7 @@ infoDisplay.init()
 window.addEventListener('load', () => {
   console.log('-- window _ load --')
 
+  window.addEventListener('keydown', handleKeyboardControl)
   initializeGame(mainLoop)
 })
 /* eslint-enable */
