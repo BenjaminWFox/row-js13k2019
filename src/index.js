@@ -162,9 +162,9 @@ function initGameClasses() {
   home.init(hs)
 
   // console.log('Set game', sound)
-  game.init(controls, goToTitle, sound)
+  game.init(goToTitle, sound)
 
-  tutorial.init(controls)
+  tutorial.init()
 
   boat.init(
     SCALE_FACTOR,
@@ -212,7 +212,7 @@ function tutorialLoop() {
 function goToGameOver() {
   sound.end()
   setHs(totalDistanceRowed)
-  game.controls.registerButton(game.controls.getMainTouchEl(), game.gameOverBtn)
+  controls.registerButton(controls.getMainTouchEl(), game.gameOverBtn)
   gameState = gameStates.gameOver
 }
 
@@ -1417,8 +1417,7 @@ river.renderBorder = (velocity) => {
 /* #region TUTORIAL */
 tutorial = {}
 
-tutorial.init = (controls) => {
-  tutorial.controls = controls
+tutorial.init = () => {
   tutorial.thumbImage = new Image()
   tutorial.thumbImage.src = thumbPath
   tutorial.thumbWidth = 17
@@ -1469,8 +1468,8 @@ tutorial.init = (controls) => {
 
 tutorial.leave = () => {
   tutorial.stopTutorial()
-  tutorial.controls.clearButton(tutorial.controls.getMainTouchEl(), tutorial.backBtn)
-  tutorial.controls.clearBoatControls()
+  controls.clearButton(controls.getMainTouchEl(), tutorial.backBtn)
+  controls.clearBoatControls()
 }
 
 tutorial.setSlowThumbspeed = () => {
@@ -1504,7 +1503,7 @@ tutorial.initRightThumb = () => {
     3: tutorial.rTY,
     4: tutorial.rTX,
   }
-  tutorial.rtMockControl = tutorial.controls.createMockTouchObject(
+  tutorial.rtMockControl = controls.createMockTouchObject(
     'rt',
     // This math is because the `rThumbX value is relative to the original, un-scaled canvas.
     // It has to be scaled, and adjusted to be correct relative to the MID-X that the controls use
@@ -1513,7 +1512,7 @@ tutorial.initRightThumb = () => {
       + ((SCREEN_WIDTH - SCALED_WIDTH) / 2),
     tutorial.rTY * SCALE_FACTOR,
   )
-  tutorial.controls.handleNewTouch(tutorial.rtMockControl)
+  controls.handleNewTouch(tutorial.rtMockControl)
 }
 
 tutorial.initLeftThumb = () => {
@@ -1540,19 +1539,19 @@ tutorial.initLeftThumb = () => {
     3: tutorial.lTY,
     4: tutorial.lTX,
   }
-  tutorial.ltMockControl = tutorial.controls.createMockTouchObject(
+  tutorial.ltMockControl = controls.createMockTouchObject(
     'lt',
     // See note above on what this math is doing
     (tutorial.lTX * SCALE_FACTOR)
       + ((SCREEN_WIDTH - SCALED_WIDTH) / 2),
     tutorial.lTY * SCALE_FACTOR,
   )
-  tutorial.controls.handleNewTouch(tutorial.ltMockControl)
+  controls.handleNewTouch(tutorial.ltMockControl)
 }
 
 tutorial.removeThumbs = () => {
-  tutorial.controls.handleRemovedTouch(tutorial.rtMockControl)
-  tutorial.controls.handleRemovedTouch(tutorial.ltMockControl)
+  controls.handleRemovedTouch(tutorial.rtMockControl)
+  controls.handleRemovedTouch(tutorial.ltMockControl)
 }
 
 tutorial.circleRightThumb = () => {
@@ -1597,7 +1596,7 @@ tutorial.circleRightThumb = () => {
   }
   tutorial.rtMockControl.pageX = tutorial.rTX * CANVAS_RATIO
   tutorial.rtMockControl.pageY = tutorial.rTY * CANVAS_RATIO
-  tutorial.controls.handleMovedTouch(tutorial.rtMockControl)
+  controls.handleMovedTouch(tutorial.rtMockControl)
 }
 
 tutorial.circleLeftThumb = () => {
@@ -1642,7 +1641,7 @@ tutorial.circleLeftThumb = () => {
   }
   tutorial.ltMockControl.pageX = tutorial.lTX * CANVAS_RATIO
   tutorial.ltMockControl.pageY = tutorial.lTY * CANVAS_RATIO
-  tutorial.controls.handleMovedTouch(tutorial.ltMockControl)
+  controls.handleMovedTouch(tutorial.ltMockControl)
 }
 
 tutorial.renderTutorial = () => {
@@ -1706,7 +1705,7 @@ tutorial.runTutorialSteps = () => {
   tutorial.steps[3] = setTimeout(() => {
     tutorial.setTutorialStep(5)
     tutorial.removeThumbs()
-    tutorial.controls.registerBoatControls()
+    controls.registerBoatControls()
     infoDisplay.setMessage('Ok, you try!')
   }, TUTORIAL_SCREEN_DURATION * 4)
 }
@@ -1735,15 +1734,14 @@ tutorial.setTutorialStep = (step) => {
 /* #region GAME */
 game = {}
 
-game.init = (controls, goToBackScreen, sound) => {
-  game.controls = controls
+game.init = (goToBackScreen, sound) => {
   game.sound = sound
   game.paused = false
   game.resetDifficulty()
   game.goToBackScreen = goToBackScreen
   game.quitBtn = makeButton(QUIT_TEXT, ctx.measureText(QUIT_TEXT).width, ctx.measureText('L').width, 2, 10, () => {
     game.leave()
-    game.controls.clearBoatControls()
+    controls.clearBoatControls()
   }, { fontSize: 10, alignment: 'left' })
   game.pauseBtn = makeButton(
     PAUSE_TEXT,
@@ -1800,14 +1798,14 @@ game.updateDifficulty = (distance) => {
 }
 
 game.goTo = () => {
-  game.controls.registerButton(game.controls.getMainTouchEl(), game.quitBtn)
-  game.controls.registerButton(game.controls.getMainTouchEl(), game.pauseBtn)
+  controls.registerButton(controls.getMainTouchEl(), game.quitBtn)
+  controls.registerButton(controls.getMainTouchEl(), game.pauseBtn)
 }
 
 game.leave = () => {
-  game.controls.clearButton(game.controls.getMainTouchEl(), game.quitBtn)
-  game.controls.clearButton(game.controls.getMainTouchEl(), game.gameOverBtn)
-  game.controls.clearButton(game.controls.getMainTouchEl(), game.pauseBtn)
+  controls.clearButton(controls.getMainTouchEl(), game.quitBtn)
+  controls.clearButton(controls.getMainTouchEl(), game.gameOverBtn)
+  controls.clearButton(controls.getMainTouchEl(), game.pauseBtn)
   game.goToBackScreen()
 }
 
