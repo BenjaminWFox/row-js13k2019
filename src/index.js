@@ -213,6 +213,7 @@ function tutorialLoop() {
 function goToGameOver() {
   sound.end()
   setHs(totalDistanceRowed)
+  game.controls.registerButton(game.controls.getMainTouchEl(), game.gameOverBtn)
   gameState = gameStates.gameOver
 }
 
@@ -1809,6 +1810,7 @@ game.goTo = () => {
 
 game.leave = () => {
   game.controls.clearButton(game.controls.getMainTouchEl(), game.quitBtn)
+  game.controls.clearButton(game.controls.getMainTouchEl(), game.gameOverBtn)
   game.controls.clearButton(game.controls.getMainTouchEl(), game.pauseBtn)
   game.goToBackScreen()
 }
