@@ -187,6 +187,7 @@ function initGameClasses() {
 
 function titleLoop() {
   _world_calculatePositions(river, __boat)
+  __boat.renderRipples()
   river.renderBody(__boat.velocity + 0.35)
   __boat.justRow()
   river.renderBorder(__boat.velocity + 0.35)
@@ -199,6 +200,7 @@ function titleLoop() {
 
 function tutorialLoop() {
   _world_calculatePositions(river, __boat)
+  __boat.renderRipples()
   river.renderBody(__boat.velocity + 0.1)
   // I think there is lingering velocity after the tutorial ends?
   // TODO: check on above.
@@ -223,6 +225,8 @@ function gameLoop() {
     }
 
     _world_calculatePositions(river, __boat, gameState)
+
+    __boat.renderRipples()
 
     river.renderBody(__boat.velocity)
 
@@ -1114,20 +1118,22 @@ __boat.checkForOutOfBounds = (x) => {
 }
 /** BOAT RENDER */
 __boat.render = () => {
-  __boat.x += __boat.drift * 4
-
-  __boat.checkForOutOfBounds(__boat.x)
-
-  __boat.roundX = Math.round(__boat.x) // Math.round(__boat.x / __boat.scaleFx)
-  __boat.roundY = Math.round(__boat.y) // Math.round(__boat.y / __boat.scaleFx)
   const renderXOffset = 12
 
-  __boat.context.save()
   spawnRipple()
-  // __boat.rippleSprite.update()
 
-  // __boat.context.globalAlpha = __boat.velocity 
-  // __boat.rippleSprite.render(__boat.roundX, __boat.roundY - 15)
+  __boat.x += __boat.drift * 4
+  __boat.checkForOutOfBounds(__boat.x)
+  __boat.roundX = Math.round(__boat.x) // Math.round(__boat.x / __boat.scaleFx)
+  __boat.roundY = Math.round(__boat.y) // Math.round(__boat.y / __boat.scaleFx)
+
+  __boat.context.save()
+  __boat.leftSprite.render(__boat.roundX, __boat.roundY)
+  __boat.rightSprite.render(__boat.roundX + renderXOffset, __boat.roundY)
+  __boat.context.restore()
+}
+
+__boat.renderRipples = () => {
   for (let i = 0;i < ripples.length; i += 1) {
     const ripple = ripples[i]
     const y = ripple.y -= getRenderAdjustAmount(__boat.velocity)
@@ -1141,15 +1147,7 @@ __boat.render = () => {
       i -= 1
     }
     __boat.context.restore()
-    console.log(ripples)
   }
-  ripples.forEach(ripple => {
-  })
-
-  __boat.leftSprite.render(__boat.roundX, __boat.roundY)
-  __boat.rightSprite.render(__boat.roundX + renderXOffset, __boat.roundY)
-
-  __boat.context.restore()
 }
 
 __boat.fadeOut = () => {
