@@ -18,7 +18,10 @@ module.exports = merge(common, {
           },
           mangle: {
             toplevel: true,
-            properties: false,
+            // properties: false,
+            properties: {
+              regex: '__boat.*',
+            },
             // properties: {
             //   regex: /__/g,
             // },
