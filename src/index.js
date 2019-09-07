@@ -904,7 +904,7 @@ __boat.init = (ctx, scaleFx, strokePower, maxVelocity, waterFriction, startCoord
 }
 
 __boat.renderLivesLeft = (collisions) => {
-  const atY = 32
+  const atY = 34
   const loops = 8 - collisions > 0 ? 8 - collisions : 0
   let evens = 0
   let odds = 0
@@ -1785,7 +1785,7 @@ game.init = (ctx, controls, goToBackScreen, sound) => {
     game.ctx.measureText(game.scoreText()).width,
     game.ctx.measureText('L').width,
     CANVAS_WIDTH / 2,
-    27,
+    29,
     () => {
       console.log('PAUSE BUTTON PRESSED!')
     },
