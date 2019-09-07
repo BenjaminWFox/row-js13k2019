@@ -162,12 +162,11 @@ function initGameClasses() {
   home.init(hs)
 
   // console.log('Set game', sound)
-  game.init(ctx, controls, goToTitle, sound)
+  game.init(controls, goToTitle, sound)
 
-  tutorial.init(ctx, controls)
+  tutorial.init(controls)
 
   boat.init(
-    ctx,
     SCALE_FACTOR,
     STROKE_POWER,
     MAX_HUMAN_POWER_VELOCITY,
@@ -869,8 +868,7 @@ function spawnRipple(velOvr = 0, opOvr = 0, nowOvr = 0) {
   }
 }
 
-boat.init = (ctx, scaleFx, strokePower, maxVelocity, waterFriction, startCoords) => {
-  boat.context = ctx
+boat.init = (scaleFx, strokePower, maxVelocity, waterFriction, startCoords) => {
   boat.height = BOAT_SPRITE_HEIGHT
   boat.width = BOAT_SPRITE_WIDTH / 7
   boat.leftImage = new Image()
@@ -910,23 +908,23 @@ boat.renderLivesLeft = (collisions) => {
   let evens = 0
   let odds = 0
 
-  boat.context.save()
-  boat.context.globalAlpha = 0.7
+  ctx.save()
+  ctx.globalAlpha = 0.7
   for (let i = 0; i < loops; i += 1) {
     if (i % 2 === 0) {
-      boat.context.drawImage(
+      ctx.drawImage(
         boat.leftImage, 0, 0, 12, 14, 16 + (evens * 24) + (evens * 2), atY, 12, 14,
       )
       evens += 1
     }
     else {
-      boat.context.drawImage(
+      ctx.drawImage(
         boat.rightImage, 0, 0, 12, 14, 28 + (odds * 24) + (odds * 2), atY, 12, 14,
       )
       odds += 1
     }
   }
-  boat.context.restore()
+  ctx.restore()
 }
 
 boat.setStuck = () => {
@@ -1128,10 +1126,10 @@ boat.render = () => {
   boat.roundX = Math.round(boat.x) // Math.round(boat.x / boat.scaleFx)
   boat.roundY = Math.round(boat.y) // Math.round(boat.y / boat.scaleFx)
 
-  boat.context.save()
+  ctx.save()
   boat.leftSprite.render(boat.roundX, boat.roundY)
   boat.rightSprite.render(boat.roundX + renderXOffset, boat.roundY)
-  boat.context.restore()
+  ctx.restore()
 }
 
 boat.renderRipples = () => {
@@ -1139,15 +1137,15 @@ boat.renderRipples = () => {
     const ripple = ripples[i]
     const y = ripple.y -= getRenderAdjustAmount(boat.velocity)
     ripple.update()
-    boat.context.save()
-    boat.context.globalAlpha = ripple.opacity
+    ctx.save()
+    ctx.globalAlpha = ripple.opacity
     ripple.render(ripple.x, y)
     ripple.opacity -= 0.005
     if (ripple.opacity <= 0) {
       ripples.splice(i, 1)
       i -= 1
     }
-    boat.context.restore()
+    ctx.restore()
   }
 }
 
@@ -1156,13 +1154,13 @@ boat.fadeOut = () => {
     boat.resetVelocity()
   }
   if (boat.opacity > 0) {
-    boat.context.save()
+    ctx.save()
     boat.opacity -= 0.05
-    boat.context.globalAlpha = boat.opacity
+    ctx.globalAlpha = boat.opacity
 
     // console.log('OP', boat.opacity)
     boat.render()
-    boat.context.restore()
+    ctx.restore()
   }
 }
 /* #endregion */
@@ -1419,8 +1417,7 @@ river.renderBorder = (velocity) => {
 /* #region TUTORIAL */
 tutorial = {}
 
-tutorial.init = (ctx, controls) => {
-  tutorial.ctx = ctx
+tutorial.init = (controls) => {
   tutorial.controls = controls
   tutorial.thumbImage = new Image()
   tutorial.thumbImage.src = thumbPath
@@ -1441,8 +1438,8 @@ tutorial.init = (ctx, controls) => {
 
   tutorial.backBtn = makeButton(
     BACK_TEXT,
-    tutorial.ctx.measureText(BACK_TEXT).width,
-    tutorial.ctx.measureText('L').width,
+    ctx.measureText(BACK_TEXT).width,
+    ctx.measureText('L').width,
     CANVAS_WIDTH / 2,
     CANVAS_HEIGHT / 5,
     () => {
@@ -1452,8 +1449,8 @@ tutorial.init = (ctx, controls) => {
   )
   tutorial.kblBtn = makeButton(
     LKB_TEXT,
-    tutorial.ctx.measureText(LKB_TEXT).width,
-    tutorial.ctx.measureText('L').width,
+    ctx.measureText(LKB_TEXT).width,
+    ctx.measureText('L').width,
     10,
     CANVAS_HEIGHT - 3,
     () => {},
@@ -1461,8 +1458,8 @@ tutorial.init = (ctx, controls) => {
   )
   tutorial.kbrBtn = makeButton(
     RKB_TEXT,
-    tutorial.ctx.measureText(RKB_TEXT).width,
-    tutorial.ctx.measureText('L').width,
+    ctx.measureText(RKB_TEXT).width,
+    ctx.measureText('L').width,
     CANVAS_WIDTH - 10,
     CANVAS_HEIGHT - 3,
     () => {},
@@ -1486,7 +1483,7 @@ tutorial.setFastThumbspeed = () => {
 
 tutorial.initRightThumb = () => {
   tutorial.rightThumb = makeSprite({
-    context: tutorial.ctx,
+    context: ctx,
     width: tutorial.thumbWidth,
     height: tutorial.thumbHeight,
     image: tutorial.thumbImage,
@@ -1521,7 +1518,7 @@ tutorial.initRightThumb = () => {
 
 tutorial.initLeftThumb = () => {
   tutorial.leftThumb = makeSprite({
-    context: tutorial.ctx,
+    context: ctx,
     width: tutorial.thumbWidth,
     height: tutorial.thumbHeight,
     image: tutorial.thumbImage,
@@ -1649,9 +1646,9 @@ tutorial.circleLeftThumb = () => {
 }
 
 tutorial.renderTutorial = () => {
-  tutorial.backBtn.render(tutorial.ctx)
-  tutorial.kblBtn.render(tutorial.ctx)
-  tutorial.kbrBtn.render(tutorial.ctx)
+  tutorial.backBtn.render(ctx)
+  tutorial.kblBtn.render(ctx)
+  tutorial.kbrBtn.render(ctx)
 
   if (!tutorial.isPaused) {
     if (tutorial.cTS === 1
@@ -1738,21 +1735,20 @@ tutorial.setTutorialStep = (step) => {
 /* #region GAME */
 game = {}
 
-game.init = (ctx, controls, goToBackScreen, sound) => {
-  game.ctx = ctx
+game.init = (controls, goToBackScreen, sound) => {
   game.controls = controls
   game.sound = sound
   game.paused = false
   game.resetDifficulty()
   game.goToBackScreen = goToBackScreen
-  game.quitBtn = makeButton(QUIT_TEXT, game.ctx.measureText(QUIT_TEXT).width, game.ctx.measureText('L').width, 2, 10, () => {
+  game.quitBtn = makeButton(QUIT_TEXT, ctx.measureText(QUIT_TEXT).width, ctx.measureText('L').width, 2, 10, () => {
     game.leave()
     game.controls.clearBoatControls()
   }, { fontSize: 10, alignment: 'left' })
   game.pauseBtn = makeButton(
     PAUSE_TEXT,
-    game.ctx.measureText(PAUSE_TEXT).width,
-    game.ctx.measureText('L').width,
+    ctx.measureText(PAUSE_TEXT).width,
+    ctx.measureText('L').width,
     CANVAS_WIDTH - 2,
     10,
     () => {
@@ -1770,8 +1766,8 @@ game.init = (ctx, controls, goToBackScreen, sound) => {
 
   game.gameOverBtn = makeButton(
     'GAMEOVER',
-    game.ctx.measureText('GAMEOVER').width,
-    game.ctx.measureText('L').width,
+    ctx.measureText('GAMEOVER').width,
+    ctx.measureText('L').width,
     CANVAS_WIDTH / 2,
     110,
     () => {
@@ -1783,8 +1779,8 @@ game.init = (ctx, controls, goToBackScreen, sound) => {
   game.distanceRowed = 0
   game.score = makeButton(
     game.scoreText(),
-    game.ctx.measureText(game.scoreText()).width,
-    game.ctx.measureText('L').width,
+    ctx.measureText(game.scoreText()).width,
+    ctx.measureText('L').width,
     CANVAS_WIDTH / 2,
     29,
     () => {
@@ -1825,13 +1821,13 @@ game.updateScore = (distance) => {
 game.render = (distanceRowed) => {
   game.updateScore(distanceRowed)
 
-  game.quitBtn.render(game.ctx)
-  game.pauseBtn.render(game.ctx)
-  game.score.render(game.ctx)
+  game.quitBtn.render(ctx)
+  game.pauseBtn.render(ctx)
+  game.score.render(ctx)
 }
 
 game.renderGameOver = () => {
-  game.gameOverBtn.render(game.ctx)
+  game.gameOverBtn.render(ctx)
 }
 /* #endregion */
 
