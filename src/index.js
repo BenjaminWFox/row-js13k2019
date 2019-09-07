@@ -5,6 +5,7 @@
 import boatLeftSheet from './assets/images/sprites/boat-shadow-sprite-left.png'
 import boatRightSheet from './assets/images/sprites/boat-shadow-sprite-right.png'
 import borderSrc from './assets/images/sprites/river-border-horizontal-stone.png'
+import rippleSrc from './assets/images/sprites/ripple-sprite.png'
 import treeSrc from './assets/images/sprites/tree-sprite.png'
 import rockSrc from './assets/images/sprites/rock-sprite.png'
 import bodySrc from './assets/images/sprites/river-body.png'
@@ -69,6 +70,8 @@ let G4 = A4 * (2 ** (9 / 12))
 let C5 = A4 * (2 ** (14 / 12))
 /* #endregion */
 
+const getRenderAdjustAmount = (velocity) => (RIVER_SPEED * 2) + velocity
+
 /**
  * World/distance vars
  */
@@ -89,6 +92,8 @@ collisionManager = {}
 obstacleManager = {}
 sound = {}
 infoDisplay = {}
+const ripples = []
+let lastRipple = 0
 
 /**
  * Put all variables that need resetting per-game here
@@ -847,14 +852,28 @@ handleKeyboardControl = (event) => {
 /* #endregion */
 
 /* #region BOAT */
+function spawnRipple(velOvr = 0, opOvr = 0, nowOvr = 0) {
+  const now = Date.now()
+  if (__boat.velocity + velOvr > .1 && now > lastRipple + 250 + nowOvr) {
+    ripples.push(
+      makeSprite({
+        context: ctx, opacity: __boat.velocity + .1 + opOvr, width: 48, height: 18, image: __boat.rippleImage, numberOfFrames: 2, loop: true, ticksPerFrame: 30, x: __boat.roundX, y: __boat.roundY - 16,
+      })
+    )
+    lastRipple = now
+  }
+}
+
 __boat.init = (ctx, scaleFx, strokePower, maxVelocity, waterFriction, startCoords) => {
   __boat.context = ctx
   __boat.height = BOAT_SPRITE_HEIGHT
   __boat.width = BOAT_SPRITE_WIDTH / 7
   __boat.leftImage = new Image()
   __boat.rightImage = new Image()
+  __boat.rippleImage = new Image()
   __boat.leftImage.src = boatLeftSheet
   __boat.rightImage.src = boatRightSheet
+  __boat.rippleImage.src = rippleSrc
   __boat.startingX = startCoords.x
   __boat.scaleFx = scaleFx
   __boat.x = startCoords.x
@@ -865,6 +884,9 @@ __boat.init = (ctx, scaleFx, strokePower, maxVelocity, waterFriction, startCoord
   })
   __boat.rightSprite = makeSprite({
     context: ctx, width: BOAT_SPRITE_WIDTH, height: BOAT_SPRITE_HEIGHT, image: __boat.rightImage, numberOfFrames: 7, loop: true, ticksPerFrame: 5, x: 12, y: 0,
+  })
+  __boat.rippleSprite = makeSprite({
+    context: ctx, width: 48, height: 18, image: __boat.rippleImage, numberOfFrames: 2, loop: true, ticksPerFrame: 30, x: 12, y: 0,
   })
   __boat.resetVelocity()
   __boat.drift = 0
@@ -996,6 +1018,7 @@ __boat.justRow = () => {
 
     __boat.rightSprite.update()
     __boat.leftSprite.update()
+    spawnRipple(.15, .15, 100)
   }
 
   __boat.render()
@@ -1089,19 +1112,42 @@ __boat.checkForOutOfBounds = (x) => {
     __boat.drift = 0
   }
 }
-
+/** BOAT RENDER */
 __boat.render = () => {
   __boat.x += __boat.drift * 4
 
   __boat.checkForOutOfBounds(__boat.x)
 
-  const roundX = Math.round(__boat.x) // Math.round(__boat.x / __boat.scaleFx)
-  const roundY = Math.round(__boat.y) // Math.round(__boat.y / __boat.scaleFx)
+  __boat.roundX = Math.round(__boat.x) // Math.round(__boat.x / __boat.scaleFx)
+  __boat.roundY = Math.round(__boat.y) // Math.round(__boat.y / __boat.scaleFx)
   const renderXOffset = 12
 
   __boat.context.save()
-  __boat.leftSprite.render(roundX, roundY)
-  __boat.rightSprite.render(roundX + renderXOffset, roundY)
+  spawnRipple()
+  // __boat.rippleSprite.update()
+
+  // __boat.context.globalAlpha = __boat.velocity 
+  // __boat.rippleSprite.render(__boat.roundX, __boat.roundY - 15)
+  for (let i = 0;i < ripples.length; i += 1) {
+    const ripple = ripples[i]
+    const y = ripple.y -= getRenderAdjustAmount(__boat.velocity)
+    ripple.update()
+    __boat.context.save()
+    __boat.context.globalAlpha = ripple.opacity
+    ripple.render(ripple.x, y)
+    ripple.opacity -= 0.005
+    if (ripple.opacity <= 0) {
+      ripples.splice(i, 1)
+      i -= 1
+    }
+    __boat.context.restore()
+    console.log(ripples)
+  }
+  ripples.forEach(ripple => {
+  })
+
+  __boat.leftSprite.render(__boat.roundX, __boat.roundY)
+  __boat.rightSprite.render(__boat.roundX + renderXOffset, __boat.roundY)
 
   __boat.context.restore()
 }
@@ -1150,7 +1196,7 @@ river.reset = () => {
   river.current = RIVER_SPEED
 }
 
-river.getRenderAdjustAmount = (velocity) => (river.current * 2) + velocity
+// river.getRenderAdjustAmount = (velocity) => (river.current * 2) + velocity
 
 /**
    * BORDER methods
@@ -1337,7 +1383,7 @@ river.renderBody = (velocity) => {
     for (let n = 0; n < river.bodiesInRow; n += 1) {
       const sprite = river.bodyColumns[i][n]
 
-      sprite.y -= river.getRenderAdjustAmount(velocity) + 0.15
+      sprite.y -= getRenderAdjustAmount(velocity) + 0.15
 
       river.bodyColumns[i][n].render()
     }
@@ -1357,7 +1403,7 @@ river.renderBorder = (velocity) => {
     // Push LEFT at LESS THAN 0
     const sprite = river.bordersLeft[i]
 
-    sprite.x -= river.getRenderAdjustAmount(velocity)
+    sprite.x -= getRenderAdjustAmount(velocity)
     sprite.render()
   }
   for (let i = 0; i < river.bordersRight.length; i += 1) {
@@ -1365,7 +1411,7 @@ river.renderBorder = (velocity) => {
     // Push RIGHT at GREATER THAN 240
     const sprite = river.bordersRight[i]
 
-    sprite.x += river.getRenderAdjustAmount(velocity)
+    sprite.x += getRenderAdjustAmount(velocity)
     sprite.render()
   }
 }
@@ -2106,10 +2152,10 @@ makeTree = (ctx) => {
     quadSize: 5,
   })
 
-  tree.getRenderAdjustAmount = (velocity) => (RIVER_SPEED * 2) + velocity
+  
 
   tree.render = (velocity) => {
-    tree.y -= tree.getRenderAdjustAmount(velocity)
+    tree.y -= getRenderAdjustAmount(velocity)
 
     tree.sprite.update()
     tree.sprite.render(tree.x, tree.y)
@@ -2172,10 +2218,10 @@ makeRock = (ctx) => {
     quadSize: 6,
   })
   
-  rock.getRenderAdjustAmount = (velocity) => (RIVER_SPEED * 2) + velocity
+  // rock.getRenderAdjustAmount = (velocity) => (RIVER_SPEED * 2) + velocity
   
   rock.render = (velocity) => {
-    rock.y -= rock.getRenderAdjustAmount(velocity)
+    rock.y -= getRenderAdjustAmount(velocity)
   
     rock.sprite.update()
     rock.sprite.render(rock.x, rock.y)
@@ -2285,6 +2331,7 @@ makeSprite = (options) => {
   that.x = options.x
   that.y = options.y
   that.frameIndex = 0
+  that.opacity = options.opacity
   that.rotation = options.rotation
 
   that.currentFrame = () => frameIndex
