@@ -20,7 +20,7 @@ module.exports = merge(common, {
             toplevel: true,
             // properties: false,
             properties: {
-              regex: '__boat.*',
+              regex: /(__[a-zA-Z]+)/,
             },
             // properties: {
             //   regex: /__/g,

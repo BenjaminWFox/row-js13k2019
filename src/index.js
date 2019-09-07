@@ -178,7 +178,7 @@ function initGameClasses() {
     },
   )
 
-  collisionManager.setup(boat)
+  collisionManager.__setup(boat)
 
   // waterfall = new Waterfall(ctx, RIVER_SPEED)
 
@@ -221,7 +221,7 @@ function gameLoop() {
   if (!game.paused) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    if (!isRunning || collisionManager.collisions >= 8) {
+    if (!isRunning || collisionManager.__collisions >= 8) {
       goToGameOver()
     }
 
@@ -243,13 +243,13 @@ function gameLoop() {
 
     boat.updateStrokePower(game.difficulty)
 
-    collisionManager.broadPhaseCheck(boat, obstacleManager.obstacles)
+    collisionManager.__broadPhaseCheck(boat, obstacleManager.obstacles)
 
     river.renderBorder(boat.velocity)
 
     game.render(totalDistanceRowed)
 
-    boat.renderLivesLeft(collisionManager.collisions)
+    boat.renderLivesLeft(collisionManager.__collisions)
 
     updateHs(totalDistanceRowed)
   }
@@ -306,7 +306,7 @@ function goToGame() {
 
   resetVarsForNewGame()
   river.reset()
-  collisionManager.reset()
+  collisionManager.__reset()
 
   obstacleManager.makeWaterfall()
 
@@ -373,7 +373,7 @@ const initializeGame = (mainFn) => {
   controls = control()
   controls.init(body, sound.oar.bind(sound))
 
-  collisionManager.init(ctx, sound.bump.bind(sound))
+  collisionManager.__init(ctx, sound.bump.bind(sound))
 
   initGameClasses()
 
@@ -417,7 +417,7 @@ function mainLoop() {
         }
         break
       case gameStates.game:
-        if (!collisionManager.hasCollision) {
+        if (!collisionManager.__hasCollision) {
           gameLoop()
         }
         break
@@ -1932,38 +1932,38 @@ home.renderMainScreen = () => {
 /* #endregion */
 
 /* #region COLLISION MANAGER */
-collisionManager.init = (ctx, colSound) => {
-  collisionManager.ctx = ctx
-  collisionManager.boatY = undefined
-  collisionManager.hasCollision = false
-  collisionManager.colSound = colSound
+collisionManager.__init = (ctx, colSound) => {
+  collisionManager.__ctx = ctx
+  collisionManager.__boatY = undefined
+  collisionManager.__hasCollision = false
+  collisionManager.__colSound = colSound
 
-  collisionManager.collisions = 0
-  collisionManager.lastCollisionAt = 0
+  collisionManager.__collisions = 0
+  collisionManager.__lastCollisionAt = 0
 }
 
-collisionManager.setup = (boat) => {
-  // collisionManager.boatY = boat.y / SCALE_FACTOR
-  collisionManager.boatWidth = boat.width
-  collisionManager.boatHeight = boat.height
+collisionManager.__setup = (boat) => {
+  // collisionManager.__boatY = boat.y / SCALE_FACTOR
+  collisionManager.__boatWidth = boat.width
+  collisionManager.__boatHeight = boat.height
 }
 
-collisionManager.reset = () => {
-  collisionManager.collisions = 0
-  collisionManager.lastCollisionAt = 0
+collisionManager.__reset = () => {
+  collisionManager.__collisions = 0
+  collisionManager.__lastCollisionAt = 0
 }
 
-collisionManager.addCollision = () => {
+collisionManager.__addCollision = () => {
   const now = Date.now()
 
-  if (now > collisionManager.lastCollisionAt + 500) {
-    collisionManager.colSound()
-    collisionManager.collisions += 1
-    collisionManager.lastCollisionAt = now
+  if (now > collisionManager.__lastCollisionAt + 500) {
+    collisionManager.__colSound()
+    collisionManager.__collisions += 1
+    collisionManager.__lastCollisionAt = now
   }
 }
 
-collisionManager.broadPhaseCheck = (boat, obstacles) => {
+collisionManager.__broadPhaseCheck = (boat, obstacles) => {
   const boatBox = boat.getBoatBodyDimensions()
 
   obstacles.forEach((obstacle) => {
@@ -1975,12 +1975,12 @@ collisionManager.broadPhaseCheck = (boat, obstacles) => {
         && boatBox.maxY > obstacleBox.minY
         && boatBox.minY < obstacleBox.maxY
     ) {
-      collisionManager.narrowPhaseCheck(boatBox, boat, obstacleBox, obstacle)
+      collisionManager.__narrowPhaseCheck(boatBox, boat, obstacleBox, obstacle)
     }
   })
 }
 
-collisionManager.narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
+collisionManager.__narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
   // console.log('Y: ', boatBox.maxY, obstacleBox.midY)
   console.log('X: ', boatBox.maxX, obstacleBox.midX, obstacleBox.quadSize)
   let buffer = 0
@@ -2022,12 +2022,12 @@ collisionManager.narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
     // Boat is stuck on the obstacle! Hold it in place...
     console.log('SET STUCK!')
     boat.setStuck()
-    collisionManager.addCollision()
+    collisionManager.__addCollision()
   }
   else if (boatBox.maxY > obstacleBox.minY + buffer) {
     console.log('BOUNCE OFF')
     boat.resetVelocity()
-    collisionManager.addCollision()
+    collisionManager.__addCollision()
   }
 
   if (
@@ -2036,7 +2036,7 @@ collisionManager.narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
   ) {
     console.log('BOUNCE RIGHT')
     boat.bounceRight()
-    collisionManager.addCollision()
+    collisionManager.__addCollision()
   }
   if (
     boatBox.maxX > obstacleBox.minX + buffer
@@ -2044,7 +2044,7 @@ collisionManager.narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
   ) {
     console.log('BOUNCE LEFT')
     boat.bounceLeft()
-    collisionManager.addCollision()
+    collisionManager.__addCollision()
   }
   // else {
   //   boat.setUnstuck()
