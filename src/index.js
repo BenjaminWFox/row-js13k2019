@@ -182,7 +182,7 @@ function initGameClasses() {
 
   // waterfall = new Waterfall(ctx, RIVER_SPEED)
 
-  obstacleManager.init(ctx)
+  obstacleManager.__init(ctx)
 }
 
 function titleLoop() {
@@ -233,9 +233,9 @@ function gameLoop() {
 
     // drawDebug(ctx, world)
 
-    obstacleManager.trySpawnObstacle(totalDistanceRowed, game.difficulty)
+    obstacleManager.__trySpawnObstacle(totalDistanceRowed, game.difficulty)
 
-    obstacleManager.render(boat.velocity)
+    obstacleManager.__render(boat.velocity)
 
     boat.setFrames(controls.boatFrame())
 
@@ -243,7 +243,7 @@ function gameLoop() {
 
     boat.updateStrokePower(game.difficulty)
 
-    collisionManager.__broadPhaseCheck(boat, obstacleManager.obstacles)
+    collisionManager.__broadPhaseCheck(boat, obstacleManager.__obstacles)
 
     river.renderBorder(boat.velocity)
 
@@ -264,7 +264,7 @@ function gameOverLoop() {
 
   river.render(0)
 
-  obstacleManager.render(-(RIVER_SPEED * 2))
+  obstacleManager.__render(-(RIVER_SPEED * 2))
 
   boat.fadeOut()
 
@@ -308,7 +308,7 @@ function goToGame() {
   river.reset()
   collisionManager.__reset()
 
-  obstacleManager.makeWaterfall()
+  obstacleManager.__makeWaterfall()
 
 
   game.goTo()
@@ -1899,7 +1899,7 @@ home.renderTitle = (x, y) => {
   ctx.save()
   ctx.textAlign = 'center'
   ctx.fillStyle = '#ffffff'
-  ctx.font = '70px Courier'
+  ctx.font = '62px Courier'
   ctx.fillText(home.title, x, y)
   ctx.restore()
 }
@@ -1918,15 +1918,15 @@ home.renderMenu = () => {
 }
 
 home.renderMainScreen = () => {
-  // if (home.currentTitleY > 60) {
-  //   home.currentTitleY -= 1
-  //   home.renderTitle(home.initialTitleX, home.currentTitleY)
-  // }
-  // else {
-  //   home.renderTitle(home.initialTitleX, home.currentTitleY)
-  //   home.renderMenu()
-  // }
-  home.renderTitle(home.initialTitleX, 60)
+  if (home.currentTitleY > 60) {
+    home.currentTitleY -= 1
+    home.renderTitle(home.initialTitleX, home.currentTitleY)
+  }
+  else {
+    home.renderTitle(home.initialTitleX, home.currentTitleY)
+    home.renderMenu()
+  }
+  // home.renderTitle(home.initialTitleX, 60)
   home.renderMenu()
 }
 /* #endregion */
@@ -2053,73 +2053,73 @@ collisionManager.__narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
 /* #endregion */
 
 /* #region OBSTACLE MANAGER */
-obstacleManager.init = (ctx) => {
-  obstacleManager.ctx = ctx
-  obstacleManager.obstacles = []
-  obstacleManager.waterfall = []
-  obstacleManager.spawnKey = 7
-  obstacleManager.spawnFrequency = 150
-  obstacleManager.difficultyMultiplyer = 15
-  obstacleManager.maxSpawnFrequency = 40
-  obstacleManager.lastSpawnAt = 0
+obstacleManager.__init = (ctx) => {
+  obstacleManager.__ctx = ctx
+  obstacleManager.__obstacles = []
+  obstacleManager.__waterfall = []
+  obstacleManager.__spawnKey = 7
+  obstacleManager.__spawnFrequency = 150
+  obstacleManager.__difficultyMultiplyer = 15
+  obstacleManager.__maxSpawnFrequency = 40
+  obstacleManager.__lastSpawnAt = 0
 }
 
-obstacleManager.makeWaterfall = () => {
+obstacleManager.__makeWaterfall = () => {
   let waterfallObjects = 50
 
   while (waterfallObjects > 0) {
-    obstacleManager.waterfall.push(obstacleManager.spawnRock(null, random(-10, -140)))
-    obstacleManager.waterfall.push(obstacleManager.spawnTree(null, random(-10, -140)))
+    obstacleManager.__waterfall.push(obstacleManager.__spawnRock(null, random(-10, -140)))
+    obstacleManager.__waterfall.push(obstacleManager.__spawnTree(null, random(-10, -140)))
     waterfallObjects -= 1
   }
 }
 
-obstacleManager.render = (velocity) => {
-  obstacleManager.renderWaterfall(velocity)
-  obstacleManager.renderObstacles(velocity)
+obstacleManager.__render = (velocity) => {
+  obstacleManager.__renderWaterfall(velocity)
+  obstacleManager.__renderObstacles(velocity)
 }
 
-obstacleManager.renderWaterfall = (velocity) => {
-  obstacleManager.waterfall.forEach((item) => {
+obstacleManager.__renderWaterfall = (velocity) => {
+  obstacleManager.__waterfall.forEach((item) => {
     item.render(velocity)
   })
 }
 
-obstacleManager.renderObstacles = (velocity) => {
-  obstacleManager.obstacles.forEach((obstacle) => {
+obstacleManager.__renderObstacles = (velocity) => {
+  obstacleManager.__obstacles.forEach((obstacle) => {
     obstacle.render(velocity)
   })
 }
 
-obstacleManager.trySpawnObstacle = (distance, difficulty) => {
-  const spawnDifficulty = obstacleManager.spawnFrequency - (obstacleManager.difficultyMultiplyer * difficulty)
-  const spawnCheckNum = spawnDifficulty < obstacleManager.maxSpawnFrequency ? obstacleManager.maxSpawnFrequency : spawnDifficulty
+obstacleManager.__trySpawnObstacle = (distance, difficulty) => {
+  const spawnDifficulty = obstacleManager.__spawnFrequency - (obstacleManager.__difficultyMultiplyer * difficulty)
+  const spawnCheckNum = spawnDifficulty < obstacleManager.__maxSpawnFrequency ? obstacleManager.__maxSpawnFrequency : spawnDifficulty
   const canSpawnNum = distance - spawnCheckNum
 
-  if (canSpawnNum > obstacleManager.lastSpawnAt) {
-    if (random(1, 20) === obstacleManager.spawnKey) {
-      obstacleManager.spawnObstacle()
+  if (canSpawnNum > obstacleManager.__lastSpawnAt) {
+    if (random(1, 20) === obstacleManager.__spawnKey) {
+      obstacleManager.__spawnObstacle()
 
-      obstacleManager.lastSpawnAt = distance
+      obstacleManager.__lastSpawnAt = distance
     }
   }
 }
 
-obstacleManager.spawnObstacle = () => {
+obstacleManager.__spawnObstacle = () => {
   const type = random(1, 2)
   let obstacle
 
   if (type === 1) {
-    obstacle = obstacleManager.spawnRock()
+    obstacle = obstacleManager.__spawnRock()
   }
   else {
-    obstacle = obstacleManager.spawnTree()
+    obstacle = obstacleManager.__spawnTree()
   }
 
-  obstacleManager.obstacles.push(obstacle)
+  obstacleManager.__obstacles.push(obstacle)
 }
 
-obstacleManager.spawnTree = (x, y) => {
+obstacleManager.__spawnTree = (x, y) => {
   const tree = makeTree(ctx)
 
   tree.x = x || random(tree.minX, tree.maxX)
@@ -2128,7 +2128,7 @@ obstacleManager.spawnTree = (x, y) => {
   return tree
 }
 
-obstacleManager.spawnRock = (x, y) => {
+obstacleManager.__spawnRock = (x, y) => {
   const rock = makeRock(ctx)
 
   rock.x = x || random(rock.minX, rock.maxX)
