@@ -1270,8 +1270,8 @@ river.makeBorderSprite = (xPos, yPos, rotation, i) => {
 river.addBordersAbove = () => {
   const startPos = river.getBorderBasePositions()
 
-  river.bordersLeft.unshift(river.makeBorderSprite(startPos.left.x, startPos.left.y, 90, 0))
-  river.bordersRight.push(river.makeBorderSprite(startPos.right.x, startPos.right.y, -90, 2))
+  river.bordersLeft.unshift(river.makeBorderSprite(river.bordersLeft[0].x, startPos.left.y, 90, 0))
+  river.bordersRight.push(river.makeBorderSprite(river.bordersRight[river.bordersRight.length - 1].x, startPos.right.y, -90, 2))
 
   if (river.bordersLeft.length > 4) {
     river.bordersLeft.splice(river.bordersLeft.length - 1, 1)
@@ -1286,8 +1286,10 @@ river.addBordersAbove = () => {
 river.addBordersBelow = () => {
   const startPos = river.getBorderBasePositions()
 
-  river.bordersLeft.push(river.makeBorderSprite(startPos.left.x, startPos.left.y, 90, 2))
-  river.bordersRight.unshift(river.makeBorderSprite(startPos.right.x, startPos.right.y, -90, 0))
+  // console.log('Add border', startPos, , river.bordersLeft[river.bordersLeft.length - 1].y)
+
+  river.bordersLeft.push(river.makeBorderSprite(river.bordersLeft[river.bordersLeft.length - 1].x, startPos.left.y, 90, 2))
+  river.bordersRight.unshift(river.makeBorderSprite(river.bordersRight[0].x, startPos.right.y, -90, 0))
 
   if (river.bordersLeft.length > 4) {
     river.bordersLeft.splice(0, 1)
@@ -1742,7 +1744,7 @@ game.init = (goToBackScreen, sound) => {
   game.paused = false
   game.resetDifficulty()
   game.goToBackScreen = goToBackScreen
-  game.quitBtn = makeButton(QUIT_TEXT, ctx.measureText(QUIT_TEXT).width, ctx.measureText('L').width, 2, 10, () => {
+  game.quitBtn = makeButton(QUIT_TEXT, ctx.measureText(QUIT_TEXT).width, ctx.measureText('L').width, 10, 10, () => {
     game.leave()
     controls.clearBoatControls()
   }, { fontSize: 10, alignment: 'left' })
@@ -1750,7 +1752,7 @@ game.init = (goToBackScreen, sound) => {
     PAUSE_TEXT,
     ctx.measureText(PAUSE_TEXT).width,
     ctx.measureText('L').width,
-    CANVAS_WIDTH - 2,
+    CANVAS_WIDTH - 10,
     10,
     () => {
       game.paused = !game.paused
