@@ -6,6 +6,7 @@ import boatLeftSheet from './assets/images/sprites/boat-shadow-sprite-left.png'
 import boatRightSheet from './assets/images/sprites/boat-shadow-sprite-right.png'
 import borderSrc from './assets/images/sprites/river-border-horizontal-stone.png'
 import rippleSrc from './assets/images/sprites/ripple-sprite.png'
+import rescueSrc from './assets/images/sprites/rescue-copter.png'
 import treeSrc from './assets/images/sprites/tree-sprite.png'
 import rockSrc from './assets/images/sprites/rock-sprite.png'
 import bodySrc from './assets/images/sprites/river-body.png'
@@ -84,10 +85,11 @@ let distanceMoved, distanceFromStart, totalDistanceRowed, isRunning
 let home, tutorial, control, game, controls, boat, river,
     obstacleManager, collisionManager, paused = false,
     makeTree, makeRock, makeButton, makeSprite, sound, infoDisplay,
-    handleKeyboardControl
+    handleKeyboardControl, rescue
 
 boat = {}
 home = {}
+rescue = {}
 collisionManager = {}
 obstacleManager = {}
 sound = {}
@@ -177,6 +179,8 @@ function initGameClasses() {
     },
   )
 
+  rescue.__init()
+
   collisionManager.__setup(boat)
 
   // waterfall = new Waterfall(ctx, RIVER_SPEED)
@@ -250,6 +254,8 @@ function gameLoop() {
 
     boat.rLL(collisionManager.__collisions)
 
+    rescue.__render()
+
     updateHs(totalDistanceRowed)
   }
 }
@@ -268,7 +274,14 @@ function gameOverLoop() {
   boat.fadeOut()
 
   game.render(totalDistanceRowed)
-  game.renderGameOver()
+
+  if (!rescue.saved) {
+    game.renderGameOver()
+  }
+  else {
+    game.renderGameOver()
+    rescue.__render()
+  }
 }
 
 function pause(duration, cb) {
@@ -825,7 +838,17 @@ handleKeyboardControl = (event) => {
       case 'KeyP':
         game.paused = !game.paused
         break  
+    }
+    if (rescue.activeControls) {
+      switch(code) {
+      case 'KeyR':
+        rescue.__rescue()
+        break  
+      case 'KeyO':
+        rescue.__row()
+        break  
       }
+    }
   }
   if (gameState === gameStates.title) {
     console.log('In title', code)
@@ -856,6 +879,83 @@ handleKeyboardControl = (event) => {
   }
 }
 /* #endregion */
+
+/* #region RESCUE */
+rescue.__init = () => {
+  rescue.height = 55
+  rescue.width = 34
+  rescue.stopY = boat.y - 13
+  rescue.x = boat.x
+  rescue.y = CANVAS_HEIGHT
+  rescue.image = new Image()
+  rescue.image.src = rescueSrc
+  rescue.decided = false
+  rescue.saved = false
+  rescue.activeControls = false
+  rescue.sprite = makeSprite({
+    context: ctx, width: 68, height: 55, image: rescue.image, numberOfFrames: 2, loop: true, ticksPerFrame: 2, x: rescue.x, y: rescue.y,
+  })
+  rescue.takeBtn = makeButton(
+    'RESCUE?(R)',
+    ctx.measureText('RESCUE?(R)').width,
+    ctx.measureText('L').width,
+    CANVAS_WIDTH / 2,
+    CANVAS_HEIGHT / 3.25,
+    rescue.__rescue,
+    { fontSize: 16, alignment: 'center' },
+  )
+  rescue.rowBtn = makeButton(
+    'JUST ROW?(O)',
+    ctx.measureText('ROW?(O)').width,
+    ctx.measureText('L').width,
+    CANVAS_WIDTH / 2,
+    CANVAS_HEIGHT / 1.5,
+    rescue.__row,
+    { fontSize: 16, alignment: 'center' },
+  )
+}
+  
+  rescue.__rescue = () => {
+    console.log('RESCUE?(R)')
+    rescue.saved = true
+    rescue.__continue()
+    game.gameOverBtn.name = 'SAFE!!'
+    goToGameOver()
+  }
+
+  rescue.__row = () => {
+    rescue.__continue()
+  }
+
+rescue.__continue = () => {
+  rescue.decided = true
+  game.paused = false
+  controls.clearButton(controls.getMainTouchEl(), rescue.takeBtn)
+  controls.clearButton(controls.getMainTouchEl(), rescue.rowBtn)
+}
+
+rescue.__render = () => {
+  rescue.sprite.update()
+  rescue.sprite.render(Math.round(boat.x - 4), rescue.y)
+
+  if (rescue.y > rescue.stopY && !rescue.decided) {
+    rescue.y -= 2
+  }
+  else if (!rescue.decided) {
+    if (!rescue.activeControls) {
+      controls.registerButton(controls.getMainTouchEl(), rescue.takeBtn)
+      controls.registerButton(controls.getMainTouchEl(), rescue.rowBtn)
+      rescue.activeControls = true
+    }
+    rescue.takeBtn.render(ctx)
+    rescue.rowBtn.render(ctx)
+    game.paused = true
+  }
+  else if (rescue.decided && rescue.y > -55) {
+    rescue.y -= 2
+  }
+
+}
 
 /* #region BOAT */
 function spawnRipple(velOvr = 0, opOvr = 0, nowOvr = 0) {
@@ -1158,10 +1258,12 @@ boat.fadeOut = () => {
   }
   if (boat.opacity > 0) {
     ctx.save()
+
     boat.opacity -= 0.05
     ctx.globalAlpha = boat.opacity
 
-    // console.log('OP', boat.opacity)
+    console.log('OP', boat.opacity)
+
     boat.render()
     ctx.restore()
   }
