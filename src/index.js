@@ -617,19 +617,21 @@ control = function() {
   }
 
   const handleMovedTouch = (touchObject) => {
+    const o = 10
     // console.log('MOVED TOUCH!')
     if (activeTouches.left && activeTouches.left.identifier === touchObject.identifier) {
+
       touchDiff.left.y += prevTouch.left.y - touchObject.pageY
       prevTouch.left.y = touchObject.pageY
       touchDiff.left.x += prevTouch.left.x - touchObject.pageX
       prevTouch.left.x = touchObject.pageX
 
-      if (touchDiff.left.x >= 40 || touchDiff.left.x <= -40) {
+      if (touchDiff.left.x >= o || touchDiff.left.x <= -o) {
         setLeftFrame(touchDiff.left.x, undefined)
         touchDiff.left.x = 0
       }
 
-      if (touchDiff.left.y >= 20 || touchDiff.left.y <= -20) {
+      if (touchDiff.left.y >= o || touchDiff.left.y <= -o) {
         setLeftFrame(undefined, touchDiff.left.y)
         touchDiff.left.y = 0
       }
@@ -641,11 +643,11 @@ control = function() {
       touchDiff.right.x += prevTouch.right.x - touchObject.pageX
       prevTouch.right.x = touchObject.pageX
 
-      if (touchDiff.right.x >= 20 || touchDiff.right.x <= -20) {
+      if (touchDiff.right.x >= o || touchDiff.right.x <= -o) {
         setRightFrame(touchDiff.right.x, undefined)
         touchDiff.right.x = 0
       }
-      if (touchDiff.right.y >= 20 || touchDiff.right.y <= -20) {
+      if (touchDiff.right.y >= o || touchDiff.right.y <= -o) {
         setRightFrame(undefined, touchDiff.right.y)
         touchDiff.right.y = 0
       }
@@ -2054,7 +2056,7 @@ obstacleManager.__init = (ctx) => {
   obstacleManager.__spawnKey = 7
   obstacleManager.__spawnFrequency = 150
   obstacleManager.__difficultyMultiplyer = 15
-  obstacleManager.__maxSpawnFrequency = 40
+  obstacleManager.__maxSpawnFrequency = 30
   obstacleManager.__lastSpawnAt = 0
 }
 
@@ -2092,6 +2094,7 @@ obstacleManager.__trySpawnObstacle = (distance, difficulty) => {
 
   if (canSpawnNum > obstacleManager.__lastSpawnAt) {
     if (random(1, 20) === obstacleManager.__spawnKey) {
+      console.log('SPAWNING:', spawnDifficulty)
       obstacleManager.__spawnObstacle()
 
       obstacleManager.__lastSpawnAt = distance
