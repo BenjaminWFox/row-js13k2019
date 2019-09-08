@@ -186,7 +186,7 @@ function initGameClasses() {
 
 function titleLoop() {
   _world_calculatePositions(river, boat)
-  boat.renderRipples()
+  boat.rR()
   river.renderBody(boat.velocity + 0.35)
   boat.justRow()
   river.renderBorder(boat.velocity + 0.35)
@@ -199,7 +199,7 @@ function titleLoop() {
 
 function tutorialLoop() {
   _world_calculatePositions(river, boat)
-  boat.renderRipples()
+  boat.rR()
   river.renderBody(boat.velocity + 0.1)
   // I think there is lingering velocity after the tutorial ends?
   // TODO: check on above.
@@ -226,7 +226,7 @@ function gameLoop() {
 
     _world_calculatePositions(river, boat, gameState)
 
-    boat.renderRipples()
+    boat.rR()
 
     river.renderBody(boat.velocity)
 
@@ -248,7 +248,7 @@ function gameLoop() {
 
     game.render(totalDistanceRowed)
 
-    boat.renderLivesLeft(collisionManager.__collisions)
+    boat.rLL(collisionManager.__collisions)
 
     updateHs(totalDistanceRowed)
   }
@@ -863,7 +863,7 @@ function spawnRipple(velOvr = 0, opOvr = 0, nowOvr = 0) {
   if (boat.velocity + velOvr > .1 && now > lastRipple + 250 + nowOvr) {
     ripples.push(
       makeSprite({
-        context: ctx, opacity: boat.velocity + .1 + opOvr, width: 48, height: 18, image: boat.rippleImage, numberOfFrames: 2, loop: true, ticksPerFrame: 30, x: boat.roundX, y: boat.roundY - 16,
+        context: ctx, opacity: boat.velocity + .1 + opOvr, width: 48, height: 18, image: boat.rpI, numberOfFrames: 2, loop: true, ticksPerFrame: 30, x: boat.roundX, y: boat.roundY - 16,
       })
     )
     lastRipple = now
@@ -873,38 +873,38 @@ function spawnRipple(velOvr = 0, opOvr = 0, nowOvr = 0) {
 boat.init = (scaleFx, strokePower, maxVelocity, waterFriction, startCoords) => {
   boat.height = BOAT_SPRITE_HEIGHT
   boat.width = BOAT_SPRITE_WIDTH / 7
-  boat.leftImage = new Image()
-  boat.rightImage = new Image()
-  boat.rippleImage = new Image()
-  boat.leftImage.src = boatLeftSheet
-  boat.rightImage.src = boatRightSheet
-  boat.rippleImage.src = rippleSrc
+  boat.lI = new Image() // leftImage
+  boat.rI = new Image() // rightImage
+  boat.rpI = new Image() // rippleImage
+  boat.lI.src = boatLeftSheet
+  boat.rI.src = boatRightSheet
+  boat.rpI.src = rippleSrc
   boat.startingX = startCoords.x
   boat.scaleFx = scaleFx
   boat.x = startCoords.x
   boat.y = startCoords.y
   boat.opacity = 1
-  boat.leftSprite = makeSprite({
-    context: ctx, width: BOAT_SPRITE_WIDTH, height: BOAT_SPRITE_HEIGHT, image: boat.leftImage, numberOfFrames: 7, loop: true, ticksPerFrame: 5, x: 0, y: 0,
+  // leftSprite
+  boat.lS = makeSprite({
+    context: ctx, width: BOAT_SPRITE_WIDTH, height: BOAT_SPRITE_HEIGHT, image: boat.lI, numberOfFrames: 7, loop: true, ticksPerFrame: 5, x: 0, y: 0,
   })
-  boat.rightSprite = makeSprite({
-    context: ctx, width: BOAT_SPRITE_WIDTH, height: BOAT_SPRITE_HEIGHT, image: boat.rightImage, numberOfFrames: 7, loop: true, ticksPerFrame: 5, x: 12, y: 0,
-  })
-  boat.rippleSprite = makeSprite({
-    context: ctx, width: 48, height: 18, image: boat.rippleImage, numberOfFrames: 2, loop: true, ticksPerFrame: 30, x: 12, y: 0,
+  // rightSprite
+  boat.rS = makeSprite({
+    context: ctx, width: BOAT_SPRITE_WIDTH, height: BOAT_SPRITE_HEIGHT, image: boat.rI, numberOfFrames: 7, loop: true, ticksPerFrame: 5, x: 12, y: 0,
   })
   boat.resetVelocity()
   boat.drift = 0
-  boat.sameSideStrokes = 0
-  boat.lastSameSideStroke = 0
+  boat.sSS = 0 // sameSideStrokes
+  boat.lSSS = 0 // lastSameSideStroke
   boat.maxVelocity = maxVelocity
   boat.strokePower = strokePower
-  boat.waterFriction = waterFriction
+  boat.wF = waterFriction // waterFriction
   boat.lastStrokeUpdate = undefined
   boat.isStuck = false
 }
 
-boat.renderLivesLeft = (collisions) => {
+// renderLivesLeft
+boat.rLL = (collisions) => {
   const atY = 34
   const loops = 8 - collisions > 0 ? 8 - collisions : 0
   let evens = 0
@@ -915,13 +915,13 @@ boat.renderLivesLeft = (collisions) => {
   for (let i = 0; i < loops; i += 1) {
     if (i % 2 === 0) {
       ctx.drawImage(
-        boat.leftImage, 0, 0, 12, 14, 16 + (evens * 24) + (evens * 2), atY, 12, 14,
+        boat.lI, 0, 0, 12, 14, 16 + (evens * 24) + (evens * 2), atY, 12, 14,
       )
       evens += 1
     }
     else {
       ctx.drawImage(
-        boat.rightImage, 0, 0, 12, 14, 28 + (odds * 24) + (odds * 2), atY, 12, 14,
+        boat.rI, 0, 0, 12, 14, 28 + (odds * 24) + (odds * 2), atY, 12, 14,
       )
       odds += 1
     }
@@ -945,7 +945,8 @@ boat.updateStrokePower = (difficulty) => {
   boat.strokePower = STROKE_POWER + (STROKE_INCREASE * difficulty)
 }
 
-boat.getBoatBodyDimensions = () => ({
+// getBoatBodyDimensions
+boat.getBBD = () => ({
   minY: boat.y,
   maxX: boat.x + 17,
   maxY: boat.y + boat.height,
@@ -958,32 +959,32 @@ boat.resetVelocity = () => {
 
 boat.setFrames = (frameObj) => {
   if (
-    boat.leftSprite.currentFrame() !== frameObj.left
-      && boat.rightSprite.currentFrame() !== frameObj.right
+    boat.lS.currentFrame() !== frameObj.left
+      && boat.rS.currentFrame() !== frameObj.right
   ) {
-    boat.sameSideStrokes = 0
+    boat.sSS = 0
   }
-  if (boat.leftSprite.currentFrame() !== frameObj.left) {
+  if (boat.lS.currentFrame() !== frameObj.left) {
     boat.addVelocity(frameObj.left)
     boat.addDrift(frameObj.left, 1)
   }
-  boat.leftSprite.goToFrame(frameObj.left)
+  boat.lS.goToFrame(frameObj.left)
 
-  if (boat.rightSprite.currentFrame() !== frameObj.right) {
+  if (boat.rS.currentFrame() !== frameObj.right) {
     boat.addVelocity(frameObj.right)
     boat.addDrift(frameObj.right, -1)
   }
-  boat.rightSprite.goToFrame(frameObj.right)
+  boat.rS.goToFrame(frameObj.right)
 }
 
 boat.checkOarAlignment = () => {
   // console.log('Checking oar alignment...')
   if (boat.x === boat.startingX) {
     console.log('Resetting oars...')
-    boat.leftSprite.goToFrame(0).resetTickCount()
-    boat.rightSprite.goToFrame(0).resetTickCount()
-    boat.rightSprite.update()
-    boat.leftSprite.update()
+    boat.lS.goToFrame(0).resetTickCount()
+    boat.rS.goToFrame(0).resetTickCount()
+    boat.rS.update()
+    boat.lS.update()
     boat.oarsOffset = false
   }
 }
@@ -1000,12 +1001,12 @@ boat.justRow = () => {
     if (boat.x - boat.startingX > 1) {
       // console.log('Going right')
       boat.x -= 0.25
-      boat.rightSprite.update()
+      boat.rS.update()
     }
     else if (boat.x - boat.startingX < -1) {
       // console.log('Going left')
       boat.x += 0.25
-      boat.leftSprite.update()
+      boat.lS.update()
     }
     else {
       boat.x = boat.startingX
@@ -1016,13 +1017,13 @@ boat.justRow = () => {
     if (boat.oarsOffset) {
       // console.log('Fixing offset oars!')
       boat.x = boat.startingX
-      boat.leftSprite.goToFrame(0).resetTickCount()
-      boat.rightSprite.goToFrame(0).resetTickCount()
+      boat.lS.goToFrame(0).resetTickCount()
+      boat.rS.goToFrame(0).resetTickCount()
       boat.oarsOffset = false
     }
 
-    boat.rightSprite.update()
-    boat.leftSprite.update()
+    boat.rS.update()
+    boat.lS.update()
     spawnRipple(.15, .15, 100)
   }
 
@@ -1031,7 +1032,7 @@ boat.justRow = () => {
 
 boat.isOarInWater = (frame) => frame > 2 && frame < 6
 
-boat.isSameSideRowing = () => Math.abs(boat.sameSideStrokes) > 3
+boat.isSameSideRowing = () => Math.abs(boat.sSS) > 3
 
 boat.addVelocity = (frame) => {
   if (frame) {
@@ -1057,10 +1058,10 @@ boat.bounceRight = () => {
 
 boat.addDrift = (frame, direction) => {
   if (boat.isSameSideRowing()) {
-    boat.lastSameSideStroke = Date.now()
+    boat.lSSS = Date.now()
   }
   else {
-    boat.sameSideStrokes += direction
+    boat.sSS += direction
   }
 
   if (frame) {
@@ -1073,15 +1074,15 @@ boat.addDrift = (frame, direction) => {
 boat.applyWaterFriction = () => {
   const now = Date.now()
 
-  if (now - boat.lastSameSideStroke > 500 && boat.drift !== 0) {
+  if (now - boat.lSSS > 500 && boat.drift !== 0) {
     if (boat.drift > 0) {
-      boat.drift -= boat.waterFriction
+      boat.drift -= boat.wF
       if (boat.drift < 0) {
         boat.drift = 0
       }
     }
     if (boat.drift < 0) {
-      boat.drift += boat.waterFriction
+      boat.drift += boat.wF
       if (boat.drift > 0) {
         boat.drift = 0
       }
@@ -1095,7 +1096,7 @@ boat.applyWaterFriction = () => {
   else if (now - boat.lastStrokeUpdate > 500 && boat.velocity > 0) {
     // console.log('Friction unstuck...')
     boat.setUnstuck()
-    boat.velocity -= boat.waterFriction
+    boat.velocity -= boat.wF
     if (boat.velocity < 0) {
       boat.resetVelocity()
     }
@@ -1129,12 +1130,12 @@ boat.render = () => {
   boat.roundY = Math.round(boat.y) // Math.round(boat.y / boat.scaleFx)
 
   ctx.save()
-  boat.leftSprite.render(boat.roundX, boat.roundY)
-  boat.rightSprite.render(boat.roundX + renderXOffset, boat.roundY)
+  boat.lS.render(boat.roundX, boat.roundY)
+  boat.rS.render(boat.roundX + renderXOffset, boat.roundY)
   ctx.restore()
 }
 
-boat.renderRipples = () => {
+boat.rR = () => {
   for (let i = 0;i < ripples.length; i += 1) {
     const ripple = ripples[i]
     const y = ripple.y -= getRenderAdjustAmount(boat.velocity)
@@ -1170,11 +1171,11 @@ boat.fadeOut = () => {
 /* #region RIVER */
 river = {}
 river.init = () => {
-  river.bodyDimention = 27
-  river.bodiesInRow = Math.ceil(CANVAS_WIDTH / river.bodyDimention)
-  river.rowsInBodyColumn = Math.ceil(CANVAS_HEIGHT / river.bodyDimention) + 2
-  river.borderXDimension = 25
-  river.borderYDimension = 240
+  river.bD = 27 // bodyDimensions
+  river.bodiesInRow = Math.ceil(CANVAS_WIDTH / river.bD)
+  river.rIBC = Math.ceil(CANVAS_HEIGHT / river.bD) + 2 // rowsInBodyColumn
+  river.bXD = 25 // borderXDimension
+  river.bYD = 240 // borderYDimension
   river.bordersInColumn = 3
   river.bordersLeft = []
   river.bordersRight = []
@@ -1184,8 +1185,8 @@ river.init = () => {
   river.bodyImage.src = bodySrc
   river.current = RIVER_SPEED
   river.bodyColumns = []
-  river.maxBodyTileY = 0
-  river.minBodyTileY = 0
+  river.mBTY = 0 // maxBodyTileY
+  river.mnBTY = 0 // minBodyTileY
   river.makeBorderLeft()
   river.makeBorderRight()
   river.makeBodySprites()
@@ -1203,17 +1204,17 @@ river.reset = () => {
 river.getBorderBasePositions = () => ({
   left: {
     x: 0,
-    y: -river.borderXDimension,
+    y: -river.bXD,
   },
   right: {
-    x: -river.borderYDimension,
-    y: CANVAS_WIDTH - river.borderXDimension,
+    x: -river.bYD,
+    y: CANVAS_WIDTH - river.bXD,
   },
 })
 
-river.getLeftBorderYPos = (yPos, index) => (yPos + ((index - 1) * river.borderYDimension))
+river.getLeftBorderYPos = (yPos, index) => (yPos + ((index - 1) * river.bYD))
 
-river.getRightBorderYPos = (yPos, index) => (yPos + ((index - 1) * river.borderYDimension))
+river.getRightBorderYPos = (yPos, index) => (yPos + ((index - 1) * river.bYD))
 
 river.makeBorderLeft = () => {
   const startPos = river.getBorderBasePositions()
@@ -1255,8 +1256,8 @@ river.makeBorderSprite = (xPos, yPos, rotation, i) => {
   return makeSprite(
     {
       context: ctx,
-      width: river.borderYDimension,
-      height: river.borderXDimension,
+      width: river.bYD,
+      height: river.bXD,
       image: river.borderImage,
       numberOfFrames: 0,
       x, // this is actually the Y value ... rotation ...
@@ -1301,15 +1302,15 @@ river.addBordersBelow = () => {
 /**
    * BODY methods
    */
-river.getBodySpriteYPos = (index) => ((index * river.bodyDimention) - river.bodyDimention)
+river.getBodySpriteYPos = (index) => ((index * river.bD) - river.bD)
 
 river.makeBodySprites = () => {
-  for (let i = 0; i < river.rowsInBodyColumn; i += 1) {
+  for (let i = 0; i < river.rIBC; i += 1) {
     if (i === 0) {
-      river.minBodyTileY = river.getBodySpriteYPos(i)
+      river.mnBTY = river.getBodySpriteYPos(i)
     }
-    if (i === river.rowsInBodyColumn - 1) {
-      river.maxBodyTileY = river.getBodySpriteYPos(i)
+    if (i === river.rIBC - 1) {
+      river.mBTY = river.getBodySpriteYPos(i)
     }
 
     river.bodyColumns.push(river.makeSpriteRow(i))
@@ -1322,13 +1323,13 @@ river.makeSpriteRow = (index) => {
   const spriteRow = []
 
   for (let n = 0; n < river.bodiesInRow; n += 1) {
-    const x = n * river.bodyDimention
+    const x = n * river.bD
     const y = river.getBodySpriteYPos(index)
     const sprite = makeSprite(
       {
         context: ctx,
         width: 135,
-        height: river.bodyDimention,
+        height: river.bD,
         image: river.bodyImage,
         numberOfFrames: 5,
         x,
@@ -1346,15 +1347,15 @@ river.makeSpriteRow = (index) => {
 river.unshiftRowToColumns = () => {
   // Add new row at start. Remove row at end.
   river.bodyColumns.unshift(river.makeSpriteRow(0))
-  if (river.bodyColumns.length > river.rowsInBodyColumn + 2) {
+  if (river.bodyColumns.length > river.rIBC + 2) {
     river.bodyColumns.splice(river.bodyColumns.length - 1, 1)
   }
 }
 
 river.pushRowToColumns = () => {
   // Add new row at end, remove row at start.
-  river.bodyColumns.push(river.makeSpriteRow(river.rowsInBodyColumn - 1))
-  if (river.bodyColumns.length > river.rowsInBodyColumn + 2) {
+  river.bodyColumns.push(river.makeSpriteRow(river.rIBC - 1))
+  if (river.bodyColumns.length > river.rIBC + 2) {
     river.bodyColumns.shift()
   }
 }
@@ -1371,11 +1372,11 @@ river.renderBody = (velocity) => {
   const maxY = river.bodyColumns[river.bodyColumns.length - 1][0].y
   const minY = river.bodyColumns[0][0].y
 
-  if (maxY < river.maxBodyTileY - river.bodyDimention) {
-    river.pushRowToColumns(maxY, river.minBodyTileY + river.bodyDimention)
+  if (maxY < river.mBTY - river.bD) {
+    river.pushRowToColumns(maxY, river.mnBTY + river.bD)
   }
-  else if (minY > river.minBodyTileY + river.bodyDimention) {
-    river.unshiftRowToColumns(river.maxBodyTileY - river.bodyDimention)
+  else if (minY > river.mnBTY + river.bD) {
+    river.unshiftRowToColumns(river.mBTY - river.bD)
   }
 
   for (let i = 0; i < river.bodyColumns.length; i += 1) {
@@ -1960,7 +1961,7 @@ collisionManager.__addCollision = () => {
 }
 
 collisionManager.__broadPhaseCheck = (boat, obstacles) => {
-  const boatBox = boat.getBoatBodyDimensions()
+  const boatBox = boat.getBBD()
 
   obstacles.forEach((obstacle) => {
     const obstacleBox = obstacle.getObstacleBodyDimensions()
