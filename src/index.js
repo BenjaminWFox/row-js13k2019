@@ -889,6 +889,7 @@ rescue.__init = () => {
   rescue.y = CANVAS_HEIGHT
   rescue.image = new Image()
   rescue.image.src = rescueSrc
+  rescue.active = false
   rescue.decided = false
   rescue.saved = false
   rescue.activeControls = false
@@ -905,16 +906,16 @@ rescue.__init = () => {
     { fontSize: 16, alignment: 'center' },
   )
   rescue.rowBtn = makeButton(
-    'JUST ROW?(O)',
+    'KEEP ROWING?(O)',
     ctx.measureText('ROW?(O)').width,
     ctx.measureText('L').width,
     CANVAS_WIDTH / 2,
     CANVAS_HEIGHT / 1.5,
     rescue.__row,
-    { fontSize: 16, alignment: 'center' },
+    { fontSize: 14, alignment: 'center' },
   )
 }
-  
+
   rescue.__rescue = () => {
     console.log('RESCUE?(R)')
     rescue.saved = true
@@ -935,24 +936,28 @@ rescue.__continue = () => {
 }
 
 rescue.__render = () => {
-  rescue.sprite.update()
-  rescue.sprite.render(Math.round(boat.x - 4), rescue.y)
+  const now = Date.now()
+  if (now > game.time + game.rescueTime) {
+    rescue.sprite.update()
+    rescue.sprite.render(Math.round(boat.x - 4), rescue.y)
 
-  if (rescue.y > rescue.stopY && !rescue.decided) {
-    rescue.y -= 2
-  }
-  else if (!rescue.decided) {
-    if (!rescue.activeControls) {
-      controls.registerButton(controls.getMainTouchEl(), rescue.takeBtn)
-      controls.registerButton(controls.getMainTouchEl(), rescue.rowBtn)
-      rescue.activeControls = true
+    if (rescue.y > rescue.stopY && !rescue.decided) {
+      rescue.y -= 2
     }
-    rescue.takeBtn.render(ctx)
-    rescue.rowBtn.render(ctx)
-    game.paused = true
-  }
-  else if (rescue.decided && rescue.y > -55) {
-    rescue.y -= 2
+    else if (!rescue.decided) {
+      if (!rescue.activeControls) {
+        controls.registerButton(controls.getMainTouchEl(), rescue.takeBtn)
+        controls.registerButton(controls.getMainTouchEl(), rescue.rowBtn)
+        rescue.activeControls = true
+      }
+      rescue.takeBtn.render(ctx)
+      rescue.rowBtn.render(ctx)
+      game.paused = true
+    }
+    else if (rescue.decided && rescue.y > -55) {
+      rescue.y -= 2
+    }
+        
   }
 
 }
@@ -1843,6 +1848,8 @@ game = {}
 
 game.init = (goToBackScreen, sound) => {
   game.sound = sound
+  game.time = Date.now()
+  game.rescueTime = 1000
   game.paused = false
   game.resetDifficulty()
   game.goToBackScreen = goToBackScreen
