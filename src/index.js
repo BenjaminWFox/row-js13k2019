@@ -11,6 +11,7 @@ import treeSrc from './assets/images/sprites/tree-sprite.png'
 import rockSrc from './assets/images/sprites/rock-sprite.png'
 import bodySrc from './assets/images/sprites/river-body.png'
 import thumbPath from './assets/images/sprites/thumb.png'
+import arrowSrc from './assets/images/sprites/arrow.png'
 
 /* #region UTILITY */
 const random = (min, max) => Math.floor(Math.random() * (max - min + 1) + min)
@@ -40,7 +41,7 @@ let BOAT_SPRITE_HEIGHT = 15
 let TUTORIAL_SCREEN_DURATION = 4000
 let QUIT_TEXT = '<QUIT(Q)'
 let PAUSE_TEXT = 'PAUSE(P)'
-let BACK_TEXT = '<BACK(B)'
+let BACK_TEXT = '<QUIT TUTORIAL(Q)'
 let TUT_TEXT = 'TUTORIAL(T)'
 let PLAY_TEXT = 'PLAY(P)'
 let LKB_TEXT = '(A S D F)'
@@ -85,7 +86,7 @@ let distanceMoved, distanceFromStart, totalDistanceRowed, isRunning
 let home, tutorial, control, game, controls, boat, river,
     obstacleManager, collisionManager, paused = false,
     makeTree, makeRock, makeButton, makeSprite, sound, infoDisplay,
-    handleKeyboardControl, rescue
+    handleKeyboardControl, initialMsg, rescue
 
 boat = {}
 home = {}
@@ -181,6 +182,8 @@ function initGameClasses() {
 
   rescue.__init()
 
+  initialMsg.__init()
+
   collisionManager.__setup(boat)
 
   // waterfall = new Waterfall(ctx, RIVER_SPEED)
@@ -215,7 +218,7 @@ function tutorialLoop() {
 
 function goToGameOver() {
   sound.end()
-  setHs(totalDistanceRowed)
+  setHs(distanceFromStart)
   controls.registerButton(controls.getMainTouchEl(), game.gameOverBtn)
   gameState = gameStates.gameOver
 }
@@ -236,6 +239,7 @@ function gameLoop() {
 
     // drawDebug(ctx, world)
 
+    // TODO: confirm this is a good idea...
     obstacleManager.__trySpawnObstacle(totalDistanceRowed, game.difficulty)
 
     obstacleManager.__render(boat.velocity)
@@ -250,13 +254,15 @@ function gameLoop() {
 
     river.renderBorder(boat.velocity)
 
-    game.render(totalDistanceRowed)
+    game.render(distanceFromStart)
 
     boat.rLL(collisionManager.__collisions)
 
     rescue.__render()
 
-    updateHs(totalDistanceRowed)
+    initialMsg.__render()
+
+    updateHs(distanceFromStart)
   }
 }
 
@@ -273,13 +279,11 @@ function gameOverLoop() {
 
   boat.fadeOut()
 
-  game.render(totalDistanceRowed)
+  game.render(distanceFromStart)
+  
+  game.renderGameOver()
 
-  if (!rescue.saved) {
-    game.renderGameOver()
-  }
-  else {
-    game.renderGameOver()
+  if (rescue.saved) {
     rescue.__render()
   }
 }
@@ -341,9 +345,9 @@ function goToTitle() {
   boat.checkOarAlignment()
 
   if (gameState === gameStates.game || gameState === gameStates.gameOver) {
-    console.log('Set hs', totalDistanceRowed)
+    // console.log('Set hs', totalDistanceRowed)
 
-    setHs(totalDistanceRowed)
+    setHs(distanceFromStart)
 
     home.updateHs(hs)
   }
@@ -452,13 +456,13 @@ function _world_calculatePositions(river, boat, state) {
 
   if (isRunning) {
     distanceMoved = distanceMoved - distMod
-    distanceFromStart = distanceMoved
+    distanceFromStart = -distanceMoved
     totalDistanceRowed = distMod > 0
       ? totalDistanceRowed + distMod
       : totalDistanceRowed
   }
 
-  if (state === 'game' && boat.y - distanceFromStart < 0) {
+  if (state === 'game' && boat.y + distanceFromStart < 0) {
     isRunning = false
   }
 }
@@ -864,7 +868,7 @@ handleKeyboardControl = (event) => {
   }
   if (gameState === gameStates.tutorial) {
     switch(code) {
-      case 'KeyB':
+      case 'KeyQ':
         tutorial.leave()
 
       break
@@ -937,7 +941,7 @@ rescue.__continue = () => {
 
 rescue.__render = () => {
   const now = Date.now()
-  if (now > game.time + game.rescueTime) {
+  if (now > game.startTime + game.rescueTime) {
     rescue.sprite.update()
     rescue.sprite.render(Math.round(boat.x - 4), rescue.y)
 
@@ -1556,7 +1560,7 @@ tutorial.init = () => {
     () => {
       console.log('BACK BUTTON PRESSED!')
     },
-    { fontSize: 16 },
+    { fontSize: 11 },
   )
   tutorial.kblBtn = makeButton(
     LKB_TEXT,
@@ -1843,12 +1847,100 @@ tutorial.setTutorialStep = (step) => {
 
 /* #endregion */
 
+/* #region INITIAL MSG */
+initialMsg = {}
+
+initialMsg.__init = () => {
+  initialMsg.__start = Date.now()
+  initialMsg.__dT = 4000
+  initialMsg.__display = true
+  initialMsg.__opacity = .50
+  initialMsg.__opMod = 1
+  initialMsg.__arrowImg = new Image()
+  initialMsg.__arrowImg.src = arrowSrc
+
+  initialMsg.__arrowSprite = makeSprite({
+    context: ctx,
+    width: 28,
+    height: 42,
+    image: initialMsg.__arrowImg,
+    numberOfFrames: 1,
+    ticksPerFrame: 100,
+    loop: true,
+    x: (CANVAS_WIDTH / 2) - 14,
+    y: 135,
+  })
+
+  initialMsg.__onoTxt = makeButton(
+    '"OH NO...',
+    ctx.measureText('"OH NO...').width,
+    ctx.measureText('L').width,
+    CANVAS_WIDTH / 2,
+    65,
+    () => {},
+    { fontSize: 17, alignment: 'center' },
+  )
+
+  initialMsg.__ljTxt = makeButton(
+    'LOGJAM!!!"',
+    ctx.measureText('LOGJAM!!!"').width,
+    ctx.measureText('L').width,
+    CANVAS_WIDTH / 2,
+    85,
+    () => {},
+    { fontSize: 17, alignment: 'center' },
+  )
+
+  initialMsg.__rowTxt = makeButton(
+    'ROW BACK UPSTREAM!',
+    ctx.measureText('ROW BACK UPSTREAM!').width,
+    ctx.measureText('L').width,
+    CANVAS_WIDTH / 2,
+    125,
+    () => {},
+    { fontSize: 10, alignment: 'center' },
+  )
+
+  // initialMsg.__arrTxt = makeButton(
+  //   '|.|',
+  //   ctx.measureText('|.|').width,
+  //   ctx.measureText('L').width,
+  //   CANVAS_WIDTH / 2,
+  //   165,
+  //   () => {},
+  //   { fontSize: 35, alignment: 'center' },
+  // )
+
+  initialMsg.__render = () => {
+    if (initialMsg.__display) {
+      if (Date.now() > initialMsg.__start + initialMsg.__dT) {
+        initialMsg.__display = false
+      }
+      ctx.save()
+      ctx.globalAlpha = initialMsg.__opacity
+      initialMsg.__onoTxt.render()
+      initialMsg.__ljTxt.render()
+      initialMsg.__rowTxt.render()
+      // initialMsg.__arrTxt.render()
+      initialMsg.__arrowSprite.render()
+      ctx.restore()
+
+      initialMsg.__opacity += (.05 * initialMsg.__opMod)
+
+      if (initialMsg.__opacity >= 1 || initialMsg.__opacity <= .5) {
+        initialMsg.__opMod *= -1
+      }
+    }
+  }
+}
+/* #endregion */
+
 /* #region GAME */
 game = {}
 
 game.init = (goToBackScreen, sound) => {
   game.sound = sound
-  game.time = Date.now()
+  game.startTime = Date.now()
   game.rescueTime = 1000
   game.paused = false
   game.resetDifficulty()
@@ -2035,7 +2127,7 @@ home.renderMainScreen = () => {
     home.renderMenu()
   }
   // home.renderTitle(home.initialTitleX, 60)
-  home.renderMenu()
+  // home.renderMenu()
 }
 /* #endregion */
 
@@ -2388,7 +2480,7 @@ makeButton = (name, width, height, x, y, action, options = {}) => {
     button.yMax = (button.oY + (button.height / 2)) * SCALE_FACTOR
   }
 
-  button.render = (ctx) => {
+  button.render = () => {
     ctx.save()
     ctx.textAlign = button.alignment
     ctx.fillStyle = '#ffffff'
@@ -2527,7 +2619,7 @@ sound.mute = () => {
 
 sound.unmute = () => {
   sound.muted = false
-  sound.vol = 0.005
+  sound.vol = 0.05
   sound.gainNode.gain.setValueAtTime(sound.vol, sound.ctx.currentTime)
   sound.ctx.resume()
 }
@@ -2638,7 +2730,7 @@ infoDisplay.init = () => {
   infoDisplay.textbox.style.padding = '16px 20px'
   infoDisplay.textbox.style.boxSizing = 'border-box'
   infoDisplay.textbox.style.color = '#ffffff'
-  infoDisplay.textbox.style.backgroundColor = 'blue'
+  infoDisplay.textbox.style.backgroundColor = '#707070'
   infoDisplay.hide()
 }
 infoDisplay.setup = (parentNode, siblingNode, width) => {
@@ -2654,7 +2746,7 @@ infoDisplay.setMessage = (message) => {
 }
 
 infoDisplay.show = () => {
-  infoDisplay.textbox.style.opacity = 0.75
+  infoDisplay.textbox.style.opacity = 1
   infoDisplay.textbox.style.display = 'block'
 }
 
