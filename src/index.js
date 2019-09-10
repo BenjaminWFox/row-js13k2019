@@ -1767,8 +1767,8 @@ initialMsg.__init = () => {
   })
 
   initialMsg.__onoTxt = makeButton(
-    'OHNO...',
-    ctx.measureText('OHNO...').width,
+    'OH NO...',
+    ctx.measureText('OH NO...').width,
     ctx.measureText('L').width,
     CANVAS_WIDTH / 2,
     65,
@@ -1777,8 +1777,8 @@ initialMsg.__init = () => {
   )
 
   initialMsg.__ljTxt = makeButton(
-    '...LOGJAM!!',
-    ctx.measureText('...LOGJAM!!').width,
+    'LOGJAM!!!',
+    ctx.measureText('LOGJAM!!!').width,
     ctx.measureText('L').width,
     CANVAS_WIDTH / 2,
     85,
