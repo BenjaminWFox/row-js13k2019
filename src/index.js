@@ -879,7 +879,7 @@ buoy.__init = () => {
   buoy.image = new Image()
   buoy.image.src = buoySrc
   buoy.sprite = makeSprite({
-    context: ctx, width: 14, height: 7, image: buoy.image, numberOfFrames: 2, loop: true, ticksPerFrame: 60, x: 40, y: 140,
+    context: ctx, width: 18, height: 9, image: buoy.image, numberOfFrames: 2, loop: true, ticksPerFrame: 60, x: 40, y: 140,
   })
 }
 
@@ -908,17 +908,17 @@ rescue.__init = () => {
   })
 }
 
-  rescue.__rescue = () => {
-    console.log('RESCUE?(R)')
-    rescue.saved = true
-    rescue.__continue()
-    game.gameOverBtn.name = 'SAFE!!'
-    goToGameOver()
-  }
+rescue.__rescue = () => {
+  console.log('RESCUE?(R)')
+  rescue.saved = true
+  rescue.__continue()
+  game.gameOverBtn.name = 'SAFE!!'
+  goToGameOver()
+}
 
-  rescue.__row = () => {
-    rescue.__continue()
-  }
+rescue.__row = () => {
+  rescue.__continue()
+}
 
 rescue.__continue = () => {
   rescue.decided = true
