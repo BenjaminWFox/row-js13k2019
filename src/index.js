@@ -7,6 +7,7 @@ import boatRightSheet from './assets/images/sprites/boat-shadow-sprite-right.png
 import borderSrc from './assets/images/sprites/river-border-horizontal-stone.png'
 import rippleSrc from './assets/images/sprites/ripple-sprite.png'
 import rescueSrc from './assets/images/sprites/rescue-copter.png'
+import buoySrc from './assets/images/sprites/rescue-buoy.png'
 import treeSrc from './assets/images/sprites/tree-sprite.png'
 import rockSrc from './assets/images/sprites/rock-sprite.png'
 import bodySrc from './assets/images/sprites/river-body.png'
@@ -86,11 +87,12 @@ let distanceMoved, distanceFromStart, totalDistanceRowed, isRunning
 let home, tutorial, control, game, controls, boat, river,
     obstacleManager, collisionManager, paused = false,
     makeTree, makeRock, makeButton, makeSprite, sound, infoDisplay,
-    handleKeyboardControl, initialMsg, rescue
+    handleKeyboardControl, initialMsg, rescue, buoy
 
 boat = {}
 home = {}
 rescue = {}
+buoy = {}
 collisionManager = {}
 obstacleManager = {}
 sound = {}
@@ -182,6 +184,8 @@ function initGameClasses() {
 
   rescue.__init()
 
+  buoy.__init()
+
   initialMsg.__init()
 
   collisionManager.__setup(boat)
@@ -237,6 +241,8 @@ function gameLoop() {
 
     river.renderBody(boat.velocity)
 
+    buoy.__render()
+
     // drawDebug(ctx, world)
 
     // TODO: confirm this is a good idea...
@@ -257,8 +263,6 @@ function gameLoop() {
     game.render(distanceFromStart)
 
     boat.rLL(collisionManager.__collisions)
-
-    rescue.__render()
 
     initialMsg.__render()
 
@@ -282,10 +286,6 @@ function gameOverLoop() {
   game.render(distanceFromStart)
   
   game.renderGameOver()
-
-  if (rescue.saved) {
-    rescue.__render()
-  }
 }
 
 function pause(duration, cb) {
@@ -843,16 +843,6 @@ handleKeyboardControl = (event) => {
         game.paused = !game.paused
         break  
     }
-    if (rescue.activeControls) {
-      switch(code) {
-      case 'KeyR':
-        rescue.__rescue()
-        break  
-      case 'KeyO':
-        rescue.__row()
-        break  
-      }
-    }
   }
   if (gameState === gameStates.title) {
     console.log('In title', code)
@@ -885,6 +875,20 @@ handleKeyboardControl = (event) => {
 /* #endregion */
 
 /* #region RESCUE */
+buoy.__init = () => {
+  buoy.image = new Image()
+  buoy.image.src = buoySrc
+  buoy.sprite = makeSprite({
+    context: ctx, width: 14, height: 7, image: buoy.image, numberOfFrames: 2, loop: true, ticksPerFrame: 60, x: 40, y: 140,
+  })
+}
+
+buoy.__render = () => {
+  buoy.sprite.y += getRenderAdjustAmount(boat.velocity)
+  buoy.sprite.update()
+  buoy.sprite.render(40, buoy.sprite.y)
+}
+
 rescue.__init = () => {
   rescue.height = 55
   rescue.width = 34
@@ -897,27 +901,11 @@ rescue.__init = () => {
   rescue.decided = false
   rescue.saved = false
   rescue.activeControls = false
+  rescue.dropStart = 0
+  rescue.dropDuration = 1500
   rescue.sprite = makeSprite({
     context: ctx, width: 68, height: 55, image: rescue.image, numberOfFrames: 2, loop: true, ticksPerFrame: 2, x: rescue.x, y: rescue.y,
   })
-  rescue.takeBtn = makeButton(
-    'RESCUE?(R)',
-    ctx.measureText('RESCUE?(R)').width,
-    ctx.measureText('L').width,
-    CANVAS_WIDTH / 2,
-    CANVAS_HEIGHT / 3.25,
-    rescue.__rescue,
-    { fontSize: 16, alignment: 'center' },
-  )
-  rescue.rowBtn = makeButton(
-    'KEEP ROWING?(O)',
-    ctx.measureText('ROW?(O)').width,
-    ctx.measureText('L').width,
-    CANVAS_WIDTH / 2,
-    CANVAS_HEIGHT / 1.5,
-    rescue.__row,
-    { fontSize: 14, alignment: 'center' },
-  )
 }
 
   rescue.__rescue = () => {
@@ -935,35 +923,41 @@ rescue.__init = () => {
 rescue.__continue = () => {
   rescue.decided = true
   game.paused = false
-  controls.clearButton(controls.getMainTouchEl(), rescue.takeBtn)
-  controls.clearButton(controls.getMainTouchEl(), rescue.rowBtn)
+  rescue.dropStart = 0
+}
+
+rescue.__renderShadow = () => {
+
 }
 
 rescue.__render = () => {
   const now = Date.now()
+
   if (now > game.startTime + game.rescueTime) {
     rescue.sprite.update()
     rescue.sprite.render(Math.round(boat.x - 4), rescue.y)
 
     if (rescue.y > rescue.stopY && !rescue.decided) {
       rescue.y -= 2
-    }
-    else if (!rescue.decided) {
-      if (!rescue.activeControls) {
-        controls.registerButton(controls.getMainTouchEl(), rescue.takeBtn)
-        controls.registerButton(controls.getMainTouchEl(), rescue.rowBtn)
-        rescue.activeControls = true
+
+      if (rescue.y <= rescue.stopY) {
+        console.log('Drop set Ys')
+        rescue.y = rescue.stopY
+        rescue.dropStart = Date.now()
       }
-      rescue.takeBtn.render(ctx)
-      rescue.rowBtn.render(ctx)
-      game.paused = true
     }
-    else if (rescue.decided && rescue.y > -55) {
+
+    if (rescue.y === rescue.stopY) {
+      console.log('drop in progress')
+      if (now > rescue.dropStart + rescue.dropDuration) {
+        rescue.y -= 2
+      }
+    }
+
+    if (rescue.y < rescue.stopY) {
       rescue.y -= 2
     }
-        
   }
-
 }
 
 /* #region BOAT */
