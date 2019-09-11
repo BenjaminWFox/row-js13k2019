@@ -48,8 +48,8 @@ let PLAY_TEXT = 'PLAY(P)'
 let LKB_TEXT = '(A S D F)'
 let RKB_TEXT = '(; L K J)'
 let USING_KEYBOARD = false
-let SPAWN_INTERVAL = 100
-let DIFFICULTY_MULTIPLYER = 1500
+let SPAWN_INTERVAL = 500
+let DIFFICULTY_MULTIPLYER = 15
 
 // let CANVAS_MID_X =  undefined
 // let CANVAS_MID_Y =  undefined
@@ -963,10 +963,10 @@ buoy.__spawn = () => {
 
 buoy.__checkPickup = () => {
   if (
-    buoy.__sprite.x > boat.x + 2
-    && buoy.__sprite.x < boat.x + 20
-    && buoy.__sprite.y < boat.y + 10
-    && buoy.__sprite.y > boat.y - 4
+    buoy.__sprite.x > boat.x - 4
+    && buoy.__sprite.x < boat.x + 18
+    && buoy.__sprite.y < boat.y + 8
+    && buoy.__sprite.y > boat.y - 5
     ) {
       sound.buoy()
       rescue.__commence()
