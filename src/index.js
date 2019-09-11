@@ -147,12 +147,13 @@ const ctx = canvas.getContext('2d')
 CTX_L_WIDTH = ctx.measureText('L').width
 
 const gameStates = {
-  initial: 'initial',
-  title: 'title',
-  tutorial: 'tutorial',
-  game: 'game',
-  gameOver: 'gameOver',
+  initial: 2,
+  title: 3,
+  tutorial: 4,
+  game: 5,
+  gameOver: 6,
 }
+
 let gameState = gameStates.initial
 
 ctx.font = '12px Courier'
@@ -243,7 +244,7 @@ function gameLoop() {
       goToGameOver()
     }
 
-    _world_calculatePositions(river, boat, gameState)
+    _world_calculatePositions(river, boat)
 
     boat.rR()
 
@@ -459,7 +460,7 @@ function mainLoop() {
 }
 
 /* #region WORLD */
-function _world_calculatePositions(river, boat, state) {
+function _world_calculatePositions(river, boat) {
   const { current } = river
   const { velocity } = boat
 
@@ -474,7 +475,7 @@ function _world_calculatePositions(river, boat, state) {
       : totalDistanceRowed
   }
 
-  if (state === 'game' && boat.y + distanceFromStart < 0) {
+  if (gameState === gameStates.game && boat.y + distanceFromStart < 0) {
     isRunning = false
   }
 }
