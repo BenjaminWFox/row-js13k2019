@@ -48,6 +48,8 @@ let PLAY_TEXT = 'PLAY(P)'
 let LKB_TEXT = '(A S D F)'
 let RKB_TEXT = '(; L K J)'
 let USING_KEYBOARD = false
+let SPAWN_INTERVAL = 500
+let DIFFICULTY_MULTIPLYER = 15
 
 // let CANVAS_MID_X =  undefined
 // let CANVAS_MID_Y =  undefined
@@ -282,8 +284,8 @@ function gameOverLoop() {
 
   _world_calculatePositions(river, boat)
 
-  river.render(0)
-
+  river.renderBody(-RIVER_SPEED * 2)
+  river.renderBorder(-(RIVER_SPEED * 2))
   obstacleManager.__render(-(RIVER_SPEED * 2))
 
   boat.fadeOut()
@@ -883,7 +885,6 @@ buoy.__init = () => {
   buoy.__image.src = buoySrc
   buoy.__active = false
   buoy.__stuck = false
-  buoy.__spawnInterval = 500
   buoy.__spawnedAt = [0]
   buoy.__sprite = makeSprite({
     context: ctx, width: 18, height: 9, image: buoy.__image, numberOfFrames: 2, loop: true, ticksPerFrame: 60, x: 40, y: 140,
@@ -907,7 +908,7 @@ buoy.__render = () => {
       buoy.__active = false
     }
   }
-  if (metersFromStart % buoy.__spawnInterval === 0) {
+  if (metersFromStart % SPAWN_INTERVAL === 0) {
     if (!buoy.__spawnedAt.includes(metersFromStart)) {
       buoy.__spawnedAt.push(metersFromStart)
       buoy.__spawn()
@@ -2372,7 +2373,6 @@ obstacleManager.__init = (ctx) => {
   obstacleManager.__waterfall = []
   obstacleManager.__spawnKey = 7
   obstacleManager.__spawnFrequency = 150
-  obstacleManager.__difficultyMultiplyer = 15
   obstacleManager.__maxSpawnFrequency = 30
   obstacleManager.__lastSpawnAt = 0
 }
@@ -2405,7 +2405,7 @@ obstacleManager.__renderObstacles = (velocity) => {
 }
 
 obstacleManager.__trySpawnObstacle = (distance, difficulty) => {
-  const spawnDifficulty = obstacleManager.__spawnFrequency - (obstacleManager.__difficultyMultiplyer * difficulty)
+  const spawnDifficulty = obstacleManager.__spawnFrequency - (DIFFICULTY_MULTIPLYER * difficulty)
   const spawnCheckNum = spawnDifficulty < obstacleManager.__maxSpawnFrequency ? obstacleManager.__maxSpawnFrequency : spawnDifficulty
   const canSpawnNum = distance - spawnCheckNum
 
@@ -2890,6 +2890,16 @@ infoDisplay.init()
 /**
  * Set the event listener that will load the game
  */
+function monStart() {
+  SPAWN_INTERVAL = 300
+  DIFFICULTY_MULTIPLYER = 10
+}
+
+if (document.monetization) {
+  console.log('Found monetization!')
+  document.monetization.addEventListener('monetizationstart', monStart)
+}
+
 window.addEventListener('load', () => {
   console.log('-- window _ load --')
 
