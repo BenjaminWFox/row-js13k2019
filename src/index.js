@@ -48,8 +48,8 @@ let PLAY_TEXT = 'PLAY(P)'
 let LKB_TEXT = '(A S D F)'
 let RKB_TEXT = '(; L K J)'
 let USING_KEYBOARD = false
-let SPAWN_INTERVAL = 500
-let DIFFICULTY_MULTIPLYER = 15
+let SPAWN_INTERVAL = 100
+let DIFFICULTY_MULTIPLYER = 1500
 
 // let CANVAS_MID_X =  undefined
 // let CANVAS_MID_Y =  undefined
@@ -893,7 +893,6 @@ buoy.__init = () => {
 }
 
 buoy.__render = () => {  
-  console.log(metersFromStart)
   if (buoy.__active) {
     buoy.__checkPickup()
     if (!buoy.__stuck) {
@@ -917,9 +916,30 @@ buoy.__render = () => {
 }
 
 buoy.__reset = () => {
+  let x = random(15, CANVAS_WIDTH - 20)
+
+  for (let i = obstacleManager.__obstacles.length -1; i >= 0; i -=1){
+    const obstacle = obstacleManager.__obstacles[i]
+
+    if (obstacle.y > CANVAS_HEIGHT - 20 && obstacle.y < CANVAS_HEIGHT + 20) {
+      if (x > obstacle.x && x < obstacle.x + obstacle.frameWidth) {
+        console.log('REALIGNING BUOY', x, obstacle.x)
+        if (obstacle.x > CANVAS_WIDTH / 2) {
+          x -= obstacle.frameWidth
+          console.log('MOVE LEFT new x', x)
+        }
+        else {
+          x += obstacle.frameWidth
+          console.log('MOVE RIGHT new x', x)
+        }
+        i = -1
+      }
+    }
+  }
+
   buoy.__stuck = false
   buoy.__sprite.y = CANVAS_HEIGHT
-  buoy.__sprite.x = random(15, CANVAS_WIDTH - 20)
+  buoy.__sprite.x = x
 
   // For hitbox testing only:
   // buoy.__active = true
@@ -2286,8 +2306,7 @@ collisionManager.__broadPhaseCheck = (boat, obstacles) => {
         && buoy.__sprite.y > obstacle.y
         && buoy.__sprite.x + 6 > obstacle.x
         && buoy.__sprite.x < obstacle.x + obstacle.frameWidth) {
-        
-          console.log(obstacleBox)
+
         if (buoy.__sprite.x > obstacle.x + obstacle.frameWidth - 7) {
           if (
             buoy.__sprite.y < obstacle.y + obstacle.height - 15
@@ -2306,35 +2325,35 @@ collisionManager.__broadPhaseCheck = (boat, obstacles) => {
 
 collisionManager.__narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
   // console.log('Y: ', boatBox.maxY, obstacleBox.midY)
-  console.log('X: ', boatBox.maxX, obstacleBox.midX, obstacleBox.quadSize)
+  // console.log('X: ', boatBox.maxX, obstacleBox.midX, obstacleBox.quadSize)
   let buffer = 0
 
   if (
     boatBox.maxX < obstacleBox.midX - obstacleBox.quadSize
       && boatBox.maxY < obstacleBox.midY
   ) {
-    console.log('NW Quad...')
+    // console.log('NW Quad...')
     buffer = obstacleBox.quadSize
   }
   else if (
     boatBox.maxX > obstacleBox.midX + obstacleBox.quadSize
       && boatBox.maxY < obstacleBox.midY
   ) {
-    console.log('NE Quad...')
+    // console.log('NE Quad...')
     buffer = obstacleBox.quadSize
   }
   else if (
     boatBox.minX > obstacleBox.midX + obstacleBox.quadSize
       && boatBox.minY > obstacleBox.midY
   ) {
-    console.log('SE Quad...')
+    // console.log('SE Quad...')
     buffer = obstacleBox.quadSize
   }
   else if (
     boatBox.maxX < obstacleBox.midX - obstacleBox.quadSize
       && boatBox.minY > obstacleBox.midY
   ) {
-    console.log('SW Quad...')
+    // console.log('SW Quad...')
   }
 
   if (
@@ -2344,12 +2363,12 @@ collisionManager.__narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
       && boatBox.maxX < obstacleBox.maxX
   ) {
     // Boat is stuck on the obstacle! Hold it in place...
-    console.log('SET STUCK!')
+    // console.log('SET STUCK!')
     boat.setStuck()
     collisionManager.__addCollision()
   }
   else if (boatBox.maxY > obstacleBox.minY + buffer) {
-    console.log('BOUNCE OFF')
+    // console.log('BOUNCE OFF')
     boat.resetVelocity()
     collisionManager.__addCollision()
   }
@@ -2358,7 +2377,7 @@ collisionManager.__narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
     boatBox.minX < obstacleBox.maxX - buffer
         && boatBox.maxX > obstacleBox.maxX
   ) {
-    console.log('BOUNCE RIGHT')
+    // console.log('BOUNCE RIGHT')
     boat.bounceRight()
     collisionManager.__addCollision()
   }
@@ -2366,7 +2385,7 @@ collisionManager.__narrowPhaseCheck = (boatBox, boat, obstacleBox) => {
     boatBox.maxX > obstacleBox.minX + buffer
         && boatBox.minX < obstacleBox.minX
   ) {
-    console.log('BOUNCE LEFT')
+    // console.log('BOUNCE LEFT')
     boat.bounceLeft()
     collisionManager.__addCollision()
   }
@@ -2421,7 +2440,7 @@ obstacleManager.__trySpawnObstacle = (distance, difficulty) => {
 
   if (canSpawnNum > obstacleManager.__lastSpawnAt) {
     if (random(1, 20) === obstacleManager.__spawnKey) {
-      console.log('SPAWNING:', spawnDifficulty)
+      // console.log('SPAWNING:', spawnDifficulty)
       obstacleManager.__spawnObstacle()
 
       obstacleManager.__lastSpawnAt = distance
