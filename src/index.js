@@ -78,7 +78,7 @@ const getRenderAdjustAmount = (velocity) => (RIVER_SPEED * 2) + velocity
 /**
  * World/distance vars
  */
-let distanceMoved, distanceFromStart, totalDistanceRowed, isRunning
+let distanceMoved, distanceFromStart, metersFromStart, totalDistanceRowed, isRunning
 
 /**
  * Other var setup ...
@@ -108,6 +108,7 @@ function resetVarsForNewGame() {
   isRunning = true
   distanceMoved = 0
   distanceFromStart = 0
+  metersFromStart = 0
   totalDistanceRowed = 0
 }
 
@@ -184,15 +185,16 @@ function initGameClasses() {
 
   rescue.__init()
 
-  buoy.__init()
-
+  
   initialMsg.__init()
-
+  
   collisionManager.__setup(boat)
-
+  
   // waterfall = new Waterfall(ctx, RIVER_SPEED)
-
+  
   obstacleManager.__init(ctx)
+  
+  buoy.__init()
 }
 
 function titleLoop() {
@@ -257,8 +259,11 @@ function gameLoop() {
     boat.updateStrokePower(game.difficulty)
 
     collisionManager.__broadPhaseCheck(boat, obstacleManager.__obstacles)
+    // collisionManager.__broadPhaseCheck(buoy, obstacleManager.__obstacles)
 
     river.renderBorder(boat.velocity)
+
+    rescue.__render()
 
     game.render(distanceFromStart)
 
@@ -457,6 +462,7 @@ function _world_calculatePositions(river, boat, state) {
   if (isRunning) {
     distanceMoved = distanceMoved - distMod
     distanceFromStart = -distanceMoved
+    metersFromStart = Math.floor((distanceFromStart / 3))
     totalDistanceRowed = distMod > 0
       ? totalDistanceRowed + distMod
       : totalDistanceRowed
@@ -795,10 +801,7 @@ handleKeyboardControl = (event) => {
     STROKE_POWER *= 4
   }
 
-  console.log('keydown', code)
-
   if (gameState === gameStates.game || gameState === gameStates.tutorial) {
-    console.log('In game', code)
     switch(code) {
       case 'Semicolon':
           controls.setFrameForY(10, 'right')
@@ -876,54 +879,108 @@ handleKeyboardControl = (event) => {
 
 /* #region RESCUE */
 buoy.__init = () => {
-  buoy.image = new Image()
-  buoy.image.src = buoySrc
-  buoy.sprite = makeSprite({
-    context: ctx, width: 18, height: 9, image: buoy.image, numberOfFrames: 2, loop: true, ticksPerFrame: 60, x: 40, y: 140,
+  buoy.__image = new Image()
+  buoy.__image.src = buoySrc
+  buoy.__active = false
+  buoy.__stuck = false
+  buoy.__spawnInterval = 500
+  buoy.__spawnedAt = [0]
+  buoy.__sprite = makeSprite({
+    context: ctx, width: 18, height: 9, image: buoy.__image, numberOfFrames: 2, loop: true, ticksPerFrame: 60, x: 40, y: 140,
   })
+  buoy.__reset()
 }
 
-buoy.__render = () => {
-  buoy.sprite.y += getRenderAdjustAmount(boat.velocity)
-  buoy.sprite.update()
-  buoy.sprite.render(40, buoy.sprite.y)
+buoy.__render = () => {  
+  console.log(metersFromStart)
+  if (buoy.__active) {
+    buoy.__checkPickup()
+    if (!buoy.__stuck) {
+      buoy.__sprite.y += getRenderAdjustAmount(-boat.velocity)
+    } 
+    else {
+      buoy.__sprite.y -= getRenderAdjustAmount(boat.velocity)
+    }
+    buoy.__sprite.update()
+    buoy.__sprite.render(buoy.__sprite.x, buoy.__sprite.y)
+    if (buoy.__sprite.y < -9) {
+      buoy.__active = false
+    }
+  }
+  if (metersFromStart % buoy.__spawnInterval === 0) {
+    if (!buoy.__spawnedAt.includes(metersFromStart)) {
+      buoy.__spawnedAt.push(metersFromStart)
+      buoy.__spawn()
+    }
+  }
+}
+
+buoy.__reset = () => {
+  buoy.__stuck = false
+  buoy.__sprite.y = CANVAS_HEIGHT
+  buoy.__sprite.x = random(15, CANVAS_WIDTH - 20)
+
+  // For hitbox testing only:
+  // buoy.__active = true
+  // buoy.__sprite.y = 120
+  // buoy.__sprite.x = 40
+
+  // Min/Max rock hitboxes
+  // obstacleManager.__obstacles.push(obstacleManager.__spawnRock(12, 50))
+  // obstacleManager.__obstacles.push(obstacleManager.__spawnRock(45, 50))
+ 
+  // Min/Max tree hitboxes
+  // obstacleManager.__obstacles.push(obstacleManager.__spawnTree(16, 50))
+  // obstacleManager.__obstacles.push(obstacleManager.__spawnTree(45, 50))
+
+}
+
+buoy.__spawn = () => {
+  buoy.__reset()
+  buoy.__active = true
+}
+
+buoy.__checkPickup = () => {
+  if (
+    buoy.__sprite.x > boat.x + 2
+    && buoy.__sprite.x < boat.x + 20
+    && buoy.__sprite.y < boat.y + 10
+    && buoy.__sprite.y > boat.y - 4
+    ) {
+      sound.buoy()
+      rescue.__commence()
+      buoy.__active = false
+    }
 }
 
 rescue.__init = () => {
-  rescue.height = 55
-  rescue.width = 34
-  rescue.stopY = boat.y - 13
+  rescue.__active = false
+  rescue.__height = 55
+  rescue.__width = 34
+  rescue.__stopY = boat.y - 13
   rescue.x = boat.x
   rescue.y = CANVAS_HEIGHT
-  rescue.image = new Image()
-  rescue.image.src = rescueSrc
-  rescue.active = false
-  rescue.decided = false
-  rescue.saved = false
-  rescue.activeControls = false
-  rescue.dropStart = 0
-  rescue.dropDuration = 1500
-  rescue.sprite = makeSprite({
-    context: ctx, width: 68, height: 55, image: rescue.image, numberOfFrames: 2, loop: true, ticksPerFrame: 2, x: rescue.x, y: rescue.y,
+  rescue.__image = new Image()
+  rescue.__image.src = rescueSrc
+  rescue.__livesAdded = 0
+
+  rescue.__dropStart = 0
+  rescue.__dropDuration = 1500
+
+  rescue.__sprite = makeSprite({
+    context: ctx, width: 68, height: 55, image: rescue.__image, numberOfFrames: 2, loop: true, ticksPerFrame: 2, x: rescue.x, y: rescue.y,
   })
 }
 
-rescue.__rescue = () => {
-  console.log('RESCUE?(R)')
-  rescue.saved = true
-  rescue.__continue()
-  game.gameOverBtn.name = 'SAFE!!'
-  goToGameOver()
+rescue.__commence = () => {
+  rescue.__reset()
+  rescue.__active = true
 }
 
-rescue.__row = () => {
-  rescue.__continue()
-}
-
-rescue.__continue = () => {
-  rescue.decided = true
-  game.paused = false
-  rescue.dropStart = 0
+rescue.__reset = () => {
+  rescue.__livesAdded = 0
+  rescue.x = boat.x
+  rescue.y = CANVAS_HEIGHT * 2
 }
 
 rescue.__renderShadow = () => {
@@ -931,31 +988,64 @@ rescue.__renderShadow = () => {
 }
 
 rescue.__render = () => {
-  const now = Date.now()
+  if (rescue.__active) {
+    const now = Date.now()
 
-  if (now > game.startTime + game.rescueTime) {
-    rescue.sprite.update()
-    rescue.sprite.render(Math.round(boat.x - 4), rescue.y)
+    if (now > game.startTime + game.rescueTime) {
+      rescue.__sprite.update()
+      rescue.__sprite.render(Math.round(boat.x - 4), rescue.y)
 
-    if (rescue.y > rescue.stopY && !rescue.decided) {
-      rescue.y -= 2
-
-      if (rescue.y <= rescue.stopY) {
-        console.log('Drop set Ys')
-        rescue.y = rescue.stopY
-        rescue.dropStart = Date.now()
+      if (rescue.y > CANVAS_HEIGHT) {
+        sound.helo(.5)
       }
-    }
+      else if (rescue.y > rescue.__stopY) {
+        sound.helo(.75)
+      }
+      else if (rescue.y === rescue.__stopY) {
+        sound.helo(1.25)
+      }
+      else if (rescue.y > 0) {
+        sound.helo(.75)
+      }
+      else if (rescue.y < 0) {
+        sound.helo(.5)
+      }
 
-    if (rescue.y === rescue.stopY) {
-      console.log('drop in progress')
-      if (now > rescue.dropStart + rescue.dropDuration) {
+      if (rescue.y > rescue.__stopY && !rescue.decided) {
         rescue.y -= 2
-      }
-    }
 
-    if (rescue.y < rescue.stopY) {
-      rescue.y -= 2
+        if (rescue.y <= rescue.__stopY) {
+          console.log('Drop set Ys')
+          rescue.y = rescue.__stopY
+          rescue.__dropStart = Date.now()
+        }
+      }
+
+      if (rescue.y === rescue.__stopY) {
+        console.log('drop in progress')
+        if (now > rescue.__dropStart + rescue.__dropDuration) {
+          rescue.y -= 2
+        }
+        else if (now > rescue.__dropStart + 1200 && rescue.__livesAdded === 2) {
+          collisionManager.__addLife()
+          rescue.__livesAdded += 1
+        }
+        else if (now > rescue.__dropStart + 800 && rescue.__livesAdded === 1) {
+          collisionManager.__addLife()
+          rescue.__livesAdded += 1
+        }
+        else if (now > rescue.__dropStart + 400 && rescue.__livesAdded === 0) {
+          collisionManager.__addLife()
+          rescue.__livesAdded += 1
+        }
+      }
+
+      if (rescue.y < rescue.__stopY) {
+        rescue.y -= 2
+        if (rescue.y < -100) {
+          rescue.__active = false
+        }
+      }
     }
   }
 }
@@ -976,6 +1066,7 @@ function spawnRipple(velOvr = 0, opOvr = 0, nowOvr = 0) {
 boat.init = (scaleFx, strokePower, maxVelocity, waterFriction, startCoords) => {
   boat.height = BOAT_SPRITE_HEIGHT
   boat.width = BOAT_SPRITE_WIDTH / 7
+  boat.active = true
   boat.lI = new Image() // leftImage
   boat.rI = new Image() // rightImage
   boat.rpI = new Image() // rippleImage
@@ -2136,6 +2227,13 @@ collisionManager.__init = (ctx, colSound) => {
   collisionManager.__lastCollisionAt = 0
 }
 
+collisionManager.__addLife = () => {
+  sound.addLife()
+  if (collisionManager.__collisions > 0) {
+    collisionManager.__collisions -= 1
+  }
+}
+
 collisionManager.__setup = (boat) => {
   // collisionManager.__boatY = boat.y / SCALE_FACTOR
   collisionManager.__boatWidth = boat.width
@@ -2170,6 +2268,27 @@ collisionManager.__broadPhaseCheck = (boat, obstacles) => {
         && boatBox.minY < obstacleBox.maxY
     ) {
       collisionManager.__narrowPhaseCheck(boatBox, boat, obstacleBox, obstacle)
+    }
+    if (buoy.__active) {
+      if (
+        buoy.__sprite.y < obstacle.y + obstacle.height - 5
+        && buoy.__sprite.y > obstacle.y
+        && buoy.__sprite.x + 6 > obstacle.x
+        && buoy.__sprite.x < obstacle.x + obstacle.frameWidth) {
+        
+          console.log(obstacleBox)
+        if (buoy.__sprite.x > obstacle.x + obstacle.frameWidth - 7) {
+          if (
+            buoy.__sprite.y < obstacle.y + obstacle.height - 15
+            && buoy.__sprite.x < obstacleBox.maxX + 3
+            ) {
+            buoy.__stuck = true
+          }
+        }
+        else {
+          buoy.__stuck = true
+        }
+      }
     }
   })
 }
@@ -2656,6 +2775,22 @@ sound.oar = () => {
 sound.bump = () => {
   sound.play(DEEP, sound.ctx.currentTime + 0.05, 0.05, 2)
   sound.play(DEEP, sound.ctx.currentTime + 0.1, 0.05, 2)
+}
+
+sound.buoy = () => {
+  sound.play(C4, sound.ctx.currentTime + 0, .2)
+  sound.play(E4, sound.ctx.currentTime + 0.075, .2)
+  sound.play(F4, sound.ctx.currentTime + 0.125, .2)
+}
+
+sound.addLife = () => {
+  sound.play(F4, sound.ctx.currentTime, .05)
+  sound.play(G4, sound.ctx.currentTime + .05, .05)
+  
+}
+
+sound.helo = (vol) => {
+  sound.play(DEEP * 1.5, sound.ctx.currentTime, 0.01, vol)
 }
 
 sound.song = () => {
