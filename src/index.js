@@ -62,6 +62,7 @@ let SCREEN_MID_X =  undefined
 let SCALE_FACTOR =  undefined
 let SCALED_WIDTH =  undefined
 let SCALED_HEIGHT =  undefined
+let CTX_L_WIDTH = undefined
 
 let DEEP = 440 / 6
 let OAR = 440 * 3
@@ -142,6 +143,9 @@ const body = document.querySelector('body')
 const wrapper = document.getElementById('wrapper')
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
+
+CTX_L_WIDTH = ctx.measureText('L').width
+
 const gameStates = {
   initial: 'initial',
   title: 'title',
@@ -1660,7 +1664,7 @@ tutorial.init = () => {
   tutorial.backBtn = makeButton(
     BACK_TEXT,
     ctx.measureText(BACK_TEXT).width,
-    ctx.measureText('L').width,
+    CTX_L_WIDTH,
     CANVAS_WIDTH / 2,
     CANVAS_HEIGHT / 5,
     () => {
@@ -1671,7 +1675,7 @@ tutorial.init = () => {
   tutorial.kblBtn = makeButton(
     LKB_TEXT,
     ctx.measureText(LKB_TEXT).width,
-    ctx.measureText('L').width,
+    CTX_L_WIDTH,
     10,
     CANVAS_HEIGHT - 3,
     () => {},
@@ -1680,7 +1684,7 @@ tutorial.init = () => {
   tutorial.kbrBtn = makeButton(
     RKB_TEXT,
     ctx.measureText(RKB_TEXT).width,
-    ctx.measureText('L').width,
+    CTX_L_WIDTH,
     CANVAS_WIDTH - 10,
     CANVAS_HEIGHT - 3,
     () => {},
@@ -1980,7 +1984,7 @@ initialMsg.__init = () => {
   initialMsg.__onoTxt = makeButton(
     '"OH NO...',
     ctx.measureText('"OH NO...').width,
-    ctx.measureText('L').width,
+    CTX_L_WIDTH,
     CANVAS_WIDTH / 2,
     65,
     () => {},
@@ -1990,7 +1994,7 @@ initialMsg.__init = () => {
   initialMsg.__ljTxt = makeButton(
     'LOGJAM!!!"',
     ctx.measureText('LOGJAM!!!"').width,
-    ctx.measureText('L').width,
+    CTX_L_WIDTH,
     CANVAS_WIDTH / 2,
     85,
     () => {},
@@ -2000,7 +2004,7 @@ initialMsg.__init = () => {
   initialMsg.__rowTxt = makeButton(
     'ROW BACK UPSTREAM!',
     ctx.measureText('ROW BACK UPSTREAM!').width,
-    ctx.measureText('L').width,
+    CTX_L_WIDTH,
     CANVAS_WIDTH / 2,
     125,
     () => {},
@@ -2010,7 +2014,7 @@ initialMsg.__init = () => {
   // initialMsg.__arrTxt = makeButton(
   //   '|.|',
   //   ctx.measureText('|.|').width,
-  //   ctx.measureText('L').width,
+  //   CTX_L_WIDTH,
   //   CANVAS_WIDTH / 2,
   //   165,
   //   () => {},
@@ -2051,14 +2055,14 @@ game.init = (goToBackScreen, sound) => {
   game.paused = false
   game.resetDifficulty()
   game.goToBackScreen = goToBackScreen
-  game.quitBtn = makeButton(QUIT_TEXT, ctx.measureText(QUIT_TEXT).width, ctx.measureText('L').width, 10, 10, () => {
+  game.quitBtn = makeButton(QUIT_TEXT, ctx.measureText(QUIT_TEXT).width, CTX_L_WIDTH, 10, 10, () => {
     game.leave()
     controls.clearBoatControls()
   }, { fontSize: 10, alignment: 'left' })
   game.__pauseTxt =  makeButton(
     'PAUSED',
     ctx.measureText('PAUSED').width,
-    ctx.measureText('L').width,
+    CTX_L_WIDTH,
     CANVAS_WIDTH / 2,
     CANVAS_HEIGHT / 2,
     () => {},
@@ -2067,7 +2071,7 @@ game.init = (goToBackScreen, sound) => {
   game.pauseBtn = makeButton(
     PAUSE_TEXT,
     ctx.measureText(PAUSE_TEXT).width,
-    ctx.measureText('L').width,
+    CTX_L_WIDTH,
     CANVAS_WIDTH - 10,
     10,
     () => {
@@ -2087,7 +2091,7 @@ game.init = (goToBackScreen, sound) => {
   game.gameOverBtn = makeButton(
     'GAMEOVER',
     ctx.measureText('GAMEOVER').width,
-    ctx.measureText('L').width,
+    CTX_L_WIDTH,
     CANVAS_WIDTH / 2,
     110,
     () => {
@@ -2100,7 +2104,7 @@ game.init = (goToBackScreen, sound) => {
   game.score = makeButton(
     game.scoreText(),
     ctx.measureText(game.scoreText()).width,
-    ctx.measureText('L').width,
+    CTX_L_WIDTH,
     CANVAS_WIDTH / 2,
     29,
     () => {
@@ -2165,7 +2169,7 @@ home.init = (hs) => {
   ctx.textAlign = 'center'
   ctx.fillStyle = '#ffffff'
   ctx.font = '20px Courier'
-  const approxHeight = ctx.measureText('L').width
+  const approxHeight = CTX_L_WIDTH
 
   home.playBtn = makeButton(
     PLAY_TEXT,
