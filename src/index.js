@@ -2055,7 +2055,7 @@ game.init = (goToBackScreen, sound) => {
     game.leave()
     controls.clearBoatControls()
   }, { fontSize: 10, alignment: 'left' })
-  game.pauseTxt =  makeButton(
+  game.__pauseTxt =  makeButton(
     'PAUSED',
     ctx.measureText('PAUSED').width,
     ctx.measureText('L').width,
@@ -2073,7 +2073,7 @@ game.init = (goToBackScreen, sound) => {
     () => {
       game.paused = !game.paused
       if (game.paused) {
-        game.pauseTxt.render()
+        game.__pauseTxt.render()
         console.log('PAUSE')
         sound.mute()
       }
@@ -2096,7 +2096,7 @@ game.init = (goToBackScreen, sound) => {
     { fontSize: 25, alignment: 'center' },
   )
 
-  game.distanceRowed = 0
+  game.__distanceRowed = 0
   game.score = makeButton(
     game.scoreText(),
     ctx.measureText(game.scoreText()).width,
@@ -2109,7 +2109,7 @@ game.init = (goToBackScreen, sound) => {
     { fontSize: 20, alignment: 'center' },
   )
 }
-game.scoreText = () => `${game.distanceRowed}m`
+game.scoreText = () => `${game.__distanceRowed}m`
 
 game.resetDifficulty = () => {
   game.difficulty = 0
@@ -2132,10 +2132,10 @@ game.leave = () => {
 }
 
 game.updateScore = (distance) => {
-  game.distanceRowed = Math.floor((distance / 3))
+  game.__distanceRowed = Math.floor((distance / 3))
   game.score.name = game.scoreText()
 
-  game.updateDifficulty(game.distanceRowed)
+  game.updateDifficulty(game.__distanceRowed)
 }
 
 game.render = (distanceRowed) => {
@@ -2919,8 +2919,6 @@ infoDisplay.init()
  */
 function monStart() {
   if (document.monetization.state === 'started') {
-    alert('Hello Coil Subscriber! Enjoy more frequent life buoys & slower difficulty scale!')
-
     SPAWN_INTERVAL = 300
     DIFFICULTY_MULTIPLYER = 10
   }
@@ -2928,7 +2926,6 @@ function monStart() {
 
 if (document.monetization) {
   console.log('Found monetization!')
-
   document.monetization.addEventListener('monetizationstart', monStart)
 }
 
