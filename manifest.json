@@ -4,5 +4,10 @@
   "images" : {
     "image_large": "image_large.png",
     "image_thumbnail": "image_thumbnail.png"
+  },
+  "categories": ["Desktop", "Mobile", "Web Monetization"],
+  "user" : {
+    "name": "Ben Fox",
+    "website": "https://www.benfox.info",
   }
 }
