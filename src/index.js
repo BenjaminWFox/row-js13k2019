@@ -2035,6 +2035,15 @@ game.init = (goToBackScreen, sound) => {
     game.leave()
     controls.clearBoatControls()
   }, { fontSize: 10, alignment: 'left' })
+  game.pauseTxt =  makeButton(
+    'PAUSED',
+    ctx.measureText('PAUSED').width,
+    ctx.measureText('L').width,
+    CANVAS_WIDTH / 2,
+    CANVAS_HEIGHT / 2,
+    () => {},
+    { fontSize: 30, alignment: 'center' },
+  )
   game.pauseBtn = makeButton(
     PAUSE_TEXT,
     ctx.measureText(PAUSE_TEXT).width,
@@ -2044,11 +2053,12 @@ game.init = (goToBackScreen, sound) => {
     () => {
       game.paused = !game.paused
       if (game.paused) {
+        game.pauseTxt.render()
         console.log('PAUSE')
-        game.sound.mute()
+        sound.mute()
       }
       else {
-        game.sound.unmute()
+        sound.unmute()
       }
     },
     { fontSize: 10, alignment: 'right' },
@@ -2272,7 +2282,7 @@ collisionManager.__broadPhaseCheck = (boat, obstacles) => {
     }
     if (buoy.__active) {
       if (
-        buoy.__sprite.y < obstacle.y + obstacle.height - 5
+        buoy.__sprite.y < obstacle.y + obstacle.height - 3
         && buoy.__sprite.y > obstacle.y
         && buoy.__sprite.x + 6 > obstacle.x
         && buoy.__sprite.x < obstacle.x + obstacle.frameWidth) {
@@ -2720,7 +2730,7 @@ sound.init = (context) => {
   sound.ctx = context
   sound.muted = false
   sound.queueSong = false
-  sound.vol = 0.005
+  sound.vol = 0.05
 }
 
 sound.mute = () => {
@@ -2744,8 +2754,6 @@ sound.setup = () => {
   sound.osc.connect(sound.gainNode)
   sound.gainNode.connect(sound.ctx.destination)
   sound.osc.type = 'square'
-
-  sound.unmute()
 }
 
 sound.play = (value, time, stopTime = undefined, volume = undefined) => {
@@ -2891,12 +2899,17 @@ infoDisplay.init()
  * Set the event listener that will load the game
  */
 function monStart() {
-  SPAWN_INTERVAL = 300
-  DIFFICULTY_MULTIPLYER = 10
+  if (document.monetization.state === 'started') {
+    alert('Hello Coil Subscriber! Enjoy more frequent life buoys & slower difficulty scale!')
+
+    SPAWN_INTERVAL = 300
+    DIFFICULTY_MULTIPLYER = 10
+  }
 }
 
 if (document.monetization) {
   console.log('Found monetization!')
+
   document.monetization.addEventListener('monetizationstart', monStart)
 }
 
