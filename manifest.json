@@ -1,0 +1,8 @@
+{
+  "name": "ROW",
+  "description": "An infinite scroller for the js13k2019 comp by Ben Fox",
+  "images" : {
+    "image_large": "image_large.png",
+    "image_thumbnail": "image_thumbnail.png"
+  }
+}
