@@ -1,0 +1,13 @@
+Row row row your boat, quickly back up stream,\n
+Frantically frantically, frantically frantically,\n
+Life will end downstream...\n
+____________________________\n
+ROW is an infinite scroller.\n
+\n
+While enjoying a leisurely day on the river, you come to the unfortunate realization that a log jam is blocking your path downstream. See how far back upstream you can get!\n
+\n
+Avoid rocks and trees, and be sure to pick up the orange buoys for extra lives.\n
+\n
+This game is designed for touch controls, but there are keyboard inputs as well. The tutorial shows the relevant left & right oar control motions/keys for both touch and keyboard.\n
+\n
+Coil subscribers! Enjoy more frequent life buoys and a slower difficulty ramp-up.\n
