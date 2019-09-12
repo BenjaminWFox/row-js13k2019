@@ -1,5 +1,7 @@
-Row row row your boat, quickly back up stream,\n
-Frantically frantically, frantically frantically,\n
+Row row row your boat,\n
+quickly back up stream,\n
+frantically frantically,\n
+frantically frantically,\n
 Life will end downstream...\n
 ____________________________\n
 \n
@@ -9,7 +11,7 @@ While enjoying a leisurely day on the river, you come to the unfortunate realiza
 \n
 Avoid rocks and trees, and be sure to pick up the orange buoys for extra lives.\n
 \n
-This game is designed for touch controls, but there are keyboard inputs as well. The tutorial shows the relevant left & right oar control motions/keys for both touch and keyboard.\n
+This game is designed for touch controls, but there are keyboard inputs as well. The tutorial shows the relevant left & right oar controls for both touch and keyboard.\n
 \n
 Coil subscribers! Enjoy more frequent life buoys and a slower difficulty ramp-up.\n
 \n
